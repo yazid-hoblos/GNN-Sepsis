@@ -209,3 +209,7 @@ __marimo__/
 executions/
 data/
 output/
+test/
+
+./load_dataset.py
+./load_embeddings.py
