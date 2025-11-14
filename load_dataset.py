@@ -25,7 +25,7 @@ def map_probes_to_genes(gpl_annotations: pd.DataFrame) -> pd.DataFrame:
     pd.DataFrame
         DataFrame mapping probes to gene IDs.
     """
-    probe_to_gene = gpl_annotations[['ID', 'Entrez_Gene_ID']].dropna(subset=['Entrez_Gene_ID'])
+    probe_to_gene = gpl_annotations[['ID', 'Entrez_Gene_ID']]
     probe_to_gene['Entrez_Gene_ID'] = pd.to_numeric(probe_to_gene['Entrez_Gene_ID'], errors='coerce')
     probe_to_gene = probe_to_gene.dropna(subset=['Entrez_Gene_ID'])
     probe_to_gene['Entrez_Gene_ID'] = probe_to_gene['Entrez_Gene_ID'].astype(int)
@@ -33,13 +33,13 @@ def map_probes_to_genes(gpl_annotations: pd.DataFrame) -> pd.DataFrame:
 
 
 
-def create_expression_data(gse: GEOparse.GEO) -> pd.DataFrame:
+def create_expression_data(gse) -> pd.DataFrame:
     """
     Extracts expression data from GEO dataset and converts to DataFrame.
 
     Parameters
     ----------
-    gse : GEOparse.GEO
+    gse
         GEO dataset object.
 
     Returns
@@ -72,7 +72,7 @@ def load_geo_data(filepath: str, gpl_filepath: str, dataset_name: str):
 
     Returns
     -------
-    gse : GEOparse.GEO
+    gse
         Loaded GEO dataset.
     gpl_annotations : pd.DataFrame
         Processed GPL annotations mapping probes to genes.
@@ -80,22 +80,21 @@ def load_geo_data(filepath: str, gpl_filepath: str, dataset_name: str):
     gse = GEOparse.get_GEO(filepath=filepath, silent=True)
     gpl_annotations = pd.read_csv(gpl_filepath, sep="\t", comment='#')
 
-    # Handle dataset-specific annotation formats
-    gpl_annotations['Entrez_Gene_ID'] = gpl_annotations['Entrez_Gene_ID'].apply(lambda x: str(x).split('///')[0].strip())
+    gpl_annotations = gpl_annotations[['ID', 'Entrez_Gene_ID']].dropna(subset=['Entrez_Gene_ID'])
 
-    gpl_annotations['Entrez_Gene_ID_label'] = gpl_annotations['Entrez_Gene_ID']
-    gpl_annotations = gpl_annotations[['ID', 'Entrez_Gene_ID', 'Entrez_Gene_ID_label']].dropna(subset=['Entrez_Gene_ID'])
-    
+    # Handle dataset-specific annotation formats (keep only first gene ID if multiple)
+    gpl_annotations['Entrez_Gene_ID'] = gpl_annotations['Entrez_Gene_ID'].apply(lambda x: str(x).split('///')[0].strip())
+        
     return gse, gpl_annotations
 
 
-def extract_sample_status(gse: GEOparse.GEO, dataset_name: str) -> list:
+def extract_sample_status(gse, dataset_name: str) -> list:
     """
     Extracts the sample status (disease/control) from GEO dataset.
 
     Parameters
     ----------
-    gse : GEOparse.GEO
+    gse
         GEO dataset object.
     dataset_name : str
         Dataset name to determine extraction method.
@@ -116,7 +115,7 @@ def extract_sample_status(gse: GEOparse.GEO, dataset_name: str) -> list:
         sample_status = [gsm.metadata["characteristics_ch1"][1].split(": ")[1] for gsm in gse.gsms.values()]
     else:
         raise ValueError("Dataset not recognized for sample status extraction.")
-    
+
     return sample_status
 
 
