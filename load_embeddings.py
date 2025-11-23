@@ -59,17 +59,24 @@ def load_all_entities(emb_path, mapping_csv, node_features_csv):
         emb = np.concatenate([emb.real, emb.imag], axis=1)
 
     # 2. Load mapping + features
-    df_map = pd.read_csv(mapping_csv)  
+    df_map = pd.read_csv(mapping_csv)
     df_csv = pd.read_csv(node_features_csv)
 
+    # Use LEFT join to keep all entities from entity_mapping, even without features
     df_merged = pd.merge(
         df_map, df_csv,
         left_on="label", right_on=df_csv.columns[0],
-        how="inner"
+        how="left"
     )
 
     # 3. Attach embeddings
     df_merged["embedding"] = df_merged["entity_id"].apply(lambda i: emb[i])
+
+    # For entities without features (like Proteins), fill node_id with label
+    if 'node_id' not in df_merged.columns:
+        df_merged['node_id'] = df_merged['label']
+    else:
+        df_merged['node_id'] = df_merged['node_id'].fillna(df_merged['label'])
 
     X = np.stack(df_merged["embedding"].values)
     entity_ids = df_merged["entity_id"].tolist()
@@ -98,9 +105,9 @@ if __name__ == "__main__":
             else:
                 raise ValueError("Dataset not recognized for control group labeling.")
           
-            emb_path = f"./models/executions/{kg}_enriched_ontology_degfilterv2.9_outputmodel_{model}_entity_embeddings.npy"
-            node_features_csv = f"./models/executions/{kg}_enriched_ontology_degfilterv2.9_node_features.csv"
-            map_csv = f"./models/executions/{kg}_enriched_ontology_degfilterv2.9_outputmodel_{model}_entity_mapping.csv"
+            emb_path = f"./models/executions/{kg}_enriched_ontology_degfilterv2.9/outputmodel_{model}_entity_embeddings.npy"
+            node_features_csv = f"./models/executions/{kg}_enriched_ontology_degfilterv2.9/node_features.csv"
+            map_csv = f"./models/executions/{kg}_enriched_ontology_degfilterv2.9/outputmodel_{model}_entity_mapping.csv"
             
             # Load patients
             patient_ids, X_patients, y_patients, df_patients = load_patient_data(emb_path, map_csv, node_features_csv, control_label)
@@ -109,5 +116,5 @@ if __name__ == "__main__":
             # --- Load all entities ---
             entity_ids, X_all, entity_labels, df_all = load_all_entities(emb_path, map_csv, node_features_csv)
             print(f"Loaded {len(entity_ids)} entities for {kg}-{model}")
-
-    
+            # ecris ligne pour afficher les lignes ou la prmeiere colonne commence par "Protein_" de df_all
+            print(df_all[df_all['label'].str.startswith('Sample_')].head(500))
