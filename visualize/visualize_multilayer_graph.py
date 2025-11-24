@@ -232,7 +232,7 @@ def create_filtered_graph(df_nodes, df_edges,
     return G
 
 
-def visualize_graph(G, output_file='graph_visualization.html', 
+def visualize_graph(G, output_file='visualize/graph_visualization.html', 
                    height='800px', width='100%',
                    physics=True,
                    notebook=False):
@@ -773,7 +773,7 @@ Examples:
     parser.add_argument('--threshold', type=float, default=0.5,
                        help='Patient similarity threshold (default: 0.5)')
     
-    parser.add_argument('--output', type=str, default='graph_visualization.html',
+    parser.add_argument('--output', type=str, default='visualize/graph_visualization.html',
                        help='Output HTML file')
     
     parser.add_argument('--no-physics', action='store_true',

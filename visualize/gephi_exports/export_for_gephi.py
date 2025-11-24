@@ -374,7 +374,7 @@ def main():
     parser = argparse.ArgumentParser(description="Export graphs for Gephi")
     parser.add_argument('--dataset', type=str, default='GSE54514')
     parser.add_argument('--model', type=str, default='ComplEx')
-    parser.add_argument('--output_dir', type=str, default='gephi_exports')
+    parser.add_argument('--output_dir', type=str, default='visualize/gephi_exports')
     parser.add_argument('--patient_sim_threshold', type=float, default=0.5,
                         help='Similarity threshold for patient network')
     parser.add_argument('--top_genes', type=int, default=200,
