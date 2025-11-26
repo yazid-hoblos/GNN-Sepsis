@@ -6,8 +6,7 @@ import argparse
 
 prepare_df = lambda df: df.set_index('label').iloc[:, 3:]
 
-def train_all(datasets:list=['gene_expression', 'RGCN_sample_embeddings', 'Complex_sample_embeddings', 'concatenated_sample_embeddings', 'RGCN_protein_embeddings', 'Complex_protein_embeddings', 'concatenated_protein_embeddings'],models=MLModel.MODELS):
-    models=['svm','xgboost','mlp']
+def train_all(datasets:list=['gene_expression', 'RGCN_sample_embeddings', 'Complex_sample_embeddings', 'concatenated_sample_embeddings', 'RGCN_protein_embeddings', 'Complex_protein_embeddings', 'concatenated_protein_embeddings'],model_types=MLModel.MODELS):
     trained_MLModels={}
 
     for dataset in datasets:
