@@ -1,282 +1,359 @@
-# -- short numpy docstring explaining the purpose of the model and the main 2 functions --
-'''
-this module provides functions to define, train, and evaluate machine learning models using:
-- scikit-learn SVM
-- xgboost XGBClassifier
-- scikit-learn MLPClassifier
+"""
+Classical models training util functions
+----------------------------------------------
 
-this is the 2nd step after performing data loading and preprocessing:  
-INPUT: pandas DataFrame with features and 'disease_status' label
-OUTPUT: trained model(s) and evaluation predictions
+this module defines utilities to construct, train, and evaluate machine-learning classification models
+using support vector machines (svm), xgboost classifiers, and multilayer perceptrons (mlp). it represents
+the second step of the workflow, following data loading and preprocessing.
 
-e.g., code snippets to train and evaluate a model:
+the module expects a pandas dataframe containing feature columns and a binary 'disease_status' label.
+it returns trained model objects, predictions, and class probabilities.
 
-train and evaluate at the same time (better)
->>> model, y_test, y_pred, y_proba = train_evaluate_model(df, 'svm') 
-- model: trained GridSearchCV object
-- y_test: true labels for test set
-- y_pred: predicted labels for test set
-- y_proba: predicted probabilities for positive class for test set
+It was redesigned in an oop fashion to encapsulate functionality within the `MLModel` class and store all
+relevant attributes
 
-If you wanna train all the models at once (using one function call):
->>> models, y_test, y_pred, y_proba = train_evaluate_model(df, 'all')
-This will return dictionaries of models, y_test, y_pred, y_proba for each model type, 
-each 1 of the 4 returned dictionaries will be of the shape: 
-- models: { 'svm':GridSearchCV, 'xgboost':GridSearchCV, 'mlp':GridSearchCV }
-- y_test: { 'svm':array, 'xgboost':array, 'mlp':array }
-- y_pred: { 'svm':array, 'xgboost':array, 'mlp':array }
-- y_proba: { 'svm':array, 'xgboost':array, 'mlp':array }
 
-or to train and evaluate separately (!need to be careful to provide the same train/test split and random state!)
->>> model=train_model(df,'svm')
->>> y_test, y_pred, y_proba = evaluate_model(model, df)
+example run
+-------------
+>>> model = MLModel(df, model_type="svm", dataset_name="my_data")
+>>> model.train()
+>>> y_test, y_pred, y_proba = model.evaluate()
+>>> model.y_test, model.y_pred, model.y_proba  # equivalent to above
 
-Note that we use defualt values for hyperparameter grids, cross-validation folds, test split ratio, random state, and scoring metric (accuracy - for gridsearch)
-You can change all of these by providing optional arguments to the functions:
+in a single step:
 
->>> model=train_model(df,'svm', hyperparameters={'C':[0.1,1,10]}, split_ratio=0.3, random_state=123, kfold=5)
+>>> model.train_evaluate()
+>>> model.y_test, model.y_pred, model.y_proba
 
-'''
+Notes
+-----
+The input DataFrame must contain a `disease_status` column, which will be used
+as the target variable, and all remaining columns are treated as features (pay attention they should all be numeric)
+"""
 
-# - [x] make a pretty print function for the hyperparameters dictionary and the best model
-# - [x] GLOBAL variables to be added instead of hardcoded values
-# - [x] add docstrings to functions
-# - [x] make some functions private if not needed to be used outside the module
-# - [ ] make it take json or yaml hyperparameter inputs and parse them to proper types
-# - [ ] add option to save trained model to file
-# - [ ] logging
-
-import sklearn
+import os
+import sys
+import pprint
+import joblib
+import numpy as np
+import pandas as pd
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.svm import SVC
 from sklearn.neural_network import MLPClassifier
 import xgboost
-import numpy as np
-import pandas as pd
-import pprint
-# import joblib
-
-import warnings
 from sklearn.exceptions import ConvergenceWarning
+import warnings
+
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
-# -- GLOBAL CONSTANTS --
-DEFAULT_KFOLD = 3
-DEFAULT_SPLIT_RATIO = 0.2
-DEFAULT_RANDOM_STATE = 42
-DEFAULT_SCORING = "accuracy"
-DEFAULT_SAVE_MODEL_PATH = None
 
-pp = pprint.PrettyPrinter(indent=4)
+class Logger:
+    '''
+    Simple logger that duplicates stdout messages to a log file.
 
-# -- DEFAULT HYPERPARAMETER GRIDS --
-SVM_HYPERPARAMS = {'C': [0.1, 1, 10], 'kernel': ['linear', 'rbf'], 'gamma': ['scale', 'auto']}
-XGBOOST_HYPERPARAMS = {'n_estimators': [50, 100, 200], 'max_depth': [3, 5, 7], 'learning_rate': [0.01, 0.1, 0.2]}
-MLP_HYPERPARAMS = {'hidden_layer_sizes': [(50,), (100,), (50,50)], 'activation': ['relu', 'tanh'], 'solver': ['adam', 'sgd'], 'learning_rate_init': [0.001, 0.01, 0.1]}
+    Parameters
+    ----------
+    filename : str
+        Path to the log file where output should be written.
+    '''
 
-# -- MODEL REGISTRY --
-MODELS = {'svm': SVC(), 'xgboost': xgboost.XGBClassifier(), 'mlp': MLPClassifier()}
+    def __init__(self, filename):
+        self.terminal = sys.stdout
+        self.log = open(filename, "w")
 
-# -- PRIVATE HELPERS --
-def _pretty_print_dict(title: str, d: dict):
-    """
-    pretty print a dictionary with a title
+    def write(self, message):
+        '''
+        Write a message to both stdout and the log file.
 
-    title : str, title printed above the dictionary
-    d : dict, dictionary to print
-    """
-    print(f"\n-- {title} --")
-    pp.pprint(d)
-    print("\n")
+        Parameters
+        ----------
+        message : str
+            Message to write.
+        '''
+        self.terminal.write(message)
+        self.log.write(message)
 
-def _validate_hyperparameters(model_type: str, hyperparameters: dict):
-    """
-    validate that provided hyperparameters exist for the requested model type
+    def flush(self):
+        '''
+        Flush both stdout and the log file buffers.
+        '''
+        self.terminal.flush()
+        self.log.flush()
 
-    model_type : str, model identifier ('svm', 'xgboost', 'mlp')
-    hyperparameters : dict, hyperparameter dictionary to validate
-    """
-    model_type = model_type.lower()
-    if model_type not in MODELS:
-        raise ValueError(f"-- model type '{model_type}' is not supported: choose from {list(MODELS.keys())} --")
-    valid_params = MODELS[model_type].get_params().keys()
-    for param in hyperparameters.keys():
-        if param not in valid_params:
-            raise ValueError(f"-- hyperparameter '{param}' is invalid for '{model_type}'. valid keys: {list(valid_params)} --")
 
-def _json_to_hyperparameters(json_dict: dict) -> dict:
-    """
-    convert json-style values to proper python hyperparameter types
+class MLModel:
+    '''
+    Machine learning utility class for training and evaluating models with
+    automatic hyperparameter tuning via GridSearchCV.
 
-    json_dict : dict, dictionary where values may be string-formatted lists
-    returns : dict, parsed hyperparameter dictionary
-    """
-    hyperparameters = {}
-    for key, value in json_dict.items():
-        if isinstance(value, str) and value.startswith("[") and value.endswith("]"):
-            value = value.strip("[]").split(",")
-            value = [v.strip().strip("'").strip('"') for v in value]
-        hyperparameters[key] = value
-    return hyperparameters
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Input dataframe containing features and a `disease_status` column.
+    model_type : str
+        Type of model: {'svm', 'xgboost', 'mlp', 'all'}.
+    dataset_name : str
+        Name of the dataset (used for saving models).
+    hyperparameters : dict, optional
+        Custom hyperparameters for the selected model.
+    split_ratio : float, optional
+        Fraction of data to use for testing (default is class attribute).
+    random_state : int, optional
+        Seed for reproducibility.
+    save_model : bool, optional
+        Whether to save trained GridSearchCV object to disk.
 
-# -- MODEL DEFINITIONS --
-def _define_svm(grid_params=None, kfold=DEFAULT_KFOLD):
-    """
-    construct a gridsearchcv object for an svm classifier
+    Attributes
+    ----------
+    X_train, X_test : ndarray
+        Training and test feature matrices.
+    y_train, y_test : ndarray
+        Training and test labels.
+    model : GridSearchCV or None
+        Fitted search object after calling `train()`.
+    y_pred : ndarray or None
+        Predictions after evaluation.
+    y_proba : ndarray or None
+        Predicted probabilities after evaluation.
+    '''
 
-    grid_params : dict, optional, hyperparameter grid for svm
-    kfold : int, optional, number of cross-validation folds
-    returns : GridSearchCV, configured gridsearchcv with SVC
-    """
-    if grid_params:
-        _validate_hyperparameters("svm", grid_params)
-    else:
-        grid_params = SVM_HYPERPARAMS
-    return GridSearchCV(estimator=SVC(probability=True), param_grid=grid_params,
-                        scoring=DEFAULT_SCORING, cv=kfold, n_jobs=-1)
+    # ------------------ CLASS ATTRIBUTES ------------------
+    DEFAULT_KFOLD = 3
+    DEFAULT_SPLIT_RATIO = 0.2
+    DEFAULT_RANDOM_STATE = 42
+    DEFAULT_SCORING = "accuracy"
+    DEFAULT_SAVE = False
+    CACHE_DIR = '.cache/'
+    SYSOUT_FILE = "training_utils.log"
 
-def _define_xgboost(grid_params=None, kfold=DEFAULT_KFOLD):
-    """
-    construct a gridsearchcv object for an xgboost classifier
+    MODELS = {'svm', 'xgboost', 'mlp'}
+    SVM_HYPERPARAMS = {'C': [0.1, 1, 10], 'kernel': ['linear', 'rbf'], 'gamma': ['scale', 'auto']}
+    XGBOOST_HYPERPARAMS = {'n_estimators': [50, 100, 200], 'max_depth': [3, 5, 7],
+                           'learning_rate': [0.01, 0.1, 0.2]}
+    MLP_HYPERPARAMS = {'hidden_layer_sizes': [(50,), (100,), (50, 50)], 'activation': ['relu', 'tanh'],
+                       'solver': ['adam', 'sgd'], 'learning_rate_init': [0.001, 0.01, 0.1]}
 
-    grid_params : dict, optional, hyperparameter grid
-    kfold : int, optional, number of cross-validation folds
-    returns : GridSearchCV, configured gridsearchcv with XGBClassifier
-    """
-    if grid_params:
-        _validate_hyperparameters("xgboost", grid_params)
-    else:
-        grid_params = XGBOOST_HYPERPARAMS
-    return GridSearchCV(estimator=xgboost.XGBClassifier(eval_metric="logloss"),
-                        param_grid=grid_params, scoring=DEFAULT_SCORING, cv=kfold, n_jobs=-1)
+    pp = pprint.PrettyPrinter(indent=4)
 
-def _define_mlp(grid_params=None, kfold=DEFAULT_KFOLD):
-    """
-    construct a gridsearchcv object for an mlp classifier
+    @classmethod
+    def initialize_logging(cls):
+        '''
+        Initialize logging by redirecting stdout to a file in CACHE_DIR.
+        '''
+        os.makedirs(cls.CACHE_DIR, exist_ok=True)
+        sys.stdout = Logger(os.path.join(cls.CACHE_DIR, cls.SYSOUT_FILE))
 
-    grid_params : dict, optional, hyperparameter grid
-    kfold : int, optional, number of folds for cross-validation
-    returns : GridSearchCV, configured gridsearchcv with MLPClassifier
-    """
-    if grid_params:
-        _validate_hyperparameters("mlp", grid_params)
-    else:
-        grid_params = MLP_HYPERPARAMS
-    return GridSearchCV(estimator=MLPClassifier(max_iter=500), param_grid=grid_params,
-                        scoring=DEFAULT_SCORING, cv=kfold, n_jobs=-1)
+    @classmethod
+    def set_global_variable(cls, var_name, value):
+        '''
+        Set global class-level configuration variables.
 
-def define_model(model_type:str, hyperparameters:dict=None):
-    """
-    define and configure a model wrapped in gridsearchcv
+        Parameters
+        ----------
+        var_name : str
+            Name of the variable to modify.
+        value : Any
+            Value to assign.
 
-    model_type : str, model identifier 'svm', 'xgboost', 'mlp', 'all'
-    hyperparameters : dict, optional, hyperparameter grid
-    returns : GridSearchCV or dict of GridSearchCV
-    """
-    model_type = model_type.lower()
-    # if model_type == "all":
-    #     return {name: define_model(name, hyperparameters) for name in MODELS.keys()}
-    if model_type not in MODELS:
-        raise ValueError(f"-- model type '{model_type}' is not supported: choose from {list(MODELS.keys())} --")
-    if model_type == 'svm':
-        return _define_svm(hyperparameters)
-    if model_type == 'xgboost':
-        return _define_xgboost(hyperparameters)
-    if model_type == 'mlp':
-        return _define_mlp(hyperparameters)
+        Raises
+        ------
+        ValueError
+            If the variable name is unknown.
+        '''
+        setters = {
+            'CACHE_DIR': lambda v: setattr(cls, 'CACHE_DIR', v),
+            'SYSOUT_FILE': lambda v: setattr(cls, 'SYSOUT_FILE', v),
+            'DEFAULT_SAVE': lambda v: setattr(cls, 'DEFAULT_SAVE', v),
+            'DEFAULT_KFOLD': lambda v: setattr(cls, 'DEFAULT_KFOLD', v),
+            'DEFAULT_SPLIT_RATIO': lambda v: setattr(cls, 'DEFAULT_SPLIT_RATIO', v),
+            'DEFAULT_RANDOM_STATE': lambda v: setattr(cls, 'DEFAULT_RANDOM_STATE', v),
+            'DEFAULT_SCORING': lambda v: setattr(cls, 'DEFAULT_SCORING', v),
+            'SVM_HYPERPARAMS': lambda v: cls._validate_hyperparameters('svm', v) or setattr(cls, 'SVM_HYPERPARAMS', v),
+            'XGBOOST_HYPERPARAMS': lambda v: cls._validate_hyperparameters('xgboost', v) or setattr(cls, 'XGBOOST_HYPERPARAMS', v),
+            'MLP_HYPERPARAMS': lambda v: cls._validate_hyperparameters('mlp', v) or setattr(cls, 'MLP_HYPERPARAMS', v)
+        }
+        if var_name in setters:
+            setters[var_name](value)
+        else:
+            raise ValueError(f"-- global variable '{var_name}' is not recognized. --")
 
-# -- TRAIN / EVALUATION --
-def train_model(df: pd.DataFrame, model_type:str, hyperparameters: dict =None, split_ratio:float=DEFAULT_SPLIT_RATIO, random_state:int =DEFAULT_RANDOM_STATE,save_path:str = DEFAULT_SAVE_MODEL_PATH):
-    """
-    train a model using gridsearchcv and a train/test split
+    def __init__(self, df, model_type, dataset_name, hyperparameters=None,
+                 split_ratio=None, random_state=None, save_model=None):
 
-    df : pandas.DataFrame, input dataframe with features and 'disease_status'
-    model_type : str, model identifier 'svm', 'xgboost', 'mlp', 'all'
-    hyperparameters : dict, optional, hyperparameter grid
-    split_ratio : float, optional, test set proportion
-    random_state : int, optional, seed for reproducible split
-    save_path : str, optional, file path to save trained model
-    returns : GridSearchCV, trained model
-    """
-    y = df["disease_status"].astype(int).values
-    X = df.drop(columns=["disease_status"]).values
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=split_ratio, random_state=random_state)
-    print(f"-- split of {split_ratio} for test set with random state {random_state}")
+        self.df = df.copy()
+        self.model_type = model_type.lower()
+        self.dataset_name = dataset_name
+        self.hyperparameters = hyperparameters
+        self.split_ratio = split_ratio if split_ratio is not None else self.DEFAULT_SPLIT_RATIO
+        self.random_state = random_state if random_state is not None else self.DEFAULT_RANDOM_STATE
+        self.save_model = save_model if save_model is not None else self.DEFAULT_SAVE
 
-    if model_type=="all":
-        models={}
-        for i,name in enumerate(MODELS.keys()):
-            print(f"\n-- training model {name} ({i+1}/{len(MODELS)})")
-            models[name] = train_model(df, name, hyperparameters, split_ratio, random_state, save_path)
-        return models
-         
+        # split data
+        self.y = self.df["disease_status"].astype(int).values
+        self.X = self.df.drop(columns=["disease_status"]).values
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+            self.X, self.y, test_size=self.split_ratio, random_state=self.random_state
+        )
 
-    model = define_model(model_type, hyperparameters)
-    print(f"-- model defined {model_type} with:")
-    if hyperparameters:
-        _pretty_print_dict("hyperparameters", hyperparameters)
-    else:
-        print("-- default hyperparameters for grid search")
+        self.grid_search_model = None
+        self.y_pred = None
+        self.y_proba = None
 
-    model.fit(X_train, y_train)
-    print(f"-- {model_type.upper()} trained on training set")
+        # self.initialize_logging()
 
-    # if save_path:
-    #     joblib.dump(model, save_path)
-    #     print(f"-- model saved to {save_path}")
 
-    return model
+        print(f"-- Initialized MLModel with model_type='{self.model_type.upper()}', dataset_name='{self.dataset_name.upper()}' --")
+        print(f'-- split ratio: {self.split_ratio}')
+        print(f'-- random state: {self.random_state}')
 
-def evaluate_model(grid_search: GridSearchCV, df: pd.DataFrame,
-                   split_ratio: float = DEFAULT_SPLIT_RATIO, random_state: int = DEFAULT_RANDOM_STATE):
-    """
-    evaluate a trained gridsearchcv model on a test split
+        if self.save_model:
+            print(f'-- trained model will be saved to: {self.CACHE_DIR} --')
 
-    grid_search : GridSearchCV, trained model
-    df : pandas.DataFrame, input dataframe with features and 'disease_status'
-    split_ratio : float, optional, test set proportion
-    random_state : int, optional, seed for reproducible split
-    returns : y_test, y_pred, y_proba
-    """
-    y = df["disease_status"].astype(int).values
-    X = df.drop(columns=["disease_status"]).values
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=split_ratio, random_state=random_state)
+        if self.model_type not in self.MODELS and self.model_type != 'all':
+            raise ValueError(f"-- model type '{self.model_type}' is not supported --")
 
-    if type(grid_search) is dict:
-        Y_test,Y_pred,Y_proba={},{},{}
-        for name, model in grid_search.items():
-            print(f"\n-- Evaluating model: {name} --")
-            _pretty_print_dict("best parameters", model.best_params_)
-            y_pred = model.predict(X_test)
-            y_proba = model.predict_proba(X_test)[:, 1]
-            print("-- predictions made on test set")
-            Y_test[name]=y_test
-            Y_pred[name]=y_pred
-            Y_proba[name]=y_proba
-        return Y_test, Y_pred, Y_proba
+    @classmethod
+    def _pretty_print_dict(cls, title, d):
+        '''
+        Pretty-print a dictionary using pprint.
 
-    # -- else single model 
-    best_model = grid_search.best_estimator_
-    print("-- best model from grid search:")
-    _pretty_print_dict("best parameters", grid_search.best_params_)
-    y_pred = best_model.predict(X_test)
-    y_proba = best_model.predict_proba(X_test)[:, 1]
-    print("-- predictions made on test set")
+        Parameters
+        ----------
+        title : str
+            Title to display before printing dict.
+        d : dict
+            Dictionary to print.
+        '''
+        print(f"\n-- {title} --")
+        cls.pp.pprint(d)
+        print("\n")
 
-    return y_test, y_pred, y_proba
+    @classmethod
+    def _validate_hyperparameters(cls, model_type, hyperparameters):
+        '''
+        Validate hyperparameters for a given model type.
 
-def train_evaluate_model(df: pd.DataFrame, model_type: str, hyperparameters: dict = None,
-                         split_ratio: float = DEFAULT_SPLIT_RATIO, random_state: int = DEFAULT_RANDOM_STATE):
-    """
-    train a model and immediately evaluate it
+        Parameters
+        ----------
+        model_type : str
+            One of {'svm', 'xgboost', 'mlp'}.
+        hyperparameters : dict
+            Hyperparameters to validate.
 
-    df : pandas.DataFrame, input dataframe with features and labels
-    model_type : str, model identifier (so far: 'svm', 'xgboost', 'mlp', 'all')
-    hyperparameters : dict, optional, hyperparameter grid
-    split_ratio : float, optional, test set proportion
-    random_state : int, optional, seed for reproducible split
-    returns : model, y_test, y_pred, y_proba
-    """
-    model = train_model(df, model_type, hyperparameters, split_ratio, random_state)
-    y_test, y_pred, y_proba = evaluate_model(model, df, split_ratio, random_state)
-    return model, y_test, y_pred, y_proba
+        Raises
+        ------
+        ValueError
+            If hyperparameters include invalid keys.
+        '''
+        model_type = model_type.lower()
+        if model_type not in cls.MODELS:
+            raise ValueError(f"-- model type '{model_type}' is not supported --")
+        valid_params = cls.MODELS[model_type].get_params().keys()
+        for param in hyperparameters.keys():
+            if param not in valid_params:
+                raise ValueError(f"-- hyperparameter '{param}' is invalid for '{model_type}' --")
+
+    def _define_model(self):
+        '''
+        Define the GridSearchCV wrapper for the selected model.
+
+        Returns
+        -------
+        GridSearchCV
+            Configured grid search.
+
+        Raises
+        ------
+        ValueError
+            If model_type is invalid.
+        '''
+        if self.model_type == 'svm':
+            params = self.hyperparameters or self.SVM_HYPERPARAMS
+            self._pretty_print_dict("SVM Hyperparameters", params)
+            return GridSearchCV(SVC(probability=True), param_grid=params,return_train_score=True,
+                                scoring=self.DEFAULT_SCORING, cv=self.DEFAULT_KFOLD, n_jobs=-1)
+
+        if self.model_type == 'xgboost':
+            params = self.hyperparameters or self.XGBOOST_HYPERPARAMS
+            self._pretty_print_dict("XGBoost Hyperparameters", params)
+            return GridSearchCV(xgboost.XGBClassifier(eval_metric="logloss"), param_grid=params,return_train_score=True,
+                                scoring=self.DEFAULT_SCORING, cv=self.DEFAULT_KFOLD, n_jobs=-1)
+
+        if self.model_type == 'mlp':
+            params = self.hyperparameters or self.MLP_HYPERPARAMS
+            self._pretty_print_dict("MLP Hyperparameters", params)
+            return GridSearchCV(MLPClassifier(max_iter=500), param_grid=params,return_train_score=True,
+                                scoring=self.DEFAULT_SCORING, cv=self.DEFAULT_KFOLD, n_jobs=-1)
+
+        raise ValueError(f"-- model type '{self.model_type}' is not supported --")
+
+    def train(self):
+        '''
+        Train the model using GridSearchCV.
+
+        Returns
+        -------
+        None
+
+        Saves
+        -----
+        A `.joblib` file if `save_model=True`.
+        '''
+        print('-'*80)
+        print(f"-- Training {self.model_type.upper()} model on dataset '{self.dataset_name}' --")
+        print('-'*80)
+        self.grid_search_model = self._define_model()
+        self.grid_search_model.fit(self.X_train, self.y_train)
+        self._pretty_print_dict("Best Parameters", self.grid_search_model.best_params_)
+
+        if self.save_model:
+            filepath = os.path.join(self.CACHE_DIR, f"{self.dataset_name}_{self.model_type}_gridsearch_model.joblib")
+            joblib.dump(self.grid_search_model, filepath)
+            print(f"-- trained model saved to: {filepath}")
+
+        self.best_model = self.grid_search_model.best_estimator_
+        print(f"-- best model parameters: {self.grid_search_model.best_params_} --")
+
+
+    def evaluate(self):
+        '''
+        Evaluate the best model on the test set.
+
+        Returns
+        -------
+        y_test : ndarray
+            True labels.
+        y_pred : ndarray
+            Predicted class labels.
+        y_proba : ndarray
+            Predicted probabilities for the positive class.
+
+        Raises
+        ------
+        RuntimeError
+            If model has not yet been trained.
+        '''
+        if self.grid_search_model is None:
+            raise RuntimeError("-- Model not trained yet. Call train() first. --")
+        
+        print('-'*80)
+        print(f"-- predicting {self.model_type.upper()} model on dataset '{self.dataset_name}' --")
+        print('-'*80)
+
+        self.best_model = self.grid_search_model.best_estimator_
+        self.y_pred = self.best_model.predict(self.X_test)
+        self.y_proba = self.best_model.predict_proba(self.X_test)[:, 1]
+        print("-- Predictions made on test set --")
+        return self.y_test, self.y_pred, self.y_proba
+
+    def train_evaluate(self):
+        '''
+        Convenience function to train the model and immediately evaluate.
+
+        Returns
+        -------
+        tuple of ndarray
+            (y_test, y_pred, y_proba)
+        '''
+        self.train()
+        return self.evaluate()

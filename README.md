@@ -1,60 +1,27 @@
-# 2526-m2geniomhe-GNN-sepsis
+# ML testing branch
 
-# Comparing Traditional and Graph-Enhanced Pipelines for Sepsis Prediction Using Omics Data
-
-## Project Overview
-
-This project explores **traditional versus graph-enhanced pipelines** for predicting sepsis outcomes using omics datasets.
-We leverage both **preprocessed datasets** and **graph-based embeddings** (e.g., ComplEx and RGCN) to compare performance and analyze patient-specific biological networks.
-
----
-
-## Project Structure
-
-```
-M2_GENIOMHE-embeddingsGraphs/
-│
-├── data/                 # Example directory containing preprocessed datasets
-├── load_dataset.py       # Scripts to load and process GEO datasets
-├── load_embeddings.py    # Scripts to load pretrained graph embeddings
-├── models/               # Pretrained embeddings for ComplEx and RGCN algorithms 
-                          # (or retrain with OWL-based graphs)
-├── output/               # Generated graphs and statistics from embeddings
-```
-
----
-
-## Data Overview
-
-| Number | Study Title                                                       | Series Accession | Series ID | Disease | Samples | Preprocessing Summary                                                                                                                                                                                              |
-| ------ | ----------------------------------------------------------------- | ---------------- | --------- | ------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1      | Whole blood transcriptome of survivors and nonsurvivors of sepsis | GSE54514         | 200054514 | Sepsis  | 163     | Raw data scanned, pre-processed in GenomeStudio. Probes filtered by detection p<0.005 in ≥1 sample. Quantile normalized and log-transformed in BRB-ArrayTools. Low-variance genes removed; validated with qRT-PCR. |
-
----
-
-## Usage
-
-### 1. Load Dataset
-
-Use the `data/` folder as an example directory containing preprocessed datasets:
-
+> [!CAUTION]
+> Need to have a specific dir structure in `model/executions/`, can run this to unify it:
 ```bash
-python load_dataset.py --datasets GSE54514
+# -- from project main dir
+mkdir -p models/executions/GSE54514_enriched_ontology_degfilterv2.9 && \
+for f in models/executions/GSE54514_enriched_ontology_degfilterv2.9_*; do
+  base=$(basename "$f")
+  newname=${base#GSE54514_enriched_ontology_degfilterv2.9_}
+  mv "$f" "models/executions/GSE54514_enriched_ontology_degfilterv2.9/$newname"
+ done
 ```
 
-### 2. Load Pretrained Embeddings
-
-The `models/` directory contains embeddings generated with **ComplEx** and **RGCN**.
-You can either use these pretrained embeddings or retrain using OWL-based graphs:
-
-```bash
-python load_embeddings.py
+This is a suggestion of the ML code
+Find the code in `src/ml`:
 ```
-
----
-
-## Notes
-
-* This repository allows for **both traditional omics pipelines** and **graph-enhanced pipelines** for sepsis prediction.
-* Graph embeddings capture **network relationships between genes, pathways, and patients**, which can be used for downstream classification or clustering.
-* Students can retrain embeddings using their own ontologies or datasets if desired.
+src/ml
+├── HOW_TO_TRAIN.ipynb      # -- example on how to use the ML training utilities
+├── __init__.py
+├── load_matrix.py          # -- preprocessing module -- sylvia
+├── test_load_matrix.py     # -- preprocessinf test -- sylvia
+├── test_train.py           # -- script to train from terminal
+├── todo.md                 # -- small notes on code to enhance
+├── training_utils.py       # -- main module for training the ML model using class MLModel
+└── training_utils_V0.py    # -- old version of the module without MLModel class
+```
