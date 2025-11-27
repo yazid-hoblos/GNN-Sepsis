@@ -9,7 +9,21 @@ for f in models/executions/GSE54514_enriched_ontology_degfilterv2.9_*; do
   base=$(basename "$f")
   newname=${base#GSE54514_enriched_ontology_degfilterv2.9_}
   mv "$f" "models/executions/GSE54514_enriched_ontology_degfilterv2.9/$newname"
- done
+done
+
+# -- generalize it for 2.10 qnd 2.11 as well
+mkdir -p models/executions/GSE54514_enriched_ontology_degfilterv2.10 && \
+for f in models/executions/GSE54514_enriched_ontology_degfilter_v2.10_*; do
+  base=$(basename "$f")
+  newname=${base#GSE54514_enriched_ontology_degfilter_v2.10_ovp0.2_ng3_}
+  mv "$f" "models/executions/GSE54514_enriched_ontology_degfilterv2.10/$newname"
+done
+mkdir -p models/executions/GSE54514_enriched_ontology_degfilterv2.11 && \
+for f in models/executions/GSE54514_enriched_ontology_degfilter_v2.11_*; do
+  base=$(basename "$f")
+  newname=${base#GSE54514_enriched_ontology_degfilter_v2.11_}
+  mv "$f" "models/executions/GSE54514_enriched_ontology_degfilterv2.11/$newname"
+done
 ```
 
 This is a suggestion of the ML code
@@ -42,7 +56,7 @@ All models were trained using `TRAIN_ALL.py` script or `train_all_parallel.ipynb
 
 ```python
 from joblib import load
-model = load('src/ml/dump/svm_gene_expression_MLmodel.joblib')
+model = load('src/ml/dump/v2.9/svm_gene_expression_MLmodel.joblib')
 
 type(model)  # -- <class 'training_utils.MLModel'>
 model.dataset_name  # -- 'gene_expression'

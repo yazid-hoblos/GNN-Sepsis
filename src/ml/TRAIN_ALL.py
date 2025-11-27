@@ -13,13 +13,13 @@ dump_dir='dump/'
 # -- parallel training
 # -- also found in notebooks/train_all_parallel.ipynb
 
-def train_one(dataset, model):
+def train_one(dataset, model,version='v2.10',dump_dir=dump_dir):
     if dataset in ["RGCN_protein_embeddings", "concatenated_protein_embeddings"] and model=='svm':
         print('-- skipping SVM on RGCN protein features for now --')
         return
     pid = os.getpid()
     print(f"[PID {pid}] Training model: {model} on dataset: {dataset}")
-    df = prepare_df(load_df(dataset))
+    df = prepare_df(load_df(dataset,folder_version=version))
     ml_model = MLModel(model_type=model, df=df, dataset_name=f'{model}_{dataset}')
     ml_model.train_evaluate()
 
@@ -29,13 +29,14 @@ def train_one(dataset, model):
 
     return 
 
-def train_all(datasets:list=['gene_expression', 'RGCN_sample_embeddings', 'Complex_sample_embeddings', 'concatenated_sample_embeddings', 'RGCN_protein_embeddings', 'Complex_protein_embeddings', 'concatenated_protein_embeddings'],model_types=MLModel.MODELS):
+def train_all(datasets:list=['gene_expression', 'RGCN_sample_embeddings', 'Complex_sample_embeddings', 'concatenated_sample_embeddings', 'RGCN_protein_embeddings', 'Complex_protein_embeddings', 'concatenated_protein_embeddings'],model_types=MLModel.MODELS,version='v2.10',dump_dir=dump_dir):
     results = Parallel(n_jobs=8)(
         delayed(train_one)(dataset, model)
         for dataset in datasets
         for model in model_types
     )
     return results
+
 
 
 def read_arguments():
