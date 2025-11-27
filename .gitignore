@@ -213,3 +213,5 @@ test/
 
 ./load_dataset.py
 ./load_embeddings.py
+
+./explorationJ.ipynb
