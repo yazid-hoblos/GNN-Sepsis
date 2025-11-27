@@ -10,6 +10,9 @@ import os
 
 dump_dir='dump/'
 
+# -- parallel training
+# -- also found in notebooks/train_all_parallel.ipynb
+
 def train_one(dataset, model):
     pid = os.getpid()
     print(f"[PID {pid}] Training model: {model} on dataset: {dataset}")
@@ -70,6 +73,8 @@ if __name__ == "__main__":
         MLModel.set_global_variable('DEFAULT_RANDOM_STATE', args.random_state)
     
 
-    l1=['RGCN_sample_embeddings', 'Complex_sample_embeddings', 'RGCN_protein_embeddings', 'Complex_protein_embeddings']
-    l2=['gene_expression', 'concatenated_sample_embeddings', 'concatenated_protein_embeddings']
-    train_all(datasets=l2)
+    # l1=['RGCN_sample_embeddings', 'Complex_sample_embeddings', 'RGCN_protein_embeddings', 'Complex_protein_embeddings']
+    # l2=['gene_expression', 'concatenated_sample_embeddings', 'concatenated_protein_embeddings']
+    # train_all(datasets=l2)
+    train_one('RGCN_protein_embeddings', 'svm')
+    train_one('concatenated_protein_embeddings', 'svm')
