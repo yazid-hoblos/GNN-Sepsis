@@ -84,30 +84,42 @@ def load_all_entities(emb_path, mapping_csv, node_features_csv):
 if __name__ == "__main__":
 
     kgs = ['GSE54514']
-    models = ['ComplEx', 'RGCN']
+    strategies =[
+         #Binning
+        'GSE54514_enriched_ontology_degfilter_v2.10_ovp0.2_ng3', 
+         #AvgExpression
+        'GSE54514_enriched_ontology_degfilter_v2.11', 
+    ]
+    models = [
+        'ComplEx', 
+        'RGCN',
+        ]
     
     for kg in kgs:
-        for model in models:
+        for s in strategies:
+            for model in models:
 
-            if kg == "GSE54514":
-                control_label = "healthy"
-            elif kg == "GSE76293":
-                control_label = "HVT"
-            elif kg == "GSE40012":
-                control_label = "healthy control"
-            else:
-                raise ValueError("Dataset not recognized for control group labeling.")
-          
-            emb_path = f"./models/executions/{kg}_enriched_ontology_degfilterv2.9_outputmodel_{model}_entity_embeddings.npy"
-            node_features_csv = f"./models/executions/{kg}_enriched_ontology_degfilterv2.9_node_features.csv"
-            map_csv = f"./models/executions/{kg}_enriched_ontology_degfilterv2.9_outputmodel_{model}_entity_mapping.csv"
+                if kg == "GSE54514":
+                    control_label = "healthy"
+                elif kg == "GSE76293":
+                    control_label = "HVT"
+                elif kg == "GSE40012":
+                    control_label = "healthy control"
+                else:
+                    raise ValueError("Dataset not recognized for control group labeling.")
             
-            # Load patients
-            patient_ids, X_patients, y_patients, df_patients = load_patient_data(emb_path, map_csv, node_features_csv, control_label)
-            print(f"Loaded {len(patient_ids)} patients, embedding dim={X_patients.shape[1]} for {kg}-{model}")
-            
-            # --- Load all entities ---
-            entity_ids, X_all, entity_labels, df_all = load_all_entities(emb_path, map_csv, node_features_csv)
-            print(f"Loaded {len(entity_ids)} entities for {kg}-{model}")
+                emb_path = f"./models/new_executions/{s}_outputmodel_{model}_entity_embeddings.npy"
+                node_features_csv = f"./models/new_executions/{s}_node_features.csv"
+                map_csv = f"./models/new_executions/{s}_outputmodel_{model}_entity_mapping.csv"
+                
+                # Load patients
+                patient_ids, X_patients, y_patients, df_patients = load_patient_data(emb_path, map_csv, node_features_csv, control_label)
+                print(f"Loaded {len(patient_ids)} patients, embedding dim={X_patients.shape[1]} for {kg}-{model}")
+                
+                # --- Load all entities ---
+                entity_ids, X_all, entity_labels, df_all = load_all_entities(emb_path, map_csv, node_features_csv)
+                print(f"Loaded {len(entity_ids)} entities for {kg}-{model}")
+
+        
 
     
