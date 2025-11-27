@@ -180,7 +180,7 @@ class MLModel:
     def __init__(self, df, model_type, dataset_name, hyperparameters=None,
                  split_ratio=None, random_state=None, save_model=None):
 
-        self.df = df.copy()
+        # self.df = df.copy()
         self.model_type = model_type.lower()
         self.dataset_name = dataset_name
         self.hyperparameters = hyperparameters
@@ -188,11 +188,12 @@ class MLModel:
         self.random_state = random_state if random_state is not None else self.DEFAULT_RANDOM_STATE
         self.save_model = save_model if save_model is not None else self.DEFAULT_SAVE
 
-        # split data
-        self.y = self.df["disease_status"].astype(int).values
-        self.X = self.df.drop(columns=["disease_status"]).values
+        # -- split data
+        # -- unsaving large dataframes for memory efficiency
+        y = df["disease_status"].astype(int).values
+        X = df.drop(columns=["disease_status"]).values
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
-            self.X, self.y, test_size=self.split_ratio, random_state=self.random_state
+            X, y, test_size=self.split_ratio, random_state=self.random_state
         )
 
         self.grid_search_model = None
@@ -304,6 +305,9 @@ class MLModel:
         print('-'*80)
         self.grid_search_model = self._define_model()
         self.grid_search_model.fit(self.X_train, self.y_train)
+        self.X_train = None  # free memory
+        self.y_train = None  # free memory
+
         self._pretty_print_dict("Best Parameters", self.grid_search_model.best_params_)
 
         if self.save_model:
@@ -344,6 +348,7 @@ class MLModel:
         self.y_pred = self.best_model.predict(self.X_test)
         self.y_proba = self.best_model.predict_proba(self.X_test)[:, 1]
         print("-- Predictions made on test set --")
+        self.X_test = None  # free memory
         return self.y_test, self.y_pred, self.y_proba
 
     def train_evaluate(self):

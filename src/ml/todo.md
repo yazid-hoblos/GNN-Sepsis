@@ -6,3 +6,4 @@
 - [ ] fix caching
 - [ ] fix logging to work with printing messages in notebook
 - [ ] make attributes private and accessible strictly through setters (no change of global variables)
+- [ ] method to save to a file and load from a file the model (joblib)

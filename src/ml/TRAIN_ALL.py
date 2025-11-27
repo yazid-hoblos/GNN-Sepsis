@@ -5,19 +5,32 @@ from training_utils import MLModel
 import argparse
 
 prepare_df = lambda df: df.set_index('label').iloc[:, 3:]
+from joblib import Parallel, delayed,dump
+import os
+
+dump_dir='dump/'
+
+def train_one(dataset, model):
+    pid = os.getpid()
+    print(f"[PID {pid}] Training model: {model} on dataset: {dataset}")
+    df = prepare_df(load_df(dataset))
+    ml_model = MLModel(model_type=model, df=df, dataset_name=f'{model}_{dataset}')
+    ml_model.train_evaluate()
+
+    joblib_path = os.path.join(dump_dir, f'{model}_{dataset}_MLmodel.joblib')
+    dump(ml_model, joblib_path)
+    print(f'[PID {pid}] Model saved to {joblib_path}')
+
+    return 
 
 def train_all(datasets:list=['gene_expression', 'RGCN_sample_embeddings', 'Complex_sample_embeddings', 'concatenated_sample_embeddings', 'RGCN_protein_embeddings', 'Complex_protein_embeddings', 'concatenated_protein_embeddings'],model_types=MLModel.MODELS):
-    trained_MLModels={}
+    results = Parallel(n_jobs=8)(
+        delayed(train_one)(dataset, model)
+        for dataset in datasets
+        for model in model_types
+    )
+    return dict(results)
 
-    for dataset in datasets:
-        print('dataset preping:', dataset)
-        df=prepare_df( load_df(dataset))
-        print('preppeddd')
-        for model in models:
-            ml_model=MLModel(model_type=model, df=df,dataset_name=f'{model}_{dataset}')
-            ml_model.train_evaluate()
-            trained_MLModels[f'{model}_{dataset}']=ml_model
-    return trained_MLModels
 
 def read_arguments():
     
@@ -28,9 +41,6 @@ def read_arguments():
         default=['gene_expression', 'RGCN_sample_embeddings', 'Complex_sample_embeddings', 'concatenated_sample_embeddings', 'RGCN_protein_embeddings', 'Complex_protein_embeddings', 'concatenated_protein_embeddings'],
         help='list of datasets to train models on'
     )
-    #         'DEFAULT_KFOLD': lambda v: setattr(cls, 'DEFAULT_KFOLD', v),
-    #         'DEFAULT_SPLIT_RATIO': lambda v: setattr(cls, 'DEFAULT_SPLIT_RATIO', v),
-    #         'DEFAULT_RANDOM_STATE': lambda v: setattr(cls, 'DEFAULT_RANDOM_STATE', v),
     parser.add_argument(
         '--models',
         nargs='+',
@@ -58,5 +68,8 @@ if __name__ == "__main__":
         MLModel.set_global_variable('DEFAULT_SPLIT_RATIO', args.split_ratio)
     if args.random_state:
         MLModel.set_global_variable('DEFAULT_RANDOM_STATE', args.random_state)
-    ALL_MODELS = train_all(datasets=args.datasets, models=args.models)
-    # -- need a way to save tehm all tho or diretly perform analysis here
+    
+
+    l1=['RGCN_sample_embeddings', 'Complex_sample_embeddings', 'RGCN_protein_embeddings', 'Complex_protein_embeddings']
+    l2=['gene_expression', 'concatenated_sample_embeddings', 'concatenated_protein_embeddings']
+    train_all(datasets=l2)
