@@ -43,7 +43,7 @@ def train_evaluate_model(model, X_train, y_train, X_test, y_test):
     y_proba = model.predict_proba(X_test)[:,1]  # probability for class 1
     return y_test, y_pred, y_proba
 
-# Monkey-patch models for compatibility with previous dashboard code
+
 for name, model in models.items():
     model.train_evaluate = lambda X, m=model: train_evaluate_model(m, X_train, y_train, X, y_test)
 
