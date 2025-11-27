@@ -4,7 +4,7 @@ from load_matrix import load_df
 from training_utils import MLModel
 import argparse
 
-prepare_df = lambda df: df.set_index('label').iloc[:, 3:]
+prepare_df = lambda df: df.set_index('label').iloc[:, 2:]
 from joblib import Parallel, delayed,dump
 import os
 
@@ -14,6 +14,9 @@ dump_dir='dump/'
 # -- also found in notebooks/train_all_parallel.ipynb
 
 def train_one(dataset, model):
+    if dataset in ["RGCN_protein_embeddings", "concatenated_protein_embeddings"] and model=='svm':
+        print('-- skipping SVM on RGCN protein features for now --')
+        return
     pid = os.getpid()
     print(f"[PID {pid}] Training model: {model} on dataset: {dataset}")
     df = prepare_df(load_df(dataset))
@@ -32,7 +35,7 @@ def train_all(datasets:list=['gene_expression', 'RGCN_sample_embeddings', 'Compl
         for dataset in datasets
         for model in model_types
     )
-    return dict(results)
+    return results
 
 
 def read_arguments():
@@ -72,9 +75,16 @@ if __name__ == "__main__":
     if args.random_state:
         MLModel.set_global_variable('DEFAULT_RANDOM_STATE', args.random_state)
     
+    MLModel.set_global_variable('DEFAULT_KFOLD', args.kfold)
+    MLModel.set_global_variable('DEFAULT_SPLIT_RATIO', args.split_ratio)
+    MLModel.set_global_variable('DEFAULT_RANDOM_STATE', args.random_state)
 
-    # l1=['RGCN_sample_embeddings', 'Complex_sample_embeddings', 'RGCN_protein_embeddings', 'Complex_protein_embeddings']
-    # l2=['gene_expression', 'concatenated_sample_embeddings', 'concatenated_protein_embeddings']
-    # train_all(datasets=l2)
-    train_one('RGCN_protein_embeddings', 'svm')
-    train_one('concatenated_protein_embeddings', 'svm')
+    train_all(datasets=args.datasets, model_types=args.models)
+
+    l1=['RGCN_sample_embeddings', 'Complex_sample_embeddings', 'RGCN_protein_embeddings', 'Complex_protein_embeddings']
+    l2=['gene_expression', 'concatenated_sample_embeddings', 'concatenated_protein_embeddings']
+
+    # -- testing examples
+    # train_all(datasets=l1)
+    # train_one('RGCN_protein_embeddings', 'svm')
+    # train_one('concatenated_protein_embeddings', 'svm')

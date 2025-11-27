@@ -53,7 +53,7 @@ import training_utils
 if __name__ == "__main__":
     gex_df=load_df('gene_expression')
     gex_df.index=gex_df['label']
-    gex_df=gex_df.iloc[:,3:]
+    gex_df=gex_df.iloc[:,3:] # -- if we use set_index before need to put 2 here
 
     # 1.
     model=training_utils.MLModel(model_type='svm', dataset_name='gene_expression', df=gex_df)
