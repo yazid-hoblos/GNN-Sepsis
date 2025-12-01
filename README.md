@@ -26,30 +26,40 @@ for f in models/executions/GSE54514_enriched_ontology_degfilter_v2.11_*; do
 done
 ```
 
-This is a suggestion of the ML code
-Find the code in `src/ml`:
+This is a suggestion of the intended design of the main dirs in this project:
 ```
-src/ml
-├── load_matrix.py      # -- sylvia - preprocessing module 
-├── training_utils.py   # -- main module for training the ML model using class MLModel
-├── training_utils.v0.py # -- old version of the module without MLModel class
-├── collector.py        # -- joelle code 1
-├── evaluator.py        # -- joelle code 2
-├── visualizer.py       # -- joelle code 3
-├── main_Joelle.py      # -- joelle code to run (parallel training unresolved)
-├── dump                # -- saved trained MLModel objects
-│   └── [model_type]_[dataset_name]_MLmodel.joblib
-├── notebooks           # -- jupyter notebooks
-│   ├── HOW_TO_TRAIN.ipynb    # -- example on how to use the ML training utilities
-│   ├── __init__.py
-│   ├── results.ipynb         # -- metrics and plots for the trained models
-│   ├── train_all.ipynb       # -- example on how to train all models on all datasets
-│   └── train_all_parallel.ipynb # -- parallel version of train_all.ipynb (the one ran successfully - 2 exceptions)
-├── test                # -- test scripts
-│   ├── test_Joelle.py        # -- joelle test
-│   ├── test_load_matrix.py   # -- sylvia test
-│   └── test_train.py         # -- train test
-└── TRAIN_ALL.py     # -- script to train all models on all datasets from terminal and save to dump/
+.
+├── src/                        # -- main source code for ML, GNN, data loading, utils, etc.
+├── notebooks/                  # -- notebooks for exploration, training, etc.
+├── tests/                      # -- tests for various modules (would have a dir per module)
+└── models/                     # -- all saved models, organized by type/version
+```
+
+Expanded view of what to be put in main branch:
+```
+├── docs/
+│   └── training_procedure.md  # -- detailed training procedure and explanation of scripts and notebooks
+├── notebooks/
+│   ├── HOW_TO_TRAIN.ipynb    #   -- instructions on how to train models using scripts or notebooks
+│   ├── TRAIN_ALL_parallel.ipynb # (considering removing since will procide function and script to train all)
+│   ├── projections.ipynb     # -- PCA, tSNE, UMAP visualizations (will consider scripting them into src/utils or exploration or smtg)  
+│   ├── results.ipynb         # -- main results notebook
+│   └── svm_trial.ipynb       # -- SVM testing notebook as requested (fishy acc=1)
+├── src/
+│   ├── gnn
+│   └── ml
+│       ├── collector.py        # -- joelle code 1, metrics evaluation and viz
+│       ├── evaluator.py        # -- joelle code 2
+│       ├── load_matrix.py      # -- sylvia code, data loading utils
+│       ├── model_trainer.py    # -- main MLModel class and training functions
+│       ├── utils.py            # -- various utils for ML (train all models function, etc.)
+│       └── visualizer.py       # -- joelle code 3
+├── tests/          # -- tests for various modules (if user can run them all anf they pass, can run safely the code)
+│   └── ml
+│       ├── test_dashboard.py
+│       ├── test_load_matrix.py
+│       └── test_train.py
+└── requirements.txt            # -- all dependencies
 ```
 
 All models were trained using `TRAIN_ALL.py` script or `train_all_parallel.ipynb` notebook, and saved as joblib files in `dump/` folder, initially with split_ratio for test 0.3 and random_state 42 (all these params/hyperparameters can be accessed in the MLModel object when you load it from joblib file).
@@ -66,6 +76,7 @@ model.random_state  # -- 42
 model.kfolds        # -- 3 (kfold cv used for gridsearch)
 model.y_test, model.y_pred, model.y_proba  # -- used for evaluation
 model.grid_search_model # -- GridSearchCV object after hyperparameter tuning
+model.best_model  # -- best estimator after gridsearch
 ```
 
 > [!IMPORTANT]

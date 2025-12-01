@@ -16,6 +16,16 @@ data_dir = project_root / "data"
 geo_filepath = str(data_dir / "GSE54514_family.soft.gz")
 gpl_filepath = str(data_dir / "GPL6947-13512.txt")
 
+
+from functools import wraps
+def prepare_df_decorator(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        df = func(*args, **kwargs)
+        return df.set_index('label').iloc[:, 2:]
+    return wrapper
+
+@prepare_df_decorator
 def load_df(key: str, folder_version: str = "v2.9") -> pd.DataFrame:
     """
     Generic interface to load expression data or Knowledge Graph embeddings.
