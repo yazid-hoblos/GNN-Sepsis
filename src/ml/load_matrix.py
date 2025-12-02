@@ -26,7 +26,7 @@ def prepare_df_decorator(func):
     return wrapper
 
 @prepare_df_decorator
-def load_df(key: str, folder_version: str = "v2.9") -> pd.DataFrame:
+def load_df(key: str, folder_version: str = "v2.10") -> pd.DataFrame:
     """
     Generic interface to load expression data or Knowledge Graph embeddings.
 

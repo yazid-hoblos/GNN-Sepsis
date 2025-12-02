@@ -1,7 +1,6 @@
 import os
-os.chdir('../../src/ml')
 
-from load_matrix import load_df
+from src.ml.load_matrix import load_df
 
 # ============================================================================
 # Test load_df('gene_expression')

@@ -27,8 +27,11 @@ in a single step:
 
 Notes
 -----
-The input DataFrame must contain a `disease_status` column, which will be used
-as the target variable, and all remaining columns are treated as features (pay attention they should all be numeric)
+- The input DataFrame must contain a `disease_status` column, which will be used as the target variable, and all remaining columns are treated as features (pay attention they should all be numeric)
+- This module includes two main classes:
+    1. `MLModel` - Handles model selection, training, evaluation, and optional saving.
+    2. `PyTorchMLP` - A PyTorch-based multilayer perceptron implementing a scikit-learn-like API
+       with `fit`, `predict`, and `predict_proba` methods, used by `MLModel` when `model_type='mlp'`
 """
 
 import os
@@ -41,12 +44,18 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 import xgboost
-from sklearn.neural_network import MLPClassifier # --> moving to pytorch
+# from sklearn.neural_network import MLPClassifier # --> moving to pytorch
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader, TensorDataset
 from sklearn.exceptions import ConvergenceWarning
+from sklearn.base import BaseEstimator, ClassifierMixin
 import warnings
 
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
+# ----------------------------------------------------------------------------------------------- #
 
 class Logger:
     '''
@@ -66,6 +75,98 @@ class Logger:
         self.terminal.flush()
         self.log.flush()
 
+# ----------------------------------------------------------------------------------------------- #
+
+class PyTorchMLP(BaseEstimator, ClassifierMixin):
+    """
+    PyTorch wrapper for a simple MLP classifier to mimic scikit-learn API in a way that is easily integrable in MLModel's GridSearchCV pipeline
+    """
+
+    def __init__(self, input_dim, hidden_layer_sizes=(50,), activation='relu', 
+                 solver='adam', learning_rate_init=0.001, max_iter=500, batch_size=32, random_state=42):
+        self.input_dim = input_dim
+        self.hidden_layer_sizes = hidden_layer_sizes
+        self.activation = activation
+        self.solver = solver
+        self.learning_rate_init = learning_rate_init
+        self.max_iter = max_iter
+        self.batch_size = batch_size
+        self.random_state = random_state
+
+        torch.manual_seed(self.random_state)
+        self._build_model()
+        self.loss_fn = nn.BCELoss()
+        self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate_init) if self.solver=='adam' else optim.SGD(self.model.parameters(), lr=self.learning_rate_init)
+
+    def _build_model(self):
+        layers = []
+        input_size = self.input_dim
+        act_fn = nn.ReLU if self.activation=='relu' else nn.Tanh
+        for hidden_size in self.hidden_layer_sizes:
+            layers.append(nn.Linear(input_size, hidden_size))
+            layers.append(act_fn())
+            input_size = hidden_size
+        layers.append(nn.Linear(input_size, 1))
+        layers.append(nn.Sigmoid())
+        self.model = nn.Sequential(*layers)
+
+    def fit(self, X, y):
+        X_tensor = torch.tensor(X, dtype=torch.float32)
+        y_tensor = torch.tensor(y.reshape(-1,1), dtype=torch.float32)
+        dataset = TensorDataset(X_tensor, y_tensor)
+        loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
+
+        self.model.train()
+        for epoch in range(self.max_iter):
+            for xb, yb in loader:
+                self.optimizer.zero_grad()
+                pred = self.model(xb)
+                loss = self.loss_fn(pred, yb)
+                loss.backward()
+                self.optimizer.step()
+        return self
+
+    # scikit-learn compatibility: allow cloning and parameter setting by GridSearchCV
+    def get_params(self, deep=True):
+        return {
+            'input_dim': self.input_dim,
+            'hidden_layer_sizes': self.hidden_layer_sizes,
+            'activation': self.activation,
+            'solver': self.solver,
+            'learning_rate_init': self.learning_rate_init,
+            'max_iter': self.max_iter,
+            'batch_size': self.batch_size,
+            'random_state': self.random_state,
+        }
+
+    def set_params(self, **params):
+        # update attributes if provided in params
+        for key, val in params.items():
+            if hasattr(self, key):
+                setattr(self, key, val)
+            else:
+                # allow setting arbitrary attributes for compatibility
+                setattr(self, key, val)
+
+        # rebuild model and optimizer if architecture or training params changed
+        self._build_model()
+        self.loss_fn = nn.BCELoss()
+        self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate_init) if self.solver=='adam' else optim.SGD(self.model.parameters(), lr=self.learning_rate_init)
+        return self
+
+    def predict_proba(self, X):
+        self.model.eval()
+        with torch.no_grad():
+            X_tensor = torch.tensor(X, dtype=torch.float32)
+            proba = self.model(X_tensor).numpy().flatten()
+        return np.vstack([1-proba, proba]).T
+
+    def predict(self, X):
+        proba = self.predict_proba(X)[:,1]
+        return (proba >= 0.5).astype(int)
+
+
+# ----------------------------------------------------------------------------------------------- #
 
 class MLModel:
     '''
@@ -126,7 +227,7 @@ class MLModel:
         Default hyperparameter grid for SVM
     XGBOOST_HYPERPARAMS : dict
         Default hyperparameter grid for XGBoost
-    MLP_HYPERPARAMS : dict
+    PYTORCH_MLP_HYPERPARAMS : dict
         Default hyperparameter grid for MLP
     '''
 
@@ -138,7 +239,7 @@ class MLModel:
     DEFAULT_SAVE = True
     DEFAULT_LOGGING = False
     CACHE_DIR = '.cache/'
-    SYSOUT_FILE = "training_utils.log"
+    SYSOUT_FILE = None
 
     AVAILABLE_MODELS = {'svm', 'xgboost', 'mlp','random_forest'}
     SVM_HYPERPARAMS = {'C': [0.1, 1, 10], 'kernel': ['linear', 'rbf'], 'gamma': ['scale', 'auto'], 'class_weight': ['balanced', {0: 2, 1: 1}, {0: 3, 1: 1}]}
@@ -146,8 +247,15 @@ class MLModel:
                            'learning_rate': [0.01, 0.1, 0.2], 'subsample': [0.6, 0.8, 1.0], 'scale_pos_weight': [36 / 127, 0.4, 0.2]}
     RANDOM_FOREST_HYPERPARAMS = {'n_estimators': [50, 100, 200], 'max_depth': [3, 5, 7],
                                 'min_samples_split': [2, 5, 10], 'class_weight': ['balanced', 'balanced_subsample', {0: 2, 1: 1}, {0: 3, 1: 1}]}
-    MLP_HYPERPARAMS = {'hidden_layer_sizes': [(50,), (100,), (50, 50)], 'activation': ['relu', 'tanh'],
-                       'solver': ['adam', 'sgd'], 'learning_rate_init': [0.001, 0.01, 0.1], 'class_weight': ['balanced', {0: 2, 1: 1}, {0: 3, 1: 1}]}
+    PYTORCH_MLP_HYPERPARAMS = {
+        'hidden_layer_sizes': [(50,), (100,), (50, 50), (100, 50)],
+        'activation': ['relu', 'tanh'],
+        'solver': ['adam', 'sgd'],
+        'learning_rate_init': [0.001, 0.01, 0.1],
+        'batch_size': [16, 32, 64]
+        # 'max_iter': [200, 500, 1000],
+        # 'dropout': [0.0, 0.1, 0.2]
+    }
 
     pp = pprint.PrettyPrinter(indent=4)
 
@@ -164,7 +272,7 @@ class MLModel:
             'DEFAULT_SCORING': cls.DEFAULT_SCORING,
             'SVM_HYPERPARAMS': cls.SVM_HYPERPARAMS,
             'XGBOOST_HYPERPARAMS': cls.XGBOOST_HYPERPARAMS,
-            'MLP_HYPERPARAMS': cls.MLP_HYPERPARAMS
+            'PYTORCH_MLP_HYPERPARAMS': cls.PYTORCH_MLP_HYPERPARAMS
         }
 
     @classmethod
@@ -180,19 +288,7 @@ class MLModel:
     @classmethod
     def set_global_variable(cls, var_name, value):
         '''
-        Set global class-level configuration variables.
-
-        Parameters
-        ----------
-        var_name : str
-            Name of the variable to modify.
-        value : Any
-            Value to assign.
-
-        Raises
-        ------
-        ValueError
-            If the variable name is unknown.
+        Set global class-level configuration variables
         '''
         setters = {
             'CACHE_DIR': lambda v: setattr(cls, 'CACHE_DIR', v),
@@ -206,7 +302,7 @@ class MLModel:
             'SVM_HYPERPARAMS': lambda v: cls._validate_hyperparameters('svm', v) or setattr(cls, 'SVM_HYPERPARAMS', v),
             'XGBOOST_HYPERPARAMS': lambda v: cls._validate_hyperparameters('xgboost', v) or setattr(cls, 'XGBOOST_HYPERPARAMS', v),
             'RANDOM_FOREST_HYPERPARAMS': lambda v: cls._validate_hyperparameters('random_forest', v) or setattr(cls, 'RANDOM_FOREST_HYPERPARAMS', v),
-            'MLP_HYPERPARAMS': lambda v: cls._validate_hyperparameters('mlp', v) or setattr(cls, 'MLP_HYPERPARAMS', v)
+            'PYTORCH_MLP_HYPERPARAMS': lambda v: cls._validate_hyperparameters('mlp', v) or setattr(cls, 'PYTORCH_MLP_HYPERPARAMS', v)
         }
         if var_name in setters:
             setters[var_name](value)
@@ -238,21 +334,23 @@ class MLModel:
         self.y_pred = None
         self.y_proba = None
 
+        print(f"-- [{self.model_type}_{self.dataset_name}] Initialized MLModel with model_type='{self.model_type.upper()}', dataset_name='{self.dataset_name.upper()}' --")
+        print(f'-- [{self.model_type}_{self.dataset_name}] split ratio: {self.split_ratio}')
+        print(f'-- [{self.model_type}_{self.dataset_name}] random state: {self.random_state}')
+
+        if self.model_type not in self.AVAILABLE_MODELS and self.model_type != 'all':
+            raise ValueError(f"-- model type '{self.model_type}' is not supported --")
+
+        if self.save_model:
+            version_dir = os.path.abspath(os.path.join(self.CACHE_DIR, f"v{self.version}"))
+            print(f'-- [{self.model_type}_{self.dataset_name}] trained model will be saved to: {version_dir} --')  
+        if self.SYSOUT_FILE is None:
+            MLModel.SYSOUT_FILE=f"{model_type}_{dataset_name}_{version}_training_utils.log"
+            print(f'-- [{self.model_type}_{self.dataset_name}] setting SYSOUT_FILE to: {self.SYSOUT_FILE} --')
         if self.DEFAULT_LOGGING:
             self.initialize_logging()
         else:
             os.makedirs(self.CACHE_DIR, exist_ok=True)
-
-
-        print(f"-- Initialized MLModel with model_type='{self.model_type.upper()}', dataset_name='{self.dataset_name.upper()}' --")
-        print(f'-- split ratio: {self.split_ratio}')
-        print(f'-- random state: {self.random_state}')
-
-        if self.save_model:
-            print(f'-- trained model will be saved to: {self.CACHE_DIR} --')
-
-        if self.model_type not in self.AVAILABLE_MODELS and self.model_type != 'all':
-            raise ValueError(f"-- model type '{self.model_type}' is not supported --")
 
     @classmethod
     def _pretty_print_dict(cls, title, d):
@@ -266,19 +364,7 @@ class MLModel:
     @classmethod
     def _validate_hyperparameters(cls, model_type, hyperparameters):
         '''
-        Validate hyperparameters for a given model type.
-
-        Parameters
-        ----------
-        model_type : str
-            One of {'svm', 'xgboost', 'mlp', 'random_forest'}.
-        hyperparameters : dict
-            Hyperparameters to validate.
-
-        Raises
-        ------
-        ValueError
-            If hyperparameters include invalid keys.
+        validate hyperparameters for a given model type
         '''
         model_type = model_type.lower()
         if model_type not in cls.AVAILABLE_MODELS:
@@ -290,22 +376,14 @@ class MLModel:
 
     def _define_model(self):
         '''
-        Define the GridSearchCV wrapper for the selected model.
-
-        Returns
-        -------
-        GridSearchCV
-            Configured grid search
-
-        Raises
-        ------
-        ValueError
-            If model_type is invalid
+        Define the GridSearchCV wrapper for the selected model type with appropriate hyperparameters
+        returns GridSearchCV object
         '''
         if self.model_type == 'svm':
             params = self.hyperparameters or self.SVM_HYPERPARAMS
             self._pretty_print_dict("SVM Hyperparameters", params)
-            return GridSearchCV(SVC(probability=True), param_grid=params,return_train_score=True,
+            # -- added max_iter to avoid long convergence times which is the case when training a linear kernel on RGCN sample embedding features
+            return GridSearchCV(SVC(probability=True,max_iter=10000), param_grid=params,return_train_score=True,
                                 scoring=self.DEFAULT_SCORING, cv=self.DEFAULT_KFOLD, n_jobs=-1)
 
         if self.model_type == 'xgboost':
@@ -321,10 +399,15 @@ class MLModel:
                                 scoring=self.DEFAULT_SCORING, cv=self.DEFAULT_KFOLD, n_jobs=-1)
 
         if self.model_type == 'mlp':
-            params = self.hyperparameters or self.MLP_HYPERPARAMS
+            params = self.hyperparameters or self.PYTORCH_MLP_HYPERPARAMS
             self._pretty_print_dict("MLP Hyperparameters", params)
-            return GridSearchCV(MLPClassifier(max_iter=500), param_grid=params,return_train_score=True,
-                                scoring=self.DEFAULT_SCORING, cv=self.DEFAULT_KFOLD, n_jobs=-1)
+            return GridSearchCV(
+                estimator=PyTorchMLP(input_dim=self.X_train.shape[1], max_iter=500),
+                param_grid=params,
+                scoring=self.DEFAULT_SCORING,
+                cv=self.DEFAULT_KFOLD,
+                n_jobs=1  
+            )
 
         raise ValueError(f"-- model type '{self.model_type}' is not supported --")
 
@@ -334,7 +417,7 @@ class MLModel:
         saves `.joblib` file if `save_model=True`
         '''
         print('-'*80)
-        print(f"-- Training {self.model_type.upper()} model on dataset '{self.dataset_name}' --")
+        print(f"-- [{self.model_type}_{self.dataset_name}] Training {self.model_type.upper()} model on dataset '{self.dataset_name}' --")
         print('-'*80)
         self.grid_search_model = self._define_model()
         self.grid_search_model.fit(self.X_train, self.y_train)
@@ -344,12 +427,14 @@ class MLModel:
         self._pretty_print_dict("Best Parameters", self.grid_search_model.best_params_)
 
         if self.save_model:
-            filepath = os.path.join(self.CACHE_DIR, f"{self.dataset_name}_{self.model_type}_gridsearch_model.joblib")
+            version_dir = os.path.join(MLModel.CACHE_DIR, f"v{self.version}")
+            os.makedirs(version_dir, exist_ok=True)
+            filepath = os.path.join(version_dir, f"{self.dataset_name}_{self.model_type}_gridsearch_model.joblib")
             joblib.dump(self.grid_search_model, filepath)
-            print(f"-- trained model saved to: {filepath}")
+            print(f"-- [{self.model_type}_{self.dataset_name}] trained model saved to: {filepath}")
 
         self.best_model = self.grid_search_model.best_estimator_
-        print(f"-- best model parameters: {self.grid_search_model.best_params_} --")
+        print(f"-- [{self.model_type}_{self.dataset_name}] best model parameters: {self.grid_search_model.best_params_} --")
 
 
     def evaluate(self):
@@ -372,7 +457,7 @@ class MLModel:
             raise RuntimeError("-- Model not trained yet. Call train() first. --")
         
         print('-'*80)
-        print(f"-- predicting {self.model_type.upper()} model on dataset '{self.dataset_name}' --")
+        print(f"-- [{self.model_type}_{self.dataset_name}] predicting {self.model_type.upper()} model on dataset '{self.dataset_name}' --")
         print('-'*80)
 
         self.best_model = self.grid_search_model.best_estimator_
