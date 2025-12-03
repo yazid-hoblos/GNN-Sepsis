@@ -44,7 +44,7 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 import xgboost
-# from sklearn.neural_network import MLPClassifier # --> moving to pytorch
+from sklearn.neural_network import MLPClassifier # --> moving to pytorch
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -241,8 +241,8 @@ class MLModel:
     CACHE_DIR = '.cache/'
     SYSOUT_FILE = None
 
-    AVAILABLE_MODELS = {'svm', 'xgboost', 'mlp','random_forest'}
-    SVM_HYPERPARAMS = {'C': [0.1, 1, 10], 'kernel': ['linear', 'rbf'], 'gamma': ['scale', 'auto'], 'class_weight': ['balanced', {0: 2, 1: 1}, {0: 3, 1: 1}]}
+    AVAILABLE_MODELS = {'svm', 'xgboost', 'sklearn_mlp','pytorch_mlp','random_forest'}
+    SVM_HYPERPARAMS = {'C': [0.1, 1], 'kernel': ['linear', 'rbf'], 'gamma': ['scale', 'auto'], 'class_weight': ['balanced', {0: 2, 1: 1}, {0: 3, 1: 1}]}
     XGBOOST_HYPERPARAMS = {'n_estimators': [50, 100, 200], 'max_depth': [3, 5, 7],
                            'learning_rate': [0.01, 0.1, 0.2], 'subsample': [0.6, 0.8, 1.0], 'scale_pos_weight': [36 / 127, 0.4, 0.2]}
     RANDOM_FOREST_HYPERPARAMS = {'n_estimators': [50, 100, 200], 'max_depth': [3, 5, 7],
@@ -256,6 +256,8 @@ class MLModel:
         # 'max_iter': [200, 500, 1000],
         # 'dropout': [0.0, 0.1, 0.2]
     }
+    SKLEARN_MLP_HYPERPARAMS = {'hidden_layer_sizes': [(50,), (100,), (50, 50)], 'activation': ['relu', 'tanh'],
+                       'solver': ['adam', 'sgd'], 'learning_rate_init': [0.001, 0.01, 0.1]}
 
     pp = pprint.PrettyPrinter(indent=4)
 
@@ -272,7 +274,8 @@ class MLModel:
             'DEFAULT_SCORING': cls.DEFAULT_SCORING,
             'SVM_HYPERPARAMS': cls.SVM_HYPERPARAMS,
             'XGBOOST_HYPERPARAMS': cls.XGBOOST_HYPERPARAMS,
-            'PYTORCH_MLP_HYPERPARAMS': cls.PYTORCH_MLP_HYPERPARAMS
+            'PYTORCH_MLP_HYPERPARAMS': cls.PYTORCH_MLP_HYPERPARAMS,
+            'SKLEARN_MLP_HYPERPARAMS': cls.SKLEARN_MLP_HYPERPARAMS
         }
 
     @classmethod
@@ -302,7 +305,8 @@ class MLModel:
             'SVM_HYPERPARAMS': lambda v: cls._validate_hyperparameters('svm', v) or setattr(cls, 'SVM_HYPERPARAMS', v),
             'XGBOOST_HYPERPARAMS': lambda v: cls._validate_hyperparameters('xgboost', v) or setattr(cls, 'XGBOOST_HYPERPARAMS', v),
             'RANDOM_FOREST_HYPERPARAMS': lambda v: cls._validate_hyperparameters('random_forest', v) or setattr(cls, 'RANDOM_FOREST_HYPERPARAMS', v),
-            'PYTORCH_MLP_HYPERPARAMS': lambda v: cls._validate_hyperparameters('mlp', v) or setattr(cls, 'PYTORCH_MLP_HYPERPARAMS', v)
+            'PYTORCH_MLP_HYPERPARAMS': lambda v: cls._validate_hyperparameters('pytorch_mlp', v) or setattr(cls, 'PYTORCH_MLP_HYPERPARAMS', v),
+            'SKLEARN_MLP_HYPERPARAMS': lambda v: cls._validate_hyperparameters('sklearn_mlp', v) or setattr(cls, 'SKLEARN_MLP_HYPERPARAMS', v)
         }
         if var_name in setters:
             setters[var_name](value)
@@ -349,6 +353,9 @@ class MLModel:
             print(f'-- [{self.model_type}_{self.dataset_name}] setting SYSOUT_FILE to: {self.SYSOUT_FILE} --')
         if self.DEFAULT_LOGGING:
             self.initialize_logging()
+            logs_dir = os.path.join(self.CACHE_DIR, 'logs')
+            print(f'-- [{self.model_type}_{self.dataset_name}] logging in f{logs_dir} --')
+
         else:
             os.makedirs(self.CACHE_DIR, exist_ok=True)
 
@@ -398,7 +405,7 @@ class MLModel:
             return GridSearchCV(RandomForestClassifier(), param_grid=params,return_train_score=True,
                                 scoring=self.DEFAULT_SCORING, cv=self.DEFAULT_KFOLD, n_jobs=-1)
 
-        if self.model_type == 'mlp':
+        if self.model_type == 'pytorch_mlp':
             params = self.hyperparameters or self.PYTORCH_MLP_HYPERPARAMS
             self._pretty_print_dict("MLP Hyperparameters", params)
             return GridSearchCV(
@@ -408,6 +415,11 @@ class MLModel:
                 cv=self.DEFAULT_KFOLD,
                 n_jobs=1  
             )
+        if self.model_type == 'sklearn_mlp':
+            params = self.hyperparameters or self.SKLEARN_MLP_HYPERPARAMS
+            self._pretty_print_dict("MLP Hyperparameters", params)
+            return GridSearchCV(MLPClassifier(max_iter=500), param_grid=params,return_train_score=True,
+                                scoring=self.DEFAULT_SCORING, cv=self.DEFAULT_KFOLD, n_jobs=-1)
 
         raise ValueError(f"-- model type '{self.model_type}' is not supported --")
 
@@ -429,8 +441,8 @@ class MLModel:
         if self.save_model:
             version_dir = os.path.join(MLModel.CACHE_DIR, f"v{self.version}")
             os.makedirs(version_dir, exist_ok=True)
-            filepath = os.path.join(version_dir, f"{self.dataset_name}_{self.model_type}_gridsearch_model.joblib")
-            joblib.dump(self.grid_search_model, filepath)
+            filepath = os.path.join(version_dir, f"{self.model_type}_{self.dataset_name}_gridsearch_model.joblib")
+            joblib.dump(self, filepath)
             print(f"-- [{self.model_type}_{self.dataset_name}] trained model saved to: {filepath}")
 
         self.best_model = self.grid_search_model.best_estimator_
@@ -465,6 +477,14 @@ class MLModel:
         self.y_proba = self.best_model.predict_proba(self.X_test)[:, 1]
         print("-- Predictions made on test set --")
         self.X_test = None  # free memory
+
+        if self.save_model:
+            version_dir = os.path.join(MLModel.CACHE_DIR, f"v{self.version}")
+            os.makedirs(version_dir, exist_ok=True)
+            filepath = os.path.join(version_dir, f"{self.model_type}_{self.dataset_name}_gridsearch_model.joblib")
+            joblib.dump(self, filepath)
+            print(f"-- [{self.model_type}_{self.dataset_name}] evaluated model saved to: {filepath}")
+
         return self.y_test, self.y_pred, self.y_proba
 
     def train_evaluate(self):

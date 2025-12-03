@@ -42,6 +42,7 @@ expanded view of what to be put in main branch:
 │       └── umap/             # -- UMAP plots for all datasets and embeddings
 ├── notebooks/
 │   ├── HOW_TO_TRAIN.ipynb    # -- instructions on how to train models using scripts or notebooks
+│   ├── train.ipynb           # -- main training notebook
 │   ├── results.ipynb         # -- main results notebook (still running new models)
 │   └── svm_trial.ipynb       # -- SVM testing notebook as requested to check why such accuracy (fishy acc=1)
 ├── src/

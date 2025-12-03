@@ -9,15 +9,51 @@ import os
 
 from src.ml.load_matrix import load_df
 from src.ml.model_trainer import MLModel
-from joblib import Parallel, delayed, dump
+from joblib import Parallel, delayed, dump, load
+import json
 
 NUM_THREADS=8
 
-def train_one(dataset, model):
 
-    if dataset in ["RGCN_protein_embeddings", "concatenated_protein_embeddings"] and model=='svm':
-        print('-- skipping SVM on RGCN protein features for now --')
-        return
+REQUIRED_HYPERPARAM_KEYS = {
+    "SVM_HYPERPARAMS",
+    "RANDOM_FOREST_HYPERPARAMS",
+    "XGBOOST_HYPERPARAMS",
+    "PYTORCH_MLP_HYPERPARAMS",
+    "SKLEARN_MLP_HYPERPARAMS"
+}
+
+def load_hyperparameters(hyperparam_file):
+    """
+    validate and load hyperparameter JSON file
+    """
+
+    if hyperparam_file is None:
+        return None
+    if not os.path.exists(hyperparam_file):
+        raise FileNotFoundError(
+            f"Hyperparameter file not found: {hyperparam_file}"
+        )
+    if not os.path.isfile(hyperparam_file):
+        raise ValueError(
+            f"Provided hyperparameter path is not a file: {hyperparam_file}"
+        )
+    try:
+        with open(hyperparam_file, "r") as f:
+            hyperparams = json.load(f)
+    except json.JSONDecodeError as e:
+        raise ValueError(
+            f"Failed to parse JSON in hyperparameter file '{hyperparam_file}': {e}"
+        )
+    missing = REQUIRED_HYPERPARAM_KEYS - set(hyperparams.keys())
+    if missing:
+        raise ValueError(
+            f"Hyperparameter file '{hyperparam_file}' is missing required keys: "
+            f"{', '.join(missing)}"
+        )
+    return hyperparams
+
+def train_one(dataset, model):
     pid = os.getpid()
     print(f"[PID {pid}] Training model: {model}  on dataset: {dataset}")
     df = load_df(dataset,folder_version=MLModel.VERSION)
@@ -47,9 +83,24 @@ def train_all(datasets:list=['gene_expression', 'RGCN_sample_embeddings', 'Compl
         for dataset in datasets
         for model in model_types
     )
-    return results
+    return 
 
 def set_num_threads(num_threads:int):
     global NUM_THREADS
     NUM_THREADS=num_threads
     print(f'-- set NUM_THREADS to {NUM_THREADS}')
+
+
+def load_models(dump_dir:str,version:str):
+    '''
+    loads all trained models for a specific version from dump_dir/version/
+    returns a dict of {model_name: MLModel instance}
+    '''
+    version_dir=os.path.join(dump_dir,version)
+    model_files=[f for f in os.listdir(version_dir) if f.endswith('.joblib')]
+    models_dict={}
+    for mf in model_files:
+        model_path=os.path.join(version_dir,mf)
+        ml_model=load(model_path)
+        models_dict[mf]=ml_model
+    return models_dict

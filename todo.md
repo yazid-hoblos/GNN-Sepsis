@@ -14,4 +14,4 @@
 - [ ] ~make attributes private and accessible strictly through setters (no change of global variables)~ bad idea for global class variables maybe consider object ones like dataset_name (not necessary tho - no restrctions on accessing them should be enforced except for y_test and these maybe)
 - [x] ~method~ *global attribute DEFAULT_SAVE* to save to a file and load from a file the model (joblib)
 - [ ] rerun everything again and save in dump/ with versioning (just run `python -m src.ml.train_all`) *ongoing through `python -m src.ml.train_all`*
-- [ ] added scripts for umap and pca plots in eda/ folder and figures saved in figures/projections/{umap,pca}/
+- [x] added scripts for umap and pca plots in eda/ folder and figures saved in figures/projections/{umap,pca}/
