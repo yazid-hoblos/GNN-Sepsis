@@ -1,8 +1,13 @@
 '''
 utils.py contains functions to perform redundant tasks such as:
-* train a specific model on a specific dataset for a specific version: --> MLModel/joblib file
-* train all models on all datasets for a specififc version: ->{name:MLModel}/joblib dir
-* run results on a set of trained models: -> pd.DataFrame
+traininf a model on all datasets, training all models on all datasets, setting number of threads, loading hyperparameters from JSON file
+
+Functions:
+- train_one(dataset, model,version)
+- train_all(datasets, model_types, version,cache_dir, split_ratio, random_state)
+- set_num_threads(num_threads)
+- load_hyperparameters(hyperparam_file)
+- load_models(dump_dir,version)
 '''
 
 import os
@@ -53,11 +58,11 @@ def load_hyperparameters(hyperparam_file):
         )
     return hyperparams
 
-def train_one(dataset, model):
+def train_one(dataset, model,version):
     pid = os.getpid()
-    print(f"[PID {pid}] Training model: {model}  on dataset: {dataset}")
-    df = load_df(dataset,folder_version=MLModel.VERSION)
-    ml_model = MLModel(model_type=model, df=df, dataset_name=dataset,save_model=True)
+    print(f"[PID {pid}] Training model: {model}  on dataset: {dataset} (version={version})")
+    df = load_df(dataset,folder_version=version)
+    ml_model = MLModel(model_type=model, df=df, dataset_name=dataset,save_model=True, version=version)
     ml_model.train_evaluate()
 
     return 
@@ -69,7 +74,6 @@ def train_all(datasets:list=['gene_expression', 'RGCN_sample_embeddings', 'Compl
     
     MLModel.CACHE_DIR=cache_dir
     MLModel.DEFAULT_SAVE=True
-    MLModel.VERSION=version
     MLModel.SPLIT_RATIO=split_ratio
     MLModel.RANDOM_STATE=random_state
     MLModel.DEFAULT_LOGGING=True
@@ -77,9 +81,10 @@ def train_all(datasets:list=['gene_expression', 'RGCN_sample_embeddings', 'Compl
     from datetime import datetime
     date=datetime.now().strftime("%Y%m%d_%H%M%S")
     MLModel.set_global_variable("SYSOUT_FILE",f"train_all_{version}_{date}_training_utils.log") # -- since parallelized better not have a file for each model/dataset
+    print(f"-- utils.train_all called with version={version}, cache_dir={cache_dir} --")
 
     results = Parallel(n_jobs=NUM_THREADS, backend='threading', verbose=10)(
-        delayed(train_one)(dataset, model)
+        delayed(train_one)(dataset, model,version)
         for dataset in datasets
         for model in model_types
     )

@@ -31,7 +31,7 @@ Notes
 - This module includes two main classes:
     1. `MLModel` - Handles model selection, training, evaluation, and optional saving.
     2. `PyTorchMLP` - A PyTorch-based multilayer perceptron implementing a scikit-learn-like API
-       with `fit`, `predict`, and `predict_proba` methods, used by `MLModel` when `model_type='mlp'`
+       with `fit`, `predict`, and `predict_proba` methods, used by `MLModel` when `model_type=pytorch_mlp'`
 """
 
 import os
@@ -60,7 +60,7 @@ warnings.filterwarnings("ignore", category=ConvergenceWarning)
 class Logger:
     '''
     logger that duplicates stdout to a log file
-    !issues! -- does not print when used in jupyter notebooks/ temporarily commented out in MLModel
+    [!CAUTION] -- does not print when used in jupyter notebooks/ temporarily commented out in MLModel
     '''
 
     def __init__(self, filename):
@@ -82,16 +82,19 @@ class PyTorchMLP(BaseEstimator, ClassifierMixin):
     PyTorch wrapper for a simple MLP classifier to mimic scikit-learn API in a way that is easily integrable in MLModel's GridSearchCV pipeline
     """
 
+    possible_activations={'relu': nn.ReLU, 'tanh': nn.Tanh, 'sigmoid': nn.Sigmoid, 'leaky_relu': nn.LeakyReLU, 'gelu': nn.GELU}
+
     def __init__(self, input_dim, hidden_layer_sizes=(50,), activation='relu', 
-                 solver='adam', learning_rate_init=0.001, max_iter=500, batch_size=32, random_state=42):
+                 solver='adam', learning_rate_init=0.001, max_iter=500, batch_size=32, random_state=42,early_stopping=False):
         self.input_dim = input_dim
         self.hidden_layer_sizes = hidden_layer_sizes
-        self.activation = activation
+        self.activation = self.possible_activations[activation] if activation in self.possible_activations else nn.ReLU
         self.solver = solver
         self.learning_rate_init = learning_rate_init
         self.max_iter = max_iter
         self.batch_size = batch_size
         self.random_state = random_state
+        self.early_stopping=False
 
         torch.manual_seed(self.random_state)
         self._build_model()
@@ -101,7 +104,7 @@ class PyTorchMLP(BaseEstimator, ClassifierMixin):
     def _build_model(self):
         layers = []
         input_size = self.input_dim
-        act_fn = nn.ReLU if self.activation=='relu' else nn.Tanh
+        act_fn = self.activation
         for hidden_size in self.hidden_layer_sizes:
             layers.append(nn.Linear(input_size, hidden_size))
             layers.append(act_fn())
@@ -236,7 +239,7 @@ class MLModel:
     DEFAULT_SPLIT_RATIO = 0.2
     DEFAULT_RANDOM_STATE = 42
     DEFAULT_SCORING = "accuracy"
-    DEFAULT_SAVE = True
+    DEFAULT_SAVE = False
     DEFAULT_LOGGING = False
     CACHE_DIR = '.cache/'
     SYSOUT_FILE = None
@@ -248,15 +251,15 @@ class MLModel:
     RANDOM_FOREST_HYPERPARAMS = {'n_estimators': [50, 100, 200], 'max_depth': [3, 5, 7],
                                 'min_samples_split': [2, 5, 10], 'class_weight': ['balanced', 'balanced_subsample', {0: 2, 1: 1}, {0: 3, 1: 1}]}
     PYTORCH_MLP_HYPERPARAMS = {
-        'hidden_layer_sizes': [(50,), (100,), (50, 50), (100, 50)],
-        'activation': ['relu', 'tanh'],
+        'hidden_layer_sizes': [(50,), (100,), (100, 50)],
+        'activation': ['relu', 'leaky_relu'],
         'solver': ['adam', 'sgd'],
         'learning_rate_init': [0.001, 0.01, 0.1],
-        'batch_size': [16, 32, 64]
+        'batch_size': 16        #--might be more stable for a small dataset like ours
         # 'max_iter': [200, 500, 1000],
         # 'dropout': [0.0, 0.1, 0.2]
     }
-    SKLEARN_MLP_HYPERPARAMS = {'hidden_layer_sizes': [(50,), (100,), (50, 50)], 'activation': ['relu', 'tanh'],
+    SKLEARN_MLP_HYPERPARAMS = {'hidden_layer_sizes': [(50,), (100,), (100, 50)], 'activation': ['relu', 'tanh'], # check if leaky_relu exists here
                        'solver': ['adam', 'sgd'], 'learning_rate_init': [0.001, 0.01, 0.1]}
 
     pp = pprint.PrettyPrinter(indent=4)
@@ -314,7 +317,7 @@ class MLModel:
             raise ValueError(f"-- global variable '{var_name}' is not recognized. --")
 
     def __init__(self, df, model_type, dataset_name, version='2.10', hyperparameters=None,
-                 split_ratio=None, random_state=None, save_model=None):
+                 split_ratio=None, random_state=None, kfold=None, save_model=None):
 
         # self.df = df.copy()
         self.model_type = model_type.lower()
@@ -323,8 +326,9 @@ class MLModel:
         self.hyperparameters = hyperparameters
         self.split_ratio = split_ratio if split_ratio is not None else self.DEFAULT_SPLIT_RATIO
         self.random_state = random_state if random_state is not None else self.DEFAULT_RANDOM_STATE
+        self.kfold = kfold if kfold is not None else self.DEFAULT_KFOLD
         self.save_model = save_model if save_model is not None else self.DEFAULT_SAVE
-
+        self.best_model = None
 
         # -- split data
         # -- unsaving large dataframes for memory efficiency
@@ -342,6 +346,8 @@ class MLModel:
         print(f'-- [{self.model_type}_{self.dataset_name}] split ratio: {self.split_ratio}')
         print(f'-- [{self.model_type}_{self.dataset_name}] random state: {self.random_state}')
 
+        print(f'-- [{self.model_type}_{self.dataset_name}] CACHE_DIR is: {self.CACHE_DIR} --')
+
         if self.model_type not in self.AVAILABLE_MODELS and self.model_type != 'all':
             raise ValueError(f"-- model type '{self.model_type}' is not supported --")
 
@@ -351,6 +357,7 @@ class MLModel:
         if self.SYSOUT_FILE is None:
             MLModel.SYSOUT_FILE=f"{model_type}_{dataset_name}_{version}_training_utils.log"
             print(f'-- [{self.model_type}_{self.dataset_name}] setting SYSOUT_FILE to: {self.SYSOUT_FILE} --')
+        
         if self.DEFAULT_LOGGING:
             self.initialize_logging()
             logs_dir = os.path.join(self.CACHE_DIR, 'logs')
@@ -360,13 +367,20 @@ class MLModel:
             os.makedirs(self.CACHE_DIR, exist_ok=True)
 
     @classmethod
-    def _pretty_print_dict(cls, title, d):
-        '''
-        pretty-print a dictionary using pprint.
-        '''
+    def _pretty_print_dict(cls, title, d, indent=0):
         print(f"\n-- {title} --")
-        cls.pp.pprint(d)
+        cls._print_nested_dict(d, indent=2)
         print("\n")
+
+    @classmethod
+    def _print_nested_dict(cls, d, indent):
+        pad = " " * indent
+        for key, value in d.items():
+            if isinstance(value, dict):
+                print(f"{pad}{key}:")
+                cls._print_nested_dict(value, indent + 2)
+            else:
+                print(f"{pad}{key}: {value}")
 
     @classmethod
     def _validate_hyperparameters(cls, model_type, hyperparameters):
@@ -386,12 +400,13 @@ class MLModel:
         Define the GridSearchCV wrapper for the selected model type with appropriate hyperparameters
         returns GridSearchCV object
         '''
+
         if self.model_type == 'svm':
             params = self.hyperparameters or self.SVM_HYPERPARAMS
             self._pretty_print_dict("SVM Hyperparameters", params)
             # -- added max_iter to avoid long convergence times which is the case when training a linear kernel on RGCN sample embedding features
             return GridSearchCV(SVC(probability=True,max_iter=10000), param_grid=params,return_train_score=True,
-                                scoring=self.DEFAULT_SCORING, cv=self.DEFAULT_KFOLD, n_jobs=-1)
+                                scoring=self.DEFAULT_SCORING, cv=self.kfold, n_jobs=-1)
 
         if self.model_type == 'xgboost':
             params = self.hyperparameters or self.XGBOOST_HYPERPARAMS
@@ -439,7 +454,7 @@ class MLModel:
         self._pretty_print_dict("Best Parameters", self.grid_search_model.best_params_)
 
         if self.save_model:
-            version_dir = os.path.join(MLModel.CACHE_DIR, f"v{self.version}")
+            version_dir = os.path.join(MLModel.CACHE_DIR, f"{self.version}")
             os.makedirs(version_dir, exist_ok=True)
             filepath = os.path.join(version_dir, f"{self.model_type}_{self.dataset_name}_gridsearch_model.joblib")
             joblib.dump(self, filepath)
@@ -479,7 +494,7 @@ class MLModel:
         self.X_test = None  # free memory
 
         if self.save_model:
-            version_dir = os.path.join(MLModel.CACHE_DIR, f"v{self.version}")
+            version_dir = os.path.join(MLModel.CACHE_DIR, f"{self.version}")
             os.makedirs(version_dir, exist_ok=True)
             filepath = os.path.join(version_dir, f"{self.model_type}_{self.dataset_name}_gridsearch_model.joblib")
             joblib.dump(self, filepath)
@@ -499,3 +514,63 @@ class MLModel:
         self.train()
         return self.evaluate()
     
+    def __repr__(self):
+        return f'''MLModel(
+    model_type={self.model_type},
+    dataset_name={self.dataset_name},
+    version={self.version},
+    split_ratio={self.split_ratio},
+    kfold={self.DEFAULT_KFOLD},
+    random_state={self.random_state},
+    best_model={self.best_model}
+    sysout_file={self.SYSOUT_FILE},
+    cache_dir={self.CACHE_DIR},
+    logging={self.DEFAULT_LOGGING},
+    save_model={self.save_model},
+)'''
+    
+    def _format_tree(self, obj, indent=0):
+        """Recursively formats objects into a nested tree view."""
+        if obj is None:
+            return " " * indent + "None"
+        pad = " " * indent
+        if hasattr(obj, "get_params"):
+            # sklearn estimator
+            params = obj.get_params(deep=False)
+            s = f"{pad}{obj.__class__.__name__}(\n"
+            for k, v in params.items():
+                s += f"{pad}  ├─ {k}: "
+                if hasattr(v, "get_params"):
+                    s += "\n" + self._format_tree(v, indent + 6)
+                else:
+                    s += f"{v}\n"
+            return s + f"{pad})"
+        elif isinstance(obj, dict):
+            s = f"{pad}{{\n"
+            for k, v in obj.items():
+                s += f"{pad}  ├─ {k}: "
+                if isinstance(v, (dict, list)) or hasattr(v, "get_params"):
+                    s += "\n" + self._format_tree(v, indent + 6)
+                else:
+                    s += f"{v}\n"
+            return s + f"{pad}}}"
+        elif isinstance(obj, list):
+            s = f"{pad}[\n"
+            for v in obj:
+                s += self._format_tree(v, indent + 4) + "\n"
+            return s + pad + "]"
+        else:
+            return f"{pad}{obj}"
+
+    def __str__(self):
+        return (
+            f"MLModel\n"
+            f"├─ model_type: {self.model_type}\n"
+            f"├─ dataset_name: {self.dataset_name}\n"
+            f"├─ version: {self.version}\n"
+            f"├─ split_ratio: {self.split_ratio}\n"
+            f"├─ random_state: {self.random_state}\n"
+            f"├─ best_model:\n"
+            f"{self._format_tree(self.best_model, indent=4)}\n"
+            f"└─ save_model: {self.save_model}"
+        )

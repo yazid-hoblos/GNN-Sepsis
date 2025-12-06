@@ -1,6 +1,15 @@
 #!/usr/bin/env python
 
 '''
+-- Training combinations of ML models on combinations of datasets for all specified versions --
+
+by default, trains all available models on all available datasets for versions v2.10 and v2.11
+
+AVAILABLE OPTIONS:  
+    model-types: svm, random_forest, xgboost, pytorch_mlp, sklearn_mlp
+    datasets: gene_expression, RGCN_sample_embeddings, Complex_sample_embeddings, concatenated_sample_embeddings, RGCN_protein_embeddings, Complex_protein_embeddings, concatenated_protein_embeddings
+    versions: v2.10, v2.11, v2.9
+
 run this script to train all ML models on all datasets for all specified versions
 saves trained models in joblib files in dump/{version}/ folder
 
@@ -8,13 +17,17 @@ saves trained models in joblib files in dump/{version}/ folder
 > run it from the project root as:
 
     python -m src.ml.train_all -h  
-    python -m src.ml.train_all # -- which is equivalent to:  
+    python -m src.ml.train_all      # -- which is equivalent to:  
     python -m src.ml.train_all --versions v2.10 v2.11 --dump-dir ./dump/ --threads 12  
+    
     python -m src.ml.train_all --versions v2.10 --model-types svm
+    python -m src.ml.train_all --versions v2.10 --datasets gene_expression RGCN_sample_embeddings --model-types random_forest
 '''
+
 
 import os
 import argparse
+import textwrap
 # -- package relative imports are essential when running as module --
 
 # from src.ml.load_matrix import load_df
@@ -26,7 +39,10 @@ import os
 
 def get_args():
     '''reads command line arguments'''
-    parser = argparse.ArgumentParser(description="-- train all ML models on all datasets of all versions")
+    parser = argparse.ArgumentParser(
+        description=textwrap.dedent(__doc__),
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
 
     parser.add_argument("--versions", nargs="+", default=["v2.10", "v2.11"])
     parser.add_argument("--logging", action="store_true", help="Whether to enable logging to file")
@@ -44,8 +60,8 @@ def get_args():
     return parser.parse_args()
 
 
-def main():
 
+def main():
     args = get_args()
     set_num_threads(args.threads)
     os.makedirs(args.dump_dir, exist_ok=True)
@@ -65,7 +81,7 @@ def main():
 
     for version in args.versions:
         os.makedirs(args.dump_dir, exist_ok=True)
-        print(f"--- Training all models for version: {version} ---")
+        print(f"-- Training all models for version: {version} --")
         train_all(version=version, cache_dir=args.cache_dir,model_types=args.model_types,datasets=args.datasets)
 
 if __name__ == "__main__":
