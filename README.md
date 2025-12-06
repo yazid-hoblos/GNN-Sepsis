@@ -58,3 +58,8 @@ python load_embeddings.py
 * This repository allows for **both traditional omics pipelines** and **graph-enhanced pipelines** for sepsis prediction.
 * Graph embeddings capture **network relationships between genes, pathways, and patients**, which can be used for downstream classification or clustering.
 * Students can retrain embeddings using their own ontologies or datasets if desired.
+
+## Branches
+
+* `dev/ml-test`: ML model training and evaluation branch (details on training in readme there)
+* `dev/KGE`: KG exploration branch
