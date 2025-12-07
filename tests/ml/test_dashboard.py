@@ -50,9 +50,9 @@ for name, model in models.items():
 
 
 import pandas as pd
-from evaluator import Evaluator
-from collector import ResultsCollector
-from visualizer import DashboardVisualizer
+from src.ml.evaluator import Evaluator
+from src.ml.collector import ResultsCollector
+from src.ml.visualizer import DashboardVisualizer
 
 collector = ResultsCollector()
 metrics_list = []

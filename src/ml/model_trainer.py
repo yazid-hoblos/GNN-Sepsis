@@ -3,8 +3,8 @@ Classical models training util functions
 ----------------------------------------------
 
 this module defines utilities to construct, train, and evaluate machine-learning classification models
-using support vector machines (svm), xgboost classifiers, and multilayer perceptrons (mlp). it represents
-the second step of the workflow, following data loading and preprocessing.
+using support vector machines (svm), xgboost classifiers, random forests and multilayer perceptrons (mlp). 
+it represents the second step of the workflow, following data loading and preprocessing.
 
 the module expects a pandas dataframe containing feature columns and a binary 'disease_status' label.
 it returns trained model objects, predictions, and class probabilities.
@@ -100,6 +100,9 @@ class PyTorchMLP(BaseEstimator, ClassifierMixin):
         self._build_model()
         self.loss_fn = nn.BCELoss()
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate_init) if self.solver=='adam' else optim.SGD(self.model.parameters(), lr=self.learning_rate_init)
+
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model.to(self.device)
 
     def _build_model(self):
         layers = []
@@ -352,7 +355,7 @@ class MLModel:
             raise ValueError(f"-- model type '{self.model_type}' is not supported --")
 
         if self.save_model:
-            version_dir = os.path.abspath(os.path.join(self.CACHE_DIR, f"v{self.version}"))
+            version_dir = os.path.abspath(os.path.join(self.CACHE_DIR, f"{self.version}"))
             print(f'-- [{self.model_type}_{self.dataset_name}] trained model will be saved to: {version_dir} --')  
         if self.SYSOUT_FILE is None:
             MLModel.SYSOUT_FILE=f"{model_type}_{dataset_name}_{version}_training_utils.log"

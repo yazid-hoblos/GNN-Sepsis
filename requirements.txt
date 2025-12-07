@@ -5,3 +5,4 @@ xgboost
 umap-learn
 plotly
 torch
+GEOparse
