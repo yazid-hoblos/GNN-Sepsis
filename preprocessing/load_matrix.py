@@ -295,6 +295,16 @@ def aggregate_probes_to_genes(expression_data: pd.DataFrame, probe_to_gene: pd.D
     return pd.DataFrame(gene_expression, index=expression_data.index)
 
 
+def normalize_gene_expression(gene_expr_matrix: pd.DataFrame) -> pd.DataFrame:
+    """
+    Normalize gene expression matrix using Z-score standardization per gene.
+    Each gene is normalized to have mean=0 and std=1 across samples.
+    """
+    normalized_matrix = gene_expr_matrix.copy()
+    normalized_matrix = (normalized_matrix - normalized_matrix.mean(axis=0)) / (normalized_matrix.std(axis=0) + 1e-10)
+    return normalized_matrix
+
+
 def map_proteins_to_genes(df_proteins: pd.DataFrame, probe_to_gene: pd.DataFrame) -> pd.DataFrame:
     """Map protein symbols to Entrez Gene IDs."""
     # Create symbol → Entrez ID mapping
@@ -363,6 +373,9 @@ def load_protein_embeddings(model_name: str, folder_version: str = "v2.9") -> pd
 
     # Aggregate probes to genes
     gene_expr_matrix = aggregate_probes_to_genes(expression_data, probe_to_gene)
+
+    # Normalize gene expression
+    gene_expr_matrix = normalize_gene_expression(gene_expr_matrix)
 
     # Map proteins to genes
     df_proteins = map_proteins_to_genes(df_proteins, probe_to_gene)
