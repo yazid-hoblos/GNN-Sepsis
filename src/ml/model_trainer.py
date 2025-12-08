@@ -258,7 +258,7 @@ class MLModel:
         'activation': ['relu', 'leaky_relu'],
         'solver': ['adam', 'sgd'],
         'learning_rate_init': [0.001, 0.01, 0.1],
-        'batch_size': 16        #--might be more stable for a small dataset like ours
+        'batch_size': [16]        #--might be more stable for a small dataset like ours
         # 'max_iter': [200, 500, 1000],
         # 'dropout': [0.0, 0.1, 0.2]
     }
