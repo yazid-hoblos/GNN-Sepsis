@@ -1,17 +1,18 @@
 from load_matrix import load_df
 
 # ============================================================================
-# Test load_df('gene_expression')
+# Test load_df('gene_expression') with default normalization (robust)
 # ============================================================================
 
 print("\n" + "="*80)
-print("TEST 1: load_df('gene_expression')")
+print("TEST 1: load_df('gene_expression') - default normalization (robust)")
 print("="*80)
 
 df_gene_expression = load_df('gene_expression')
 
 print(f"\nShape: {df_gene_expression.shape}")
 print(f"Columns: {list(df_gene_expression.columns[:5])} ... + disease_status")
+print(f"Normalization: RobustScaler (default)")
 
 
 print(f"\nFirst 10 samples (all features + 2 probes + disease_status):")

@@ -3,6 +3,7 @@ import numpy as np
 import sys
 from pathlib import Path
 import GEOparse
+from sklearn.preprocessing import RobustScaler, StandardScaler, MinMaxScaler
 
 # Setup paths
 project_root = Path(__file__).parent.parent
@@ -16,7 +17,7 @@ data_dir = project_root / "data"
 geo_filepath = str(data_dir / "GSE54514_family.soft.gz")
 gpl_filepath = str(data_dir / "GPL6947-13512.txt")
 
-def load_df(key: str, folder_version: str = "v2.9") -> pd.DataFrame:
+def load_df(key: str, folder_version: str = "v2.9", normalization: str = "robust") -> pd.DataFrame:
     """
     Generic interface to load expression data or Knowledge Graph embeddings.
 
@@ -24,7 +25,7 @@ def load_df(key: str, folder_version: str = "v2.9") -> pd.DataFrame:
     ----------
     key : str
         Type of data to load:
-        
+
         - 'gene_expression' : Gene expression matrix (5000 probes) with sample metadata
         - 'RGCN_sample_embeddings' : Sample embeddings from RGCN model (128 dims)
         - 'Complex_sample_embeddings' : Sample embeddings from ComplEx model (128 dims)
@@ -32,30 +33,34 @@ def load_df(key: str, folder_version: str = "v2.9") -> pd.DataFrame:
         - 'RGCN_protein_embeddings' : Protein embeddings from RGCN, weighted by gene expression
         - 'Complex_protein_embeddings' : Protein embeddings from ComplEx, weighted by gene expression
         - 'concatenated_protein_embeddings' : Both RGCN + ComplEx protein embeddings (256 dims)
-        
+
     folder_version : str, optional
         Version of embeddings folder in models/executions/ (default: 'v2.9')
+
+    normalization : str, optional
+        Normalization method to apply to gene expression data (default: 'robust')
+        Options: 'robust', 'standard', 'minmax', 'log1p', 'none'
 
     Returns
     -------
     pd.DataFrame
         DataFrame with columns: [label, hasAge, hasGender, <data_cols>, disease_status]
-        
+
 
     Examples
     --------
-    >>> df = load_df('gene_expression', 'v2.9')
+    >>> df = load_df('gene_expression', 'v2.9', normalization='robust')
     """
     if key == "gene_expression":
-        return load_gene_expression()
+        return load_gene_expression(normalization=normalization)
     elif key in ("RGCN_sample_embeddings", "Complex_sample_embeddings"):
         return load_sample_embeddings(key.split("_")[0], folder_version)
     elif key == "concatenated_sample_embeddings":
         return load_concatenate_sample_embeddings(folder_version)
     elif key in ("RGCN_protein_embeddings", "Complex_protein_embeddings"):
-        return load_protein_embeddings(key.split("_")[0], folder_version)
+        return load_protein_embeddings(key.split("_")[0], folder_version, normalization=normalization)
     elif key == "concatenated_protein_embeddings":
-        return load_concatenate_protein_embeddings(folder_version)
+        return load_concatenate_protein_embeddings(folder_version, normalization=normalization)
     else:
         raise ValueError(f"Unknown data key: {key}")
 
@@ -64,13 +69,18 @@ def load_df(key: str, folder_version: str = "v2.9") -> pd.DataFrame:
 # Gene Expression Loading
 # ============================================================================
 
-def load_gene_expression() -> pd.DataFrame:
-    """Load gene expression matrix from GSE54514 with sample features and disease status."""
+def load_gene_expression(normalization: str = "robust") -> pd.DataFrame:
+    """
+    Load gene expression matrix from GSE54514 with sample features and disease status."""
     # Load GEO dataset
     gse = GEOparse.get_GEO(filepath=geo_filepath, silent=True)
 
     # Extract expression matrix
     expression_data = create_expression_data(gse)
+
+    # Apply normalization if requested
+    if normalization != "none":
+        expression_data = normalize_gene_expression(expression_data, method=normalization)
 
     # Load sample features
     df_features = _load_sample_features()
@@ -140,11 +150,15 @@ def _load_filtered_entities(model_name: str, folder_version: str, entity_prefix:
     return df_filtered
 
 
-def _concatenate_model_embeddings(load_func, folder_version: str) -> pd.DataFrame:
+def _concatenate_model_embeddings(load_func, folder_version: str, normalization: str = None) -> pd.DataFrame:
     """Generic function to concatenate RGCN and ComplEx embeddings."""
-    # Load both models
-    df_rgcn = load_func('RGCN', folder_version)
-    df_complex = load_func('ComplEx', folder_version)
+    # Load both models (pass normalization if provided)
+    if normalization is not None:
+        df_rgcn = load_func('RGCN', folder_version, normalization=normalization)
+        df_complex = load_func('ComplEx', folder_version, normalization=normalization)
+    else:
+        df_rgcn = load_func('RGCN', folder_version)
+        df_complex = load_func('ComplEx', folder_version)
 
     # Verify disease status matches
     assert (df_rgcn['disease_status'] == df_complex['disease_status']).all(), \
@@ -295,13 +309,37 @@ def aggregate_probes_to_genes(expression_data: pd.DataFrame, probe_to_gene: pd.D
     return pd.DataFrame(gene_expression, index=expression_data.index)
 
 
-def normalize_gene_expression(gene_expr_matrix: pd.DataFrame) -> pd.DataFrame:
+def normalize_gene_expression(gene_expr_matrix: pd.DataFrame, method: str = "robust") -> pd.DataFrame:
     """
-    Normalize gene expression matrix using Z-score standardization per gene.
-    Each gene is normalized to have mean=0 and std=1 across samples.
+    Normalize gene expression matrix using specified method.
+        Normalization method (default: 'robust')
+        - 'robust': RobustScaler (median and IQR, robust to outliers)
+        - 'standard': StandardScaler (mean=0, std=1, Z-score)
+        - 'minmax': MinMaxScaler (scale to [0, 1])
+        - 'log1p': Log1p transformation (log(1 + x))
+        - 'none': No normalization
     """
+    if method == "none":
+        return gene_expr_matrix.copy()
+
     normalized_matrix = gene_expr_matrix.copy()
-    normalized_matrix = (normalized_matrix - normalized_matrix.mean(axis=0)) / (normalized_matrix.std(axis=0) + 1e-10)
+
+    if method == "robust":
+        scaler = RobustScaler()
+        normalized_matrix[:] = scaler.fit_transform(normalized_matrix)
+    elif method == "standard":
+        scaler = StandardScaler()
+        normalized_matrix[:] = scaler.fit_transform(normalized_matrix)
+    elif method == "minmax":
+        scaler = MinMaxScaler()
+        normalized_matrix[:] = scaler.fit_transform(normalized_matrix)
+    elif method == "log1p":
+        # Log1p: log(1 + x), useful for count data
+        normalized_matrix = np.log1p(normalized_matrix)
+    else:
+        raise ValueError(f"Unknown normalization method: {method}. "
+                         f"Options: 'robust', 'standard', 'minmax', 'log1p', 'none'")
+
     return normalized_matrix
 
 
@@ -357,10 +395,8 @@ def create_weighted_protein_embeddings(df_proteins: pd.DataFrame, gene_expr_matr
     return df_embeddings
 
 
-def load_protein_embeddings(model_name: str, folder_version: str = "v2.9") -> pd.DataFrame:
-    """
-    Load protein embeddings weighted by gene expression for each sample with features.
-    """
+def load_protein_embeddings(model_name: str, folder_version: str = "v2.9", normalization: str = "robust") -> pd.DataFrame:
+    """ Load protein embeddings weighted by gene expression for each sample with features."""
     # Load protein embeddings
     df_proteins = _load_raw_protein_embeddings(model_name, folder_version)
 
@@ -375,7 +411,7 @@ def load_protein_embeddings(model_name: str, folder_version: str = "v2.9") -> pd
     gene_expr_matrix = aggregate_probes_to_genes(expression_data, probe_to_gene)
 
     # Normalize gene expression
-    gene_expr_matrix = normalize_gene_expression(gene_expr_matrix)
+    gene_expr_matrix = normalize_gene_expression(gene_expr_matrix, method=normalization)
 
     # Map proteins to genes
     df_proteins = map_proteins_to_genes(df_proteins, probe_to_gene)
@@ -393,6 +429,6 @@ def load_protein_embeddings(model_name: str, folder_version: str = "v2.9") -> pd
     return _add_features_and_disease_status(df_protein_embeddings, df_features)
 
 
-def load_concatenate_protein_embeddings(folder_version: str = "v2.9") -> pd.DataFrame:
-    """Concatenate RGCN and ComplEx protein embeddings at sample level."""
-    return _concatenate_model_embeddings(load_protein_embeddings, folder_version)
+def load_concatenate_protein_embeddings(folder_version: str = "v2.9", normalization: str = "robust") -> pd.DataFrame:
+    """ Concatenate RGCN and ComplEx protein embeddings at sample level. """
+    return _concatenate_model_embeddings(load_protein_embeddings, folder_version, normalization)
