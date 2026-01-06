@@ -6,3 +6,5 @@ umap-learn
 plotly
 torch
 GEOparse
+rdflib
+torch-geometric

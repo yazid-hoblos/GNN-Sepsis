@@ -11,7 +11,7 @@
 - [x] logging and saving the trained models in dump/ with versioning
 - [x] added pca.py and umap.py scripts in src/eda/ folder 
 - [x] new directory structure suggestion and expanded view of main branch content 
-- [ ] averaged protein embeddings by **normalized** gene expression (mentioned RobustScaler)
+- [x] averaged protein embeddings by **normalized** gene expression (mentioned RobustScaler)
 
 
 > [!CAUTION]
