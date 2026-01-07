@@ -58,11 +58,11 @@ def load_hyperparameters(hyperparam_file):
         )
     return hyperparams
 
-def train_one(dataset, model,version):
+def train_one(dataset, model,version,normalization):
     pid = os.getpid()
     print(f"[PID {pid}] Training model: {model}  on dataset: {dataset} (version={version})")
-    df = load_df(dataset,folder_version=version)
-    ml_model = MLModel(model_type=model, df=df, dataset_name=dataset,save_model=True, version=version)
+    df = load_df(dataset,folder_version=version, normalization=normalization)
+    ml_model = MLModel(model_type=model, df=df, dataset_name=dataset,save_model=True, version=version,normalization=normalization)
     ml_model.train_evaluate()
 
     return 
@@ -70,6 +70,7 @@ def train_one(dataset, model,version):
 def train_all(datasets:list=['gene_expression', 'RGCN_sample_embeddings', 'Complex_sample_embeddings', 'concatenated_sample_embeddings', 'RGCN_protein_embeddings', 'Complex_protein_embeddings', 'concatenated_protein_embeddings'],
               model_types=MLModel.AVAILABLE_MODELS,
               version='v2.10',cache_dir='../../dump/',
+              normalization="robust",
               split_ratio=0.3, random_state=42):
     
     MLModel.CACHE_DIR=cache_dir
@@ -80,11 +81,11 @@ def train_all(datasets:list=['gene_expression', 'RGCN_sample_embeddings', 'Compl
 
     from datetime import datetime
     date=datetime.now().strftime("%Y%m%d_%H%M%S")
-    MLModel.set_global_variable("SYSOUT_FILE",f"train_all_{version}_{date}_training_utils.log") # -- since parallelized better not have a file for each model/dataset
-    print(f"-- utils.train_all called with version={version}, cache_dir={cache_dir} --")
+    MLModel.set_global_variable("SYSOUT_FILE",f"train_all_{version}_{normalization}_{date}_training_utils.log") # -- since parallelized better not have a file for each model/dataset
+    print(f"-- utils.train_all called with version={version}, normalization={normalization}, cache_dir={cache_dir} --")
 
     results = Parallel(n_jobs=NUM_THREADS, backend='threading', verbose=10)(
-        delayed(train_one)(dataset, model,version)
+        delayed(train_one)(dataset, model,version, normalization)
         for dataset in datasets
         for model in model_types
     )
@@ -96,12 +97,13 @@ def set_num_threads(num_threads:int):
     print(f'-- set NUM_THREADS to {NUM_THREADS}')
 
 
-def load_models(dump_dir:str,version:str):
+def load_models(dump_dir:str,version:str,normalization:str="robust"):
     '''
     loads all trained models for a specific version from dump_dir/version/
     returns a dict of {model_name: MLModel instance}
     '''
-    version_dir=os.path.join(dump_dir,version)
+    version_norm=f"{version}_{normalization}"
+    version_dir=os.path.join(dump_dir,version_norm)
     model_files=[f for f in os.listdir(version_dir) if f.endswith('.joblib')]
     models_dict={}
     for mf in model_files:

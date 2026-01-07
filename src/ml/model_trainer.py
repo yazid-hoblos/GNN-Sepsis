@@ -85,7 +85,7 @@ class PyTorchMLP(BaseEstimator, ClassifierMixin):
     possible_activations={'relu': nn.ReLU, 'tanh': nn.Tanh, 'sigmoid': nn.Sigmoid, 'leaky_relu': nn.LeakyReLU, 'gelu': nn.GELU}
 
     def __init__(self, input_dim, hidden_layer_sizes=(50,), activation='relu', 
-                 solver='adam', learning_rate_init=0.001, max_iter=500, batch_size=32, random_state=42,early_stopping=False):
+                 solver='adam', learning_rate_init=0.001, max_iter=20, batch_size=32, random_state=42,early_stopping=False):
         self.input_dim = input_dim
         self.hidden_layer_sizes = hidden_layer_sizes
         self.activation = self.possible_activations[activation] if activation in self.possible_activations else nn.ReLU
@@ -132,12 +132,12 @@ class PyTorchMLP(BaseEstimator, ClassifierMixin):
                 self.optimizer.step()
         return self
 
-    # scikit-learn compatibility: allow cloning and parameter setting by GridSearchCV
+    # s-- cikit-learn compatibility: allow cloning and parameter setting by GridSearchCV (imp for reproducibility of class's funcs)
     def get_params(self, deep=True):
         return {
             'input_dim': self.input_dim,
             'hidden_layer_sizes': self.hidden_layer_sizes,
-            'activation': self.activation,
+            'activation': self._activation_name if hasattr(self, '_activation_name') else 'relu',
             'solver': self.solver,
             'learning_rate_init': self.learning_rate_init,
             'max_iter': self.max_iter,
@@ -146,13 +146,23 @@ class PyTorchMLP(BaseEstimator, ClassifierMixin):
         }
 
     def set_params(self, **params):
-        # update attributes if provided in params
         for key, val in params.items():
-            if hasattr(self, key):
-                setattr(self, key, val)
+            if key == 'activation':
+                # -- accept either a string name or a callable/class
+                if isinstance(val, str):
+                    self._activation_name = val
+                    self.activation = self.possible_activations[val] if val in self.possible_activations else nn.ReLU
+                elif callable(val):
+                    self._activation_name = getattr(val, '__name__', 'custom')
+                    self.activation = val
+                else:
+                    raise ValueError("[!] activation must be a string name or a callable activation class")
             else:
-                # allow setting arbitrary attributes for compatibility
-                setattr(self, key, val)
+                if hasattr(self, key):
+                    setattr(self, key, val)
+                else:
+                    # allow setting arbitrary attributes for compatibility
+                    setattr(self, key, val)
 
         # rebuild model and optimizer if architecture or training params changed
         self._build_model()
@@ -189,6 +199,9 @@ class MLModel:
         Name of the dataset (used for saving models)
     version : str, optional
         Version identifier for the dataset of the format 'v2.x'
+    normalization : str, optional
+        nromalization type to perform on gene exp data when creating teh protein embeddings (saved for logging the steps taken)
+        Options: 'robust', 'standard', 'minmax', 'log1p', 'none'
     hyperparameters : dict, optional
         Custom hyperparameters for the selected model.
     split_ratio : float, optional
@@ -260,9 +273,9 @@ class MLModel:
         'learning_rate_init': [0.001, 0.01, 0.1],
         'batch_size': [16]        #--might be more stable for a small dataset like ours
         # 'max_iter': [200, 500, 1000],
-        # 'dropout': [0.0, 0.1, 0.2]
+        # 'dropout': [0.0, 0.1, 0.2] #-- reconsidering
     }
-    SKLEARN_MLP_HYPERPARAMS = {'hidden_layer_sizes': [(50,), (100,), (100, 50)], 'activation': ['relu', 'tanh'], # check if leaky_relu exists here
+    SKLEARN_MLP_HYPERPARAMS = {'hidden_layer_sizes': [(50,), (100,), (100, 50)], 'activation': ['relu'], # check if leaky_relu exists here
                        'solver': ['adam', 'sgd'], 'learning_rate_init': [0.001, 0.01, 0.1]}
 
     pp = pprint.PrettyPrinter(indent=4)
@@ -319,13 +332,14 @@ class MLModel:
         else:
             raise ValueError(f"-- global variable '{var_name}' is not recognized. --")
 
-    def __init__(self, df, model_type, dataset_name, version='2.10', hyperparameters=None,
-                 split_ratio=None, random_state=None, kfold=None, save_model=None):
+    def __init__(self, df, model_type, dataset_name, version='2.10', normalization="robust",
+                 hyperparameters=None, split_ratio=None, random_state=None, kfold=None, save_model=None):
 
         # self.df = df.copy()
         self.model_type = model_type.lower()
         self.dataset_name = dataset_name
         self.version = version
+        self.normalization=normalization
         self.hyperparameters = hyperparameters
         self.split_ratio = split_ratio if split_ratio is not None else self.DEFAULT_SPLIT_RATIO
         self.random_state = random_state if random_state is not None else self.DEFAULT_RANDOM_STATE
@@ -355,10 +369,10 @@ class MLModel:
             raise ValueError(f"-- model type '{self.model_type}' is not supported --")
 
         if self.save_model:
-            version_dir = os.path.abspath(os.path.join(self.CACHE_DIR, f"{self.version}"))
+            version_dir = os.path.abspath(os.path.join(self.CACHE_DIR, f"{self.version}_{self.normalization}"))
             print(f'-- [{self.model_type}_{self.dataset_name}] trained model will be saved to: {version_dir} --')  
         if self.SYSOUT_FILE is None:
-            MLModel.SYSOUT_FILE=f"{model_type}_{dataset_name}_{version}_training_utils.log"
+            MLModel.SYSOUT_FILE=f"{model_type}_{dataset_name}_{version}_{normalization}_training_utils.log"
             print(f'-- [{self.model_type}_{self.dataset_name}] setting SYSOUT_FILE to: {self.SYSOUT_FILE} --')
         
         if self.DEFAULT_LOGGING:
@@ -457,7 +471,7 @@ class MLModel:
         self._pretty_print_dict("Best Parameters", self.grid_search_model.best_params_)
 
         if self.save_model:
-            version_dir = os.path.join(MLModel.CACHE_DIR, f"{self.version}")
+            version_dir = os.path.join(MLModel.CACHE_DIR, f"{self.version}_{self.normalization}")
             os.makedirs(version_dir, exist_ok=True)
             filepath = os.path.join(version_dir, f"{self.model_type}_{self.dataset_name}_gridsearch_model.joblib")
             joblib.dump(self, filepath)
@@ -497,7 +511,7 @@ class MLModel:
         self.X_test = None  # free memory
 
         if self.save_model:
-            version_dir = os.path.join(MLModel.CACHE_DIR, f"{self.version}")
+            version_dir = os.path.join(MLModel.CACHE_DIR, f"{self.version}_{self.normalization}")
             os.makedirs(version_dir, exist_ok=True)
             filepath = os.path.join(version_dir, f"{self.model_type}_{self.dataset_name}_gridsearch_model.joblib")
             joblib.dump(self, filepath)
@@ -522,6 +536,7 @@ class MLModel:
     model_type={self.model_type},
     dataset_name={self.dataset_name},
     version={self.version},
+    normalization={self.normalization},
     split_ratio={self.split_ratio},
     kfold={self.DEFAULT_KFOLD},
     random_state={self.random_state},
@@ -571,6 +586,7 @@ class MLModel:
             f"├─ model_type: {self.model_type}\n"
             f"├─ dataset_name: {self.dataset_name}\n"
             f"├─ version: {self.version}\n"
+            f"├─ normalization: {self.normalization}\n"
             f"├─ split_ratio: {self.split_ratio}\n"
             f"├─ random_state: {self.random_state}\n"
             f"├─ best_model:\n"

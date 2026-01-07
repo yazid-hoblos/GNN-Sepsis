@@ -9,6 +9,7 @@ AVAILABLE OPTIONS:
     model-types: svm, random_forest, xgboost, pytorch_mlp, sklearn_mlp
     datasets: gene_expression, RGCN_sample_embeddings, Complex_sample_embeddings, concatenated_sample_embeddings, RGCN_protein_embeddings, Complex_protein_embeddings, concatenated_protein_embeddings
     versions: v2.10, v2.11, v2.9
+    normalizations: robust, standard, minmax, log1p, none
 
 run this script to train all ML models on all datasets for all specified versions
 saves trained models in joblib files in dump/{version}/ folder
@@ -45,6 +46,7 @@ def get_args():
     )
 
     parser.add_argument("--versions", nargs="+", default=["v2.10", "v2.11"])
+    parser.add_argument("--normalizations", nargs="+", default=["robust"])
     parser.add_argument("--logging", action="store_true", help="Whether to enable logging to file")
     parser.add_argument("--cache-dir", default=os.path.abspath(os.path.join(os.path.dirname(__file__), "../../dump")))
     parser.add_argument("--threads", type=int, default=12)
