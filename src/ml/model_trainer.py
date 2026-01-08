@@ -360,6 +360,7 @@ class MLModel:
         self.y_proba = None
 
         print(f"-- [{self.model_type}_{self.dataset_name}] Initialized MLModel with model_type='{self.model_type.upper()}', dataset_name='{self.dataset_name.upper()}' --")
+        print(f"-- [{self.model_type}_{self.dataset_name}] version='{self.version}', normalization='{self.normalization}' --")
         print(f'-- [{self.model_type}_{self.dataset_name}] split ratio: {self.split_ratio}')
         print(f'-- [{self.model_type}_{self.dataset_name}] random state: {self.random_state}')
 
