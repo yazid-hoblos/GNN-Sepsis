@@ -383,7 +383,6 @@ class MLModel:
         else:
             os.makedirs(self.CACHE_DIR, exist_ok=True)
 
-    # -- these should not be class methods in case some parameters are set as object attributes overriding class atributes (liek random seed), to stick to the safe side 
     def get_data(self,df):
         '''same code in init to split the data but implemented later for replication
         WITHOUT memoizing matrices as object attributes
@@ -611,12 +610,14 @@ class MLModel:
             return f"{pad}{obj}"
 
     def __str__(self):
+        norm_str=f"├─ normalization: {self.normalization}\n" if self.normalization else "" # -- for older trained versions with no normalization param
+
         return (
             f"MLModel\n"
+            f"{norm_str}"
             f"├─ model_type: {self.model_type}\n"
             f"├─ dataset_name: {self.dataset_name}\n"
             f"├─ version: {self.version}\n"
-            f"├─ normalization: {self.normalization}\n" if self.normalization else "" # -- for older trained versions with no normalization param
             f"├─ split_ratio: {self.split_ratio}\n"
             f"├─ random_state: {self.random_state}\n"
             f"├─ best_model:\n"

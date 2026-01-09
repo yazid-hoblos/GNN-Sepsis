@@ -70,7 +70,7 @@ def train_one(dataset, model,version,normalization):
 def train_all(datasets:list=['gene_expression', 'RGCN_sample_embeddings', 'Complex_sample_embeddings', 'concatenated_sample_embeddings', 'RGCN_protein_embeddings', 'Complex_protein_embeddings', 'concatenated_protein_embeddings'],
               model_types=MLModel.AVAILABLE_MODELS,
               version='v2.10',cache_dir='../../dump/',
-              normalization="robust",
+              normalization:list="robust",
               split_ratio=0.3, random_state=42):
     
     MLModel.CACHE_DIR=cache_dir
@@ -109,5 +109,7 @@ def load_models(dump_dir:str,version:str,normalization:str="robust"):
     for mf in model_files:
         model_path=os.path.join(version_dir,mf)
         ml_model=load(model_path)
+        if not ml_model.normalization:
+            ml_model.normalization='none' #-- for older trainer version without this attribute, to be reset to none (no norm was performed)
         models_dict[mf]=ml_model
     return models_dict
