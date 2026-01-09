@@ -360,7 +360,6 @@ class MLModel:
         self.y_proba = None
 
         print(f"-- [{self.model_type}_{self.dataset_name}] Initialized MLModel with model_type='{self.model_type.upper()}', dataset_name='{self.dataset_name.upper()}' --")
-        print(f"-- [{self.model_type}_{self.dataset_name}] version='{self.version}', normalization='{self.normalization}' --")
         print(f'-- [{self.model_type}_{self.dataset_name}] split ratio: {self.split_ratio}')
         print(f'-- [{self.model_type}_{self.dataset_name}] random state: {self.random_state}')
 
@@ -383,6 +382,35 @@ class MLModel:
 
         else:
             os.makedirs(self.CACHE_DIR, exist_ok=True)
+
+    def get_data(self,df):
+        '''same code in init to split the data but implemented later for replication
+        WITHOUT memoizing matrices as object attributes
+        ensures same random seed and test split ration (+stratification if performed)
+        [!] useful for shap value computation to get the original X
+
+        param: df (from load_df)
+        returns: X, y
+        '''
+        y = df["disease_status"].astype(int).values
+        X = df.drop(columns=["disease_status"]).values
+        return  X, y
+
+    def get_data_split(self,df):
+        '''same code in init to split the data but implemented later for replication
+        WITHOUT memoizing matrices as object attributes
+        ensures same random seed and test split ration (+stratification if performed)
+        [!] useful for shap value computation to get the original X
+
+        param: df (from load_df)
+        returns: X_train, X_test, y_train, y_test
+        '''
+        y = df["disease_status"].astype(int).values
+        X = df.drop(columns=["disease_status"]).values
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=self.split_ratio, random_state=self.random_state, stratify=y
+        )
+        return  X_train, X_test, y_train, y_test
 
     @classmethod
     def _pretty_print_dict(cls, title, d, indent=0):
@@ -587,7 +615,7 @@ class MLModel:
             f"├─ model_type: {self.model_type}\n"
             f"├─ dataset_name: {self.dataset_name}\n"
             f"├─ version: {self.version}\n"
-            f"├─ normalization: {self.normalization}\n"
+            f"├─ normalization: {self.normalization}\n" if self.normalization else "" # -- for older trained versions with no normalization param
             f"├─ split_ratio: {self.split_ratio}\n"
             f"├─ random_state: {self.random_state}\n"
             f"├─ best_model:\n"
