@@ -16,6 +16,7 @@ from src.ml.load_matrix import load_df
 from src.ml.model_trainer import MLModel
 from joblib import Parallel, delayed, dump, load
 import json
+import torch
 
 NUM_THREADS=8
 
@@ -108,8 +109,23 @@ def load_models(dump_dir:str,version:str,normalization:str="robust"):
     models_dict={}
     for mf in model_files:
         model_path=os.path.join(version_dir,mf)
-        ml_model=load(model_path)
-        if not ml_model.normalization:
-            ml_model.normalization='none' #-- for older trainer version without this attribute, to be reset to none (no norm was performed)
+
+        # -- since pytorch models are trained on gpu, need to reset to cpu before loading on local machine wo gpu to avoid error
+        _torch_load = torch.load
+        torch.load = lambda *args, **kwargs: _torch_load(
+            *args, map_location=torch.device("cpu"), **kwargs
+        )
+
+        try:
+            ml_model = load(model_path, mmap_mode=None) # -- the joblib load
+        finally:
+            torch.load = _torch_load  # restore original
+
+
+
+        #-- for older trainer version without this attribute, to be reset to none (no norm was performed)    
+        if hasattr(ml_model, "normalization") and not ml_model.normalization:
+            ml_model.normalization = "none"
+
         models_dict[mf]=ml_model
     return models_dict
