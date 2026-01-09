@@ -109,5 +109,7 @@ def load_models(dump_dir:str,version:str,normalization:str="robust"):
     for mf in model_files:
         model_path=os.path.join(version_dir,mf)
         ml_model=load(model_path)
+        if not ml_model.normalization:
+            ml_model.normalization='none' #-- for older trainer version without this attribute, to be reset to none (no norm was performed)
         models_dict[mf]=ml_model
     return models_dict
