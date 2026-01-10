@@ -213,3 +213,9 @@ test/
 
 ./load_dataset.py
 ./load_embeddings.py
+
+./explorationJ.ipynb
+
+!src/ml/test/
+preprocessing/
+old_notebooks/

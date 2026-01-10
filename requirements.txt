@@ -1,0 +1,10 @@
+pandas
+scikit-learn
+matplotlib
+xgboost
+umap-learn
+plotly
+torch
+GEOparse
+rdflib
+torch-geometric
