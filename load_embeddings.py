@@ -91,10 +91,20 @@ def load_all_entities(emb_path, mapping_csv, node_features_csv):
 if __name__ == "__main__":
 
     kgs = ['GSE54514']
-    models = ['ComplEx', 'RGCN']
+    strategies =[
+         #Binning
+        'GSE54514_enriched_ontology_degfilter_v2.10_ovp0.2_ng3', 
+         #AvgExpression
+        'GSE54514_enriched_ontology_degfilter_v2.11', 
+    ]
+    models = [
+        'ComplEx', 
+        'RGCN',
+        ]
     
     for kg in kgs:
-        for model in models:
+        for s in strategies:
+            for model in models:
 
             if kg == "GSE54514":
                 control_label = "healthy"
