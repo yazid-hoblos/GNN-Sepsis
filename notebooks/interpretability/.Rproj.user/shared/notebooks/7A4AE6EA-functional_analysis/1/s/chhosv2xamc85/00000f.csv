@@ -1,0 +1,13 @@
+"0","import os,sys"
+"0","py_install('pandas')"
+"2","G3;Traceback (most recent call last):
+  File ""<string>"", line 1, in <module>
+NameError: name 'py_install' is not defined
+g"
+"0","sys.path.append('../../src/ml')"
+"0","from load_matrix import load_protein_embeddings, _load_raw_protein_embeddings"
+"0",""
+"0","df_raw=_load_raw_protein_embeddings('Complex','v2.10')"
+"0","df_raw.index=df_raw.iloc[:,-1] #-- gene symbol as index"
+"0","df_raw.iloc[:,5:] # -- showing the embeddings columns"
+"0",""

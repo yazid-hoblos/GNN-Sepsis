@@ -1,0 +1,118 @@
+---
+title: "Functional Analysis Notebook"
+author: "Rayane Adam"
+output:
+  html_notebook:
+    theme: flatly
+    highlight: tango
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    code_folding: hide
+---
+
+## Environment prep
+
+This notebook was made to perform pathway analysis using the GSEA method, it will be performed using the `clusterProfiler` package in R.
+
+```{r install_depencies}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+if (!requireNamespace("clusterProfiler", quietly = TRUE) || !requireNamespace("org.Hs.eg.db", quietly = TRUE)||
+    !requireNamespace("enrichplot", quietly = TRUE))
+    BiocManager::install(c("clusterProfiler",'org.Hs.eg.db','enrichplot'))
+```
+
+```{r}
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(enrichplot)
+library(ggplot2)
+```
+
+## data Preparation
+
+Need to have here ranked gene list to proceed with GSEA analysis, will be performed on KEGG pathways.  
+Note though that this gene list will be coming from a "loadings" vector, as in the contribution of genes in a single embedding vector (gene program), where it will be ranked based on its number.
+
+As scikit-learn silently casts complex values into the real space, the same will be done here by taking the modulus of the complex numbers (i.e., $\sqrt{(real^2 + imag^2)}$) (might consider performing another approach).
+
+```{r}
+library(reticulate)
+py_require(c("scikit-learn","pandas"))
+py_require(c("GEOparse"))
+```
+
+
+```{python}
+import os,sys
+py_install('pandas')
+sys.path.append('../../src/ml')
+from load_matrix import load_protein_embeddings, _load_raw_protein_embeddings
+
+model='Complex'
+version='v2.10'
+
+df_raw=_load_raw_protein_embeddings(model,version)
+df_raw.index=df_raw.iloc[:,-1] #-- gene symbol as index
+df_raw.iloc[:,5:] # -- showing the embeddings columns
+```
+
+```{r}
+df_raw = py$df_raw
+df_raw = as.data.frame(df_raw)
+
+head(df_raw)
+```
+
+### Embedding 
+
+```{r}
+embedding_num=127
+
+col=paste0('emb_',embedding_num)
+# -- soring based on col
+df_sorted <- df_raw[order(df_raw[[col]], decreasing = TRUE), ]
+
+# -- fa
+gene_list <- df_sorted[[col]]
+names(gene_list) <- rownames(df_sorted)
+head(gene_list)
+```
+
+### enrichR
+
+```{r}
+gene_df <- bitr(
+  names(gene_list),
+  fromType = "SYMBOL",
+  toType   = "ENTREZID",
+  OrgDb    = org.Hs.eg.db
+)
+
+gene_list_entrez <- gene_list[gene_df$SYMBOL]
+names(gene_list_entrez) <- gene_df$ENTREZID
+
+gene_list_entrez <- sort(gene_list_entrez, decreasing = TRUE)
+
+
+gsea_kegg <- gseKEGG(
+  geneList     = gene_list_entrez,
+  organism     = "hsa",
+  pvalueCutoff = 0.05
+)
+gsea_kegg
+```
+
+```{r}
+dotplot(gsea_kegg, showCategory=20, title=paste0("GSEA KEGG pathways - Embedding ",embedding_num))
+```
+
+
+
+### camera
+
+```{r}
+View(gsea_kegg@result)
+```
+

@@ -53,6 +53,8 @@ from sklearn.exceptions import ConvergenceWarning
 from sklearn.base import BaseEstimator, ClassifierMixin
 import warnings
 
+import matplotlib.pyplot as plt
+
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
 # ----------------------------------------------------------------------------------------------- #
@@ -84,8 +86,11 @@ class PyTorchMLP(BaseEstimator, ClassifierMixin):
 
     possible_activations={'relu': nn.ReLU, 'tanh': nn.Tanh, 'sigmoid': nn.Sigmoid, 'leaky_relu': nn.LeakyReLU, 'gelu': nn.GELU}
 
-    def __init__(self, input_dim, hidden_layer_sizes=(50,), activation='relu', 
+    def __init__(self, input_dim, cache_dir='.cache_pytorch/',name='', hidden_layer_sizes=(50,), activation='relu', dropout_rate=0,weight_decay=0.0, 
                  solver='adam', learning_rate_init=0.001, max_iter=20, batch_size=32, random_state=42,early_stopping=False):
+        
+        self.name=name
+        
         self.input_dim = input_dim
         self.hidden_layer_sizes = hidden_layer_sizes
         self.activation = self.possible_activations[activation] if activation in self.possible_activations else nn.ReLU
@@ -95,11 +100,44 @@ class PyTorchMLP(BaseEstimator, ClassifierMixin):
         self.batch_size = batch_size
         self.random_state = random_state
         self.early_stopping=False
+        self.dropout_rate=dropout_rate
+        self.weight_decay = weight_decay
+
+        self.cache_dir=cache_dir
+        os.makedirs(self.cache_dir, exist_ok=True)
+
+        # print(f'-- PytorchMLP model initialization for {self.name}, caching plot to {self.cache_dir}, random seed at {self.random_state}')
+
 
         torch.manual_seed(self.random_state)
+        torch.manual_seed(self.random_state)
+        torch.cuda.manual_seed(self.random_state)
+        torch.cuda.manual_seed_all(self.random_state)
+        
         self._build_model()
-        self.loss_fn = nn.BCELoss()
-        self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate_init) if self.solver=='adam' else optim.SGD(self.model.parameters(), lr=self.learning_rate_init)
+        self.loss_fn = nn.BCEWithLogitsLoss() #-- more stable than BCE
+
+        if self.solver.lower() == 'adam':
+            self.optimizer = optim.Adam(
+                self.model.parameters(),
+                lr=self.learning_rate_init,
+                weight_decay=self.weight_decay
+            )
+        elif self.solver.lower() == 'adamw':
+            self.optimizer = optim.AdamW(
+                self.model.parameters(),
+                lr=self.learning_rate_init,
+                weight_decay=self.weight_decay
+            )
+        elif self.solver.lower() == 'sgd':
+            self.optimizer = optim.SGD(
+                self.model.parameters(),
+                lr=self.learning_rate_init,
+                momentum=0.9, # maybe experiment ehre?
+                weight_decay=self.weight_decay
+            )
+        else:
+            raise ValueError(f"Unsupported solver: {self.solver}. Choose from 'adam', 'adamw', 'sgd'.")
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)
@@ -111,10 +149,14 @@ class PyTorchMLP(BaseEstimator, ClassifierMixin):
         for hidden_size in self.hidden_layer_sizes:
             layers.append(nn.Linear(input_size, hidden_size))
             layers.append(act_fn())
+            if self.dropout_rate > 0:
+                layers.append(nn.Dropout(self.dropout_rate))
             input_size = hidden_size
         layers.append(nn.Linear(input_size, 1))
         layers.append(nn.Sigmoid())
         self.model = nn.Sequential(*layers)
+
+
 
     def fit(self, X, y):
         X_tensor = torch.tensor(X, dtype=torch.float32)
@@ -123,19 +165,45 @@ class PyTorchMLP(BaseEstimator, ClassifierMixin):
         loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
 
         self.model.train()
+        train_losses = []
+
         for epoch in range(self.max_iter):
+            epoch_loss = 0.0
             for xb, yb in loader:
                 self.optimizer.zero_grad()
                 pred = self.model(xb)
                 loss = self.loss_fn(pred, yb)
                 loss.backward()
                 self.optimizer.step()
+                epoch_loss += loss.item() * xb.size(0)  # sum over batch
+            epoch_loss /= len(dataset)  # average loss over dataset
+            train_losses.append(epoch_loss)
+            print(f'-- [pytorch mlp] epoch {epoch+1}/{self.max_iter}, loss: {epoch_loss:.4f} --')
+
+        # -- plotting
+        if hasattr(self, 'cache_dir') and self.cache_dir is not None:
+            os.makedirs(self.cache_dir, exist_ok=True)
+            plt.figure(figsize=(6,4))
+            plt.plot(range(1, self.max_iter+1), train_losses, marker='o')
+            plt.title(f"Training Loss per Epoch {self.name} ([!note the best model in gridsearch but last one trained])")
+            plt.xlabel("Epoch")
+            plt.ylabel("Loss")
+            plt.grid(True)
+            plt.tight_layout()
+            save_path = os.path.join(self.cache_dir, f"{self.name}_train_loss.png")
+            plt.savefig(save_path)
+            plt.close()
+            print(f"-- training loss plot saved to: {save_path} in {self.cache_dir}")
+
         return self
 
-    # s-- cikit-learn compatibility: allow cloning and parameter setting by GridSearchCV (imp for reproducibility of class's funcs)
+
+    # -- scikit-learn compatibility: allow cloning and parameter setting by GridSearchCV (imp for reproducibility of class's funcs)
     def get_params(self, deep=True):
         return {
             'input_dim': self.input_dim,
+            'name': self.name,
+            'cache_dir': self.cache_dir,
             'hidden_layer_sizes': self.hidden_layer_sizes,
             'activation': self._activation_name if hasattr(self, '_activation_name') else 'relu',
             'solver': self.solver,
@@ -143,6 +211,8 @@ class PyTorchMLP(BaseEstimator, ClassifierMixin):
             'max_iter': self.max_iter,
             'batch_size': self.batch_size,
             'random_state': self.random_state,
+            'dropout_rate': self.dropout_rate,
+            'weight_decay': self.weight_decay
         }
 
     def set_params(self, **params):
@@ -157,6 +227,8 @@ class PyTorchMLP(BaseEstimator, ClassifierMixin):
                     self.activation = val
                 else:
                     raise ValueError("[!] activation must be a string name or a callable activation class")
+            elif key in ('name', 'cache_dir'):
+                setattr(self, key, val)
             else:
                 if hasattr(self, key):
                     setattr(self, key, val)
@@ -266,14 +338,23 @@ class MLModel:
                            'learning_rate': [0.01, 0.1, 0.2], 'subsample': [0.6, 0.8, 1.0], 'scale_pos_weight': [36 / 127, 0.4, 0.2]}
     RANDOM_FOREST_HYPERPARAMS = {'n_estimators': [50, 100, 200], 'max_depth': [3, 5, 7],
                                 'min_samples_split': [2, 5, 10], 'class_weight': ['balanced', 'balanced_subsample', {0: 2, 1: 1}, {0: 3, 1: 1}]}
+    # PYTORCH_MLP_HYPERPARAMS_OG = {
+    #     'hidden_layer_sizes': [(50,), (100,), (100, 50)],
+    #     'activation': ['relu'],
+    #     'solver': ['adam', 'sgd'],
+    #     'learning_rate_init': [0.001, 0.01, 0.1],
+    #     'batch_size': [16]        #--might be more stable for a small dataset like ours
+    #     # 'max_iter': [200, 500, 1000],
+    #     # 'dropout': [0.0, 0.1, 0.2] #-- reconsidering
+    # }
     PYTORCH_MLP_HYPERPARAMS = {
-        'hidden_layer_sizes': [(50,), (100,), (100, 50)],
-        'activation': ['relu', 'leaky_relu'],
-        'solver': ['adam', 'sgd'],
-        'learning_rate_init': [0.001, 0.01, 0.1],
-        'batch_size': [16]        #--might be more stable for a small dataset like ours
-        # 'max_iter': [200, 500, 1000],
-        # 'dropout': [0.0, 0.1, 0.2] #-- reconsidering
+        'hidden_layer_sizes': [(50,), (100,)],
+        'max_iter':[30],
+        'activation': ['relu'],
+        'solver': ['adam','adamW'],
+        'learning_rate_init': [0.001, 0.0001],
+        'batch_size': [16],
+        'dropout_rate': [0.0, 0.1]
     }
     SKLEARN_MLP_HYPERPARAMS = {'hidden_layer_sizes': [(50,), (100,), (100, 50)], 'activation': ['relu'], # check if leaky_relu exists here
                        'solver': ['adam', 'sgd'], 'learning_rate_init': [0.001, 0.01, 0.1]}
@@ -451,35 +532,35 @@ class MLModel:
             params = self.hyperparameters or self.SVM_HYPERPARAMS
             self._pretty_print_dict("SVM Hyperparameters", params)
             # -- added max_iter to avoid long convergence times which is the case when training a linear kernel on RGCN sample embedding features
-            return GridSearchCV(SVC(probability=True,max_iter=10000), param_grid=params,return_train_score=True,
+            return GridSearchCV(SVC(probability=True,max_iter=10000,random_state=self.random_state), param_grid=params,return_train_score=True,
                                 scoring=self.DEFAULT_SCORING, cv=self.kfold, n_jobs=-1)
 
         if self.model_type == 'xgboost':
             params = self.hyperparameters or self.XGBOOST_HYPERPARAMS
             self._pretty_print_dict("XGBoost Hyperparameters", params)
-            return GridSearchCV(xgboost.XGBClassifier(eval_metric="logloss"), param_grid=params,return_train_score=True,
+            return GridSearchCV(xgboost.XGBClassifier(eval_metric="logloss",random_state=self.random_state), param_grid=params,return_train_score=True,
                                 scoring=self.DEFAULT_SCORING, cv=self.DEFAULT_KFOLD, n_jobs=-1)
 
         if self.model_type == 'random_forest':
             params = self.hyperparameters or self.RANDOM_FOREST_HYPERPARAMS
             self._pretty_print_dict("Random Forest Hyperparameters", params)
-            return GridSearchCV(RandomForestClassifier(), param_grid=params,return_train_score=True,
+            return GridSearchCV(RandomForestClassifier(random_state=self.random_state), param_grid=params,return_train_score=True,
                                 scoring=self.DEFAULT_SCORING, cv=self.DEFAULT_KFOLD, n_jobs=-1)
 
         if self.model_type == 'pytorch_mlp':
             params = self.hyperparameters or self.PYTORCH_MLP_HYPERPARAMS
             self._pretty_print_dict("MLP Hyperparameters", params)
             return GridSearchCV(
-                estimator=PyTorchMLP(input_dim=self.X_train.shape[1], max_iter=500),
+                estimator=PyTorchMLP(input_dim=self.X_train.shape[1], name=f"{self.dataset_name}_{self.version}_{self.normalization}_{self.random_state}", cache_dir=os.path.join(self.CACHE_DIR,'pytorch_mlp_plots/'),random_state=self.random_state  ), #-- testing the grid
                 param_grid=params,
                 scoring=self.DEFAULT_SCORING,
                 cv=self.DEFAULT_KFOLD,
-                n_jobs=1  
+                n_jobs=-1
             )
         if self.model_type == 'sklearn_mlp':
             params = self.hyperparameters or self.SKLEARN_MLP_HYPERPARAMS
             self._pretty_print_dict("MLP Hyperparameters", params)
-            return GridSearchCV(MLPClassifier(max_iter=500), param_grid=params,return_train_score=True,
+            return GridSearchCV(MLPClassifier(max_iter=500,random_state=self.random_state), param_grid=params,return_train_score=True,
                                 scoring=self.DEFAULT_SCORING, cv=self.DEFAULT_KFOLD, n_jobs=-1)
 
         raise ValueError(f"-- model type '{self.model_type}' is not supported --")

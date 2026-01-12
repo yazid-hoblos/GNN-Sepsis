@@ -1,0 +1,28 @@
+{
+    "id": "2D02D556",
+    "path": "~/saclay/courses/deep-learning-and-artifical-intelligence/project/2526-m2geniomhe-GNN-sepsis/notebooks/interpretability/functional_analysis.Rmd",
+    "project_path": "functional_analysis.Rmd",
+    "type": "r_markdown",
+    "hash": "2007151888",
+    "contents": "",
+    "dirty": false,
+    "created": 1768114902636.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "tempName": "Untitled1",
+        "chunk_output_type": "inline",
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "13,19",
+        "scrollLine": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1768144574,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1768144574097,
+    "read_only": false,
+    "read_only_alternatives": []
+}

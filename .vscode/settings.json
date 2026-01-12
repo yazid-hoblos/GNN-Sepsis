@@ -1,0 +1,15 @@
+{
+    "python.analysis.exclude": [
+        "**/data/**",
+        "**/results/**",
+        "**/outputs/**",
+        "**/.venv/**",
+        "**/env/**",
+        "**/node_modules/**"
+    ]
+}
+{
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.diagnosticMode": "openFilesOnly"
+}
+

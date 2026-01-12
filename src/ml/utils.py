@@ -59,7 +59,7 @@ def load_hyperparameters(hyperparam_file):
         )
     return hyperparams
 
-def train_one(dataset, model,version,normalization):
+def train_one(dataset, model,version,normalization,random_state, split_ratio):
     pid = os.getpid()
     print(f"[PID {pid}] Training model: {model}  on dataset: {dataset} (version={version})")
     df = load_df(dataset,folder_version=version, normalization=normalization)
@@ -71,22 +71,26 @@ def train_one(dataset, model,version,normalization):
 def train_all(datasets:list=['gene_expression', 'RGCN_sample_embeddings', 'Complex_sample_embeddings', 'concatenated_sample_embeddings', 'RGCN_protein_embeddings', 'Complex_protein_embeddings', 'concatenated_protein_embeddings'],
               model_types=MLModel.AVAILABLE_MODELS,
               version='v2.10',cache_dir='../../dump/',
-              normalization:list="robust",
+              normalization:str="robust",
               split_ratio=0.3, random_state=42):
     
-    MLModel.CACHE_DIR=cache_dir
-    MLModel.DEFAULT_SAVE=True
-    MLModel.SPLIT_RATIO=split_ratio
-    MLModel.RANDOM_STATE=random_state
-    MLModel.DEFAULT_LOGGING=True
+    # MLModel.CACHE_DIR=cache_dir
+    # MLModel.DEFAULT_SAVE=True
+    # MLModel.SPLIT_RATIO=split_ratio
+    # MLModel.RANDOM_STATE=random_state
+    # MLModel.DEFAULT_LOGGING=True
+
+    MLModel.set_global_variable("DEFAULT_RANDOM_STATE",random_state)
+    MLModel.set_global_variable("DEFAULT_SPLIT_RATIO",split_ratio)
 
     from datetime import datetime
     date=datetime.now().strftime("%Y%m%d_%H%M%S")
+    MLModel.set_global_variable("CACHE_DIR",cache_dir)
     MLModel.set_global_variable("SYSOUT_FILE",f"train_all_{version}_{normalization}_{date}_training_utils.log") # -- since parallelized better not have a file for each model/dataset
     print(f"-- utils.train_all called with version={version}, normalization={normalization}, cache_dir={cache_dir} --")
 
     results = Parallel(n_jobs=NUM_THREADS, backend='threading', verbose=10)(
-        delayed(train_one)(dataset, model,version, normalization)
+        delayed(train_one)(dataset, model,version, normalization,random_state,split_ratio)
         for dataset in datasets
         for model in model_types
     )
