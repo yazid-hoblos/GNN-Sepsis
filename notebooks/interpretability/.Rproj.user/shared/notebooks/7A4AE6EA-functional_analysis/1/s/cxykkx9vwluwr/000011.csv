@@ -1,4 +1,0 @@
-"0","if (!requireNamespace(""BiocManager"", quietly = TRUE))"
-"0","    install.packages(""BiocManager"")"
-"0","if (!requireNamespace(c(""clusterProfiler"",'org.Hs.eg.db'), quietly = TRUE))"
-"0","    BiocManager::install(c(""clusterProfiler"",'org.Hs.eg.db'))"

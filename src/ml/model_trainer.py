@@ -349,7 +349,7 @@ class MLModel:
     # }
     PYTORCH_MLP_HYPERPARAMS = {
         'hidden_layer_sizes': [(50,), (100,)],
-        'max_iter':[30],
+        'max_iter':[40],
         'activation': ['relu'],
         'solver': ['adam','adamW'],
         'learning_rate_init': [0.001, 0.0001],
