@@ -12,7 +12,7 @@ fi
 
 
 
-seed=1
+seed=6
 # -- gex once
 python -m src.ml.train_all --cache-dir ./dump_seeds/dump_$seed --model-types sklearn_mlp xgboost svm random_forest --normalization none --dataset gene_expression --random-state $seed --threads 1 --split-ratio 0.3 --versions v2.10
 

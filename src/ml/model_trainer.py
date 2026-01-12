@@ -561,7 +561,7 @@ class MLModel:
             params = self.hyperparameters or self.SKLEARN_MLP_HYPERPARAMS
             self._pretty_print_dict("MLP Hyperparameters", params)
             return GridSearchCV(MLPClassifier(max_iter=500,random_state=self.random_state), param_grid=params,return_train_score=True,
-                                scoring=self.DEFAULT_SCORING, cv=self.DEFAULT_KFOLD, n_jobs=-1)
+                                scoring=self.DEFAULT_SCORING, cv=self.DEFAULT_KFOLD, n_jobs=-1,error_score=np.nan, refit=True) # -- refit=T added for v2.10 mlp on Complex after robust => error instability 
 
         raise ValueError(f"-- model type '{self.model_type}' is not supported --")
 

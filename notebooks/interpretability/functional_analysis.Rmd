@@ -18,6 +18,8 @@ This notebook was made to perform pathway analysis using the GSEA method, it wil
 ```{r install_depencies}
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
+if (!requireNamespace("umap", quietly = TRUE))
+    install.packages("umap")
 if (!requireNamespace("clusterProfiler", quietly = TRUE) || !requireNamespace("org.Hs.eg.db", quietly = TRUE)||
     !requireNamespace("enrichplot", quietly = TRUE))
     BiocManager::install(c("clusterProfiler",'org.Hs.eg.db','enrichplot'))
@@ -28,6 +30,7 @@ library(clusterProfiler)
 library(org.Hs.eg.db)
 library(enrichplot)
 library(ggplot2)
+library(umap)
 ```
 
 ## data Preparation
@@ -79,6 +82,18 @@ gene_list <- df_sorted[[col]]
 names(gene_list) <- rownames(df_sorted)
 head(gene_list)
 ```
+
+```{r}
+# -- umap
+library(umap)
+set.seed(42)
+
+numeric_data <- df_raw[, sapply(df_raw, is.numeric)]
+embedding <- umap(as.matrix(numeric_data))
+
+plot(embedding$layout, main="UMAP of Protein Embeddings", xlab="UMAP1", ylab="UMAP2")
+```
+
 
 ### enrichR
 
