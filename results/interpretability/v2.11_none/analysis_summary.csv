@@ -1,0 +1,4 @@
+model_path,model_type,dataset,version,test_accuracy,status,mean_abs_shap,top_feature,top_importance,error
+/mnt/c/Users/user/Desktop/projects/M2/DL/dump/v2.11_none/random_forest_gene_expression_gridsearch_model.joblib,random_forest,gene_expression,v2.11,0.7878787878787878,success,3.0343923799464274e-05,Feature_2508,0.015518704490172617,
+/mnt/c/Users/user/Desktop/projects/M2/DL/dump/v2.11_none/svm_gene_expression_gridsearch_model.joblib,svm,gene_expression,v2.11,1.0,failed,,,,"Failed to compute SHAP values: Unable to allocate 316. GiB for an array with shape (51728, 819720) and data type float64"
+/mnt/c/Users/user/Desktop/projects/M2/DL/dump/v2.11_none/xgboost_gene_expression_gridsearch_model.joblib,xgboost,gene_expression,v2.11,0.7878787878787878,failed,,,,Failed to compute SHAP values: could not convert string to float: '[4.9678922E-1]'
