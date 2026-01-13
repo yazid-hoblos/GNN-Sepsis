@@ -1,8 +1,10 @@
 from pathlib import Path
-from rdflib import Graph
+from rdflib import Graph, Namespace, RDF, OWL
 import torch
 from torch_geometric.data import HeteroData
 from collections import defaultdict
+import xml.etree.ElementTree as ET
+import numpy as np
 
 project_root = Path(__file__).parent.parent.parent
 owl_dir = project_root / "models" / "executions" / "GSE54514_enriched_ontology_degfilterv2.9"
@@ -50,6 +52,58 @@ def _load_owl_graph(owl_path=None):
     return g
 
 
+def _extract_edge_weights_from_axioms(owl_path):
+    """Extract edge weights from OWL Axioms with hasExpressionValue."""
+    print("  Extracting edge weights from OWL Axioms...")
+    edge_weights = {}  # {(source, relation, target): weight}
+
+    print("  Parsing XML file...")
+    tree = ET.parse(owl_path)
+    root = tree.getroot()
+    print("  XML parsed successfully!")
+
+    # Define namespaces
+    ns = {
+        'owl': 'http://www.w3.org/2002/07/owl#',
+        'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
+    }
+
+    print("  Finding axioms...")
+    axiom_count = 0
+    for i, axiom in enumerate(root.findall('.//owl:Axiom', ns)):
+        if i % 50000 == 0 and i > 0:
+            print(f"    Processed {i} axioms, found {axiom_count} with expression values...")
+
+        # Get annotated source, property, and target
+        source_elem = axiom.find('owl:annotatedSource', ns)
+        prop_elem = axiom.find('owl:annotatedProperty', ns)
+        target_elem = axiom.find('owl:annotatedTarget', ns)
+
+        if source_elem is None or prop_elem is None or target_elem is None:
+            continue
+
+        source = source_elem.get('{http://www.w3.org/1999/02/22-rdf-syntax-ns#}resource', '').split('#')[-1]
+        relation = prop_elem.get('{http://www.w3.org/1999/02/22-rdf-syntax-ns#}resource', '').split('#')[-1]
+        target = target_elem.get('{http://www.w3.org/1999/02/22-rdf-syntax-ns#}resource', '').split('#')[-1]
+
+        # Get all hasExpressionValue elements (usually 3 replicates)
+        expr_values = []
+        for expr_elem in axiom.findall('.//{*}hasExpressionValue'):
+            try:
+                expr_values.append(float(expr_elem.text))
+            except (ValueError, TypeError):
+                pass
+
+        if expr_values and source and relation and target:
+            # Average the replicate values
+            avg_weight = np.mean(expr_values)
+            edge_weights[(source, relation, target)] = avg_weight
+            axiom_count += 1
+
+    print(f"  Found {axiom_count} edges with expression values")
+    return edge_weights
+
+
 def _extract_nodes_and_edges(g, node_types_filter=None):
     """Extract nodes and edges from RDF graph."""
     nodes = defaultdict(set)
@@ -86,23 +140,26 @@ def _extract_nodes_and_edges(g, node_types_filter=None):
     return nodes, edges, sample_labels
 
 
-def _create_node_features(nodes):
-    """Create one-hot encoded features for each node type."""
+def _create_node_features(nodes, embedding_dim=128):
+    """Create fixed-size embeddings for each node type."""
     node_to_idx = {}
     node_features = {}
 
+    torch.manual_seed(42)
     for node_type, node_list in nodes.items():
         n_nodes = len(node_list)
-        features = torch.eye(n_nodes, dtype=torch.float)
+        features = torch.randn(n_nodes, embedding_dim, dtype=torch.float)
+        features = torch.nn.functional.normalize(features, dim=1)
         node_features[node_type] = features
         node_to_idx[node_type] = {node_id: idx for idx, node_id in enumerate(node_list)}
 
     return node_features, node_to_idx
 
 
-def _create_edge_indices(edges, node_to_idx):
-    """Convert edge lists to PyTorch Geometric format."""
+def _create_edge_indices(edges, node_to_idx, edge_weights_dict=None):
+    """Convert edge lists to PyTorch Geometric format with optional edge weights."""
     edge_indices = {}
+    edge_weights = {}
 
     for edge_key, edge_list in edges.items():
         src_type, rel, dst_type = edge_key
@@ -112,26 +169,48 @@ def _create_edge_indices(edges, node_to_idx):
 
         src_indices = []
         dst_indices = []
+        weights = []
 
         for src_id, dst_id in edge_list:
             if src_id in node_to_idx[src_type] and dst_id in node_to_idx[dst_type]:
                 src_indices.append(node_to_idx[src_type][src_id])
                 dst_indices.append(node_to_idx[dst_type][dst_id])
 
+                # Get edge weight if available
+                if edge_weights_dict:
+                    weight_key = (src_id, rel, dst_id)
+                    weight = edge_weights_dict.get(weight_key, 1.0)  # Default weight = 1.0
+                    weights.append(weight)
+
         if len(src_indices) > 0:
             edge_index = torch.tensor([src_indices, dst_indices], dtype=torch.long)
             edge_indices[edge_key] = edge_index
 
-    return edge_indices
+            if edge_weights_dict and weights:
+                edge_weights[edge_key] = torch.tensor(weights, dtype=torch.float)
+
+    return edge_indices, edge_weights
 
 
 def load_heterodata(owl_path=None, save_path=None):
-    """Load OWL ontology and convert to HeteroData with all node types (sample, protein, pathway, goterm)."""
-    g = _load_owl_graph(owl_path)
-    nodes, edges, sample_labels = _extract_nodes_and_edges(g, node_types_filter={'sample', 'protein', 'pathway', 'goterm'})
+    """Load OWL ontology and convert to HeteroData with edge weights."""
+    if owl_path is None:
+        owl_path = owl_filepath
 
+    print("Loading OWL graph with RDFlib...")
+    g = _load_owl_graph(owl_path)
+    print("  RDF graph loaded!")
+
+    print("\nExtracting nodes and edges from RDF graph...")
+    nodes, edges, sample_labels = _extract_nodes_and_edges(g, node_types_filter={'sample', 'protein', 'pathway', 'goterm'})
+    print(f"  Found {len(nodes)} node types, {sum(len(e) for e in edges.values())} total edges")
+
+    print("\nExtracting edge weights from OWL...")
+    edge_weights_dict = _extract_edge_weights_from_axioms(owl_path)
+
+    print("\nCreating node features and edge indices...")
     node_features, node_to_idx = _create_node_features(nodes)
-    edge_indices = _create_edge_indices(edges, node_to_idx)
+    edge_indices, edge_weights = _create_edge_indices(edges, node_to_idx, edge_weights_dict)
 
     n_samples = len(nodes['sample'])
     sample_label_tensor = torch.zeros(n_samples, dtype=torch.long)
@@ -147,8 +226,14 @@ def load_heterodata(owl_path=None, save_path=None):
 
     data['sample'].y = sample_label_tensor
 
+    # Add edges and edge weights
     for (src_type, rel, dst_type), edge_index in edge_indices.items():
         data[src_type, rel, dst_type].edge_index = edge_index
+
+        # Add edge weights if available
+        if (src_type, rel, dst_type) in edge_weights:
+            data[src_type, rel, dst_type].edge_weight = edge_weights[(src_type, rel, dst_type)]
+            print(f"  Added edge weights for {src_type} -> {rel} -> {dst_type}: {edge_weights[(src_type, rel, dst_type)].shape}")
 
     if save_path is not None:
         save_path = Path(save_path)
