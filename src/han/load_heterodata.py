@@ -5,10 +5,36 @@ from torch_geometric.data import HeteroData
 from collections import defaultdict
 import xml.etree.ElementTree as ET
 import numpy as np
+import argparse
 
 project_root = Path(__file__).parent.parent.parent
-owl_dir = project_root / "models" / "executions" / "GSE54514_enriched_ontology_degfilterv2.9"
-owl_filepath = owl_dir / "GSE54514_enriched_ontology_degfilterv2.9.owl"
+
+# Version configurations
+OWL_VERSIONS = {
+    'v2.9': {
+        'owl_dir': 'GSE54514_enriched_ontology_degfilterv2.9',
+        'owl_file': 'GSE54514_enriched_ontology_degfilterv2.9.owl',
+    },
+    'v2.10': {
+        'owl_dir': 'GSE54514_enriched_ontology_degfilterv2.10',
+        'owl_file': 'GSE54514_enriched_ontology_degfilter_v2.10_ovp0.2_ng3.owl',
+    },
+    'v2.11': {
+        'owl_dir': 'GSE54514_enriched_ontology_degfilterv2.11',
+        'owl_file': 'GSE54514_enriched_ontology_degfilter_v2.11.owl',
+    },
+}
+
+def get_owl_path(version: str = 'v2.11') -> Path:
+    """Get OWL file path for a specific version."""
+    if version not in OWL_VERSIONS:
+        raise ValueError(f"Unknown version: {version}. Choose from {list(OWL_VERSIONS.keys())}")
+    config = OWL_VERSIONS[version]
+    return project_root / "models" / "executions" / config['owl_dir'] / config['owl_file']
+
+def get_save_path(version: str = 'v2.11') -> Path:
+    """Get save path for HeteroData for a specific version."""
+    return project_root / "data" / "han" / version / "hetero_graph.pt"
 
 
 def _get_node_type(uri):
@@ -43,10 +69,8 @@ def _get_node_id(uri):
         return uri_str.split('/')[-1]
 
 
-def _load_owl_graph(owl_path=None):
+def _load_owl_graph(owl_path):
     """Load OWL file with RDFlib."""
-    if owl_path is None:
-        owl_path = owl_filepath
     g = Graph()
     g.parse(str(owl_path), format='xml')
     return g
@@ -192,10 +216,18 @@ def _create_edge_indices(edges, node_to_idx, edge_weights_dict=None):
     return edge_indices, edge_weights
 
 
-def load_heterodata(owl_path=None, save_path=None):
-    """Load OWL ontology and convert to HeteroData with edge weights."""
+def load_heterodata(owl_path=None, save_path=None, version: str = 'v2.11'):
+    """Load OWL ontology and convert to HeteroData with edge weights.
+
+    Args:
+        owl_path: Path to OWL file (overrides version if provided)
+        save_path: Path to save HeteroData (overrides version if provided)
+        version: Version to use ('v2.9', 'v2.10', 'v2.11')
+    """
     if owl_path is None:
-        owl_path = owl_filepath
+        owl_path = get_owl_path(version)
+    if save_path is None:
+        save_path = get_save_path(version)
 
     print("Loading OWL graph with RDFlib...")
     g = _load_owl_graph(owl_path)
@@ -244,16 +276,22 @@ def load_heterodata(owl_path=None, save_path=None):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Load OWL ontology and convert to HeteroData')
+    parser.add_argument('--version', '-v', type=str, default='v2.11',
+                        choices=['v2.9', 'v2.10', 'v2.11'],
+                        help='OWL version to use (default: v2.11)')
+    args = parser.parse_args()
+
     print("="*80)
-    print("Testing load_heterodata module")
+    print(f"Loading HeteroData from {args.version}")
     print("="*80)
 
-    data = load_heterodata(save_path=project_root / "data" / "han" / "hetero_graph.pt")
+    data = load_heterodata(version=args.version)
 
     print(f"\n✓ HeteroData loaded:")
     print(data)
     print(f"\nNode types: {data.node_types}")
     print(f"Edge types: {data.edge_types}")
     print("\n" + "="*80)
-    print("Test passed!")
+    print(f"Saved to: {get_save_path(args.version)}")
     print("="*80)

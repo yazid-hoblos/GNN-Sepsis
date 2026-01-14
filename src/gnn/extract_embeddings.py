@@ -10,9 +10,10 @@ Usage:
 import argparse
 import torch
 from base import (
-    PROJECT_ROOT, DATA_PATH, get_device, load_hetero_data,
+    PROJECT_ROOT, get_device, load_hetero_data,
     prepare_edge_weight_dict, train_epoch, evaluate,
     plot_loss, save_embeddings, EarlyStopping,
+    get_data_path, get_output_dir, DATA_VERSIONS,
 )
 from models import create_model, MODELS
 
@@ -64,6 +65,8 @@ def run_model(name, data, device, output_dir, epochs=100, lr=0.01, patience=10):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", choices=list(MODELS.keys()) + ["all"], default="all")
+    parser.add_argument("--version", "-v", choices=list(DATA_VERSIONS.keys()), default="v2.11",
+                        help="Data version to use (default: v2.11)")
     parser.add_argument("--epochs", type=int, default=100)
     parser.add_argument("--lr", type=float, default=0.01)
     parser.add_argument("--patience", type=int, default=10)
@@ -71,9 +74,11 @@ def main():
 
     device = get_device()
     print(f"Device: {device}")
+    print(f"Version: {args.version}")
 
-    data = load_hetero_data(DATA_PATH)
-    output_dir = PROJECT_ROOT / "results" / "embeddings"
+    data_path = get_data_path(args.version)
+    data = load_hetero_data(data_path)
+    output_dir = get_output_dir(args.version)
 
     models = list(MODELS.keys()) if args.model == "all" else [args.model]
     for name in models:
