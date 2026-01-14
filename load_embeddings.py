@@ -105,26 +105,25 @@ if __name__ == "__main__":
     for kg in kgs:
         for s in strategies:
             for model in models:
+                if kg == "GSE54514":
+                    control_label = "healthy"
+                elif kg == "GSE76293":
+                    control_label = "HVT"
+                elif kg == "GSE40012":
+                    control_label = "healthy control"
+                else:
+                    raise ValueError("Dataset not recognized for control group labeling.")
 
-            if kg == "GSE54514":
-                control_label = "healthy"
-            elif kg == "GSE76293":
-                control_label = "HVT"
-            elif kg == "GSE40012":
-                control_label = "healthy control"
-            else:
-                raise ValueError("Dataset not recognized for control group labeling.")
-          
-            emb_path = f"./models/executions/{kg}_enriched_ontology_degfilterv2.9/outputmodel_{model}_entity_embeddings.npy"
-            node_features_csv = f"./models/executions/{kg}_enriched_ontology_degfilterv2.9/node_features.csv"
-            map_csv = f"./models/executions/{kg}_enriched_ontology_degfilterv2.9/outputmodel_{model}_entity_mapping.csv"
-            
-            # Load patients
-            patient_ids, X_patients, y_patients, df_patients = load_patient_data(emb_path, map_csv, node_features_csv, control_label)
-            print(f"Loaded {len(patient_ids)} patients, embedding dim={X_patients.shape[1]} for {kg}-{model}")
-            
-            # --- Load all entities ---
-            entity_ids, X_all, entity_labels, df_all = load_all_entities(emb_path, map_csv, node_features_csv)
-            print(f"Loaded {len(entity_ids)} entities for {kg}-{model}")
-            # ecris ligne pour afficher les lignes ou la prmeiere colonne commence par "Protein_" de df_all
-            print(df_all[df_all['label'].str.startswith('Sample_')].head(500))
+                emb_path = f"./models/executions/{kg}_enriched_ontology_degfilterv2.9/outputmodel_{model}_entity_embeddings.npy"
+                node_features_csv = f"./models/executions/{kg}_enriched_ontology_degfilterv2.9/node_features.csv"
+                map_csv = f"./models/executions/{kg}_enriched_ontology_degfilterv2.9/outputmodel_{model}_entity_mapping.csv"
+
+                # Load patients
+                patient_ids, X_patients, y_patients, df_patients = load_patient_data(emb_path, map_csv, node_features_csv, control_label)
+                print(f"Loaded {len(patient_ids)} patients, embedding dim={X_patients.shape[1]} for {kg}-{model}")
+
+                # --- Load all entities ---
+                entity_ids, X_all, entity_labels, df_all = load_all_entities(emb_path, map_csv, node_features_csv)
+                print(f"Loaded {len(entity_ids)} entities for {kg}-{model}")
+                # Display rows where label starts with "Protein_" from df_all
+                print(df_all[df_all['label'].str.startswith('Protein_')].head(50))
