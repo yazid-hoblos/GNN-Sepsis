@@ -1,0 +1,2 @@
+"ID","Description","setSize","enrichmentScore","NES","pvalue","p.adjust","qvalue","rank","leading_edge","core_enrichment"
+"hsa03010","Ribosome",24,0.742448253089446,2.41566996745909,1.65989515321093e-07,2.35705111755952e-05,2.2015451505745e-05,151,"tags=62%, list=12%, signal=56%","51069/65003/6201/6189/64969/219927/6182/2197/6176/6209/64960/51264/4736/9801/6227"

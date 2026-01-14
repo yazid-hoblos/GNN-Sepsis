@@ -1,0 +1,2 @@
+"ID","Description","setSize","enrichmentScore","NES","pvalue","p.adjust","qvalue","rank","leading_edge","core_enrichment"
+"hsa04072","Phospholipase D signaling pathway",16,0.67422658233625,2.05101368244915,0.000326146405082857,0.0463127895217657,0.0460038087169504,255,"tags=56%, list=20%, signal=46%","1785/551/5295/1606/6464/10555/2534/2185/2885"

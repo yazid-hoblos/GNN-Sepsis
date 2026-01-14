@@ -1,0 +1,2 @@
+"ID","Description","setSize","enrichmentScore","NES","pvalue","p.adjust","qvalue","rank","leading_edge","core_enrichment"
+"hsa00230","Purine metabolism",10,-0.795195791701536,-2.03928212537845,0.000284814482878537,0.0404436565687522,0.0389746134465366,222,"tags=80%, list=17%, signal=67%","1633/5150/5153/10606/9061/4830/5140/204"

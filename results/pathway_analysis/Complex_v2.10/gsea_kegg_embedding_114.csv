@@ -1,0 +1,2 @@
+"ID","Description","setSize","enrichmentScore","NES","pvalue","p.adjust","qvalue","rank","leading_edge","core_enrichment"
+"hsa05162","Measles",18,-0.669664880165936,-1.9803415087544,0.000229529655724995,0.0325932111129493,0.025610677375631,252,"tags=61%, list=20%, signal=50%","9367/3665/5610/6773/841/1027/3551/103/23118/9641/637"

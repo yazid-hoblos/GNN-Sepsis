@@ -1,0 +1,2 @@
+"ID","Description","setSize","enrichmentScore","NES","pvalue","p.adjust","qvalue","rank","leading_edge","core_enrichment"
+"hsa04146","Peroxisome",10,0.814334258907141,2.09611589382379,8.16469942398725e-05,0.0115938731820619,0.0115938731820619,111,"tags=60%, list=9%, signal=55%","5827/215/2053/3418/5830/3417"

@@ -79,6 +79,18 @@ class Logger:
 
 # ----------------------------------------------------------------------------------------------- #
 
+import os
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader, TensorDataset
+from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.model_selection import train_test_split
+from copy import deepcopy
+import matplotlib.pyplot as plt
+
+
 class PyTorchMLP(BaseEstimator, ClassifierMixin):
     """
     PyTorch wrapper for a simple MLP classifier to mimic scikit-learn API in a way that is easily integrable in MLModel's GridSearchCV pipeline
@@ -254,6 +266,7 @@ class PyTorchMLP(BaseEstimator, ClassifierMixin):
         return (proba >= 0.5).astype(int)
 
 
+
 # ----------------------------------------------------------------------------------------------- #
 
 class MLModel:
@@ -348,11 +361,11 @@ class MLModel:
     #     # 'dropout': [0.0, 0.1, 0.2] #-- reconsidering
     # }
     PYTORCH_MLP_HYPERPARAMS = {
-        'hidden_layer_sizes': [(50,), (100,)],
-        'max_iter':[40],
+        'hidden_layer_sizes': [(50,), (100,), (100, 50)],
+        'max_iter':[50,20],
         'activation': ['relu'],
         'solver': ['adam','adamW'],
-        'learning_rate_init': [0.001, 0.0001],
+        'learning_rate_init': [0.00001, 0.0001],
         'batch_size': [16],
         'dropout_rate': [0.0, 0.1]
     }
@@ -551,7 +564,7 @@ class MLModel:
             params = self.hyperparameters or self.PYTORCH_MLP_HYPERPARAMS
             self._pretty_print_dict("MLP Hyperparameters", params)
             return GridSearchCV(
-                estimator=PyTorchMLP(input_dim=self.X_train.shape[1], name=f"{self.dataset_name}_{self.version}_{self.normalization}_{self.random_state}", cache_dir=os.path.join(self.CACHE_DIR,'pytorch_mlp_plots/'),random_state=self.random_state  ), #-- testing the grid
+                estimator=PyTorchMLP(input_dim=self.X_train.shape[1], name=f"{self.dataset_name}_{self.version}_{self.normalization}_{self.random_state}", cache_dir=os.path.join(self.CACHE_DIR,'.cache_pytorch_mlp/'),random_state=self.random_state  ), #-- testing the grid
                 param_grid=params,
                 scoring=self.DEFAULT_SCORING,
                 cv=self.DEFAULT_KFOLD,
