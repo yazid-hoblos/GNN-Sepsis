@@ -14,6 +14,7 @@ import json
 from pathlib import Path
 import sys
 import os
+import argparse
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -24,9 +25,13 @@ app = Flask(__name__)
 class MultiLayerNetworkManager:
     """Manages the multi-layer network data and provides filtering capabilities."""
     
-    def __init__(self, kg_path='../kg_conversion', models_path='../models/executions'):
-        self.kg_path = kg_path
-        self.models_path = models_path
+    def __init__(self, kg_path=None, models_path=None):
+        # Resolve paths relative to project root
+        script_dir = Path(__file__).parent
+        project_root = script_dir.parent
+        
+        self.kg_path = kg_path or str(project_root / 'kg_conversion')
+        self.models_path = models_path or str(project_root / 'models' / 'executions')
         self.df_nodes = None
         self.df_edges = None
         self.df_classes = None
@@ -34,16 +39,27 @@ class MultiLayerNetworkManager:
         self.edge_types = set()
         self.layer_definitions = {}
         self.patient_embeddings = None
+        self.cached_nodes = []
+        self.cached_edges = []
+        self.cached_stats = {}
         
         self.load_data()
         self.initialize_layers()
+        self.cache_sample_network()
     
     def load_data(self):
         """Load knowledge graph data from CSV files."""
-        # Load full knowledge graph data
-        nodes_file = f"{self.kg_path}/nodes.csv"
-        edges_file = f"{self.kg_path}/edges.csv"
-        classes_file = f"{self.kg_path}/classes.csv"
+        base_path = Path(self.kg_path)
+        lean_path = base_path / "lean_kg"
+
+        if not base_path.exists() and lean_path.exists():
+            print(f"Primary kg_path {base_path} missing, using lean export at {lean_path}")
+            base_path = lean_path
+            self.kg_path = str(lean_path)
+
+        nodes_file = base_path / "nodes.csv"
+        edges_file = base_path / "edges.csv"
+        classes_file = base_path / "classes.csv"
         
         try:
             self.df_nodes = pd.read_csv(nodes_file)
@@ -60,12 +76,19 @@ class MultiLayerNetworkManager:
             print("Falling back to model execution data...")
             
             # Fallback to original data source
-            node_file = f"{self.models_path}/GSE54514_enriched_ontology_degfilterv2.9_node_features.csv"
-            edge_file = f"{self.models_path}/GSE54514_enriched_ontology_degfilterv2.9_edge_attributes.csv"
+            node_file = Path(self.models_path) / "GSE54514_enriched_ontology_degfilterv2.9_node_features.csv"
+            edge_file = Path(self.models_path) / "GSE54514_enriched_ontology_degfilterv2.9_edge_attributes.csv"
             
-            self.df_nodes = pd.read_csv(node_file)
-            self.df_edges = pd.read_csv(edge_file)
-            self.df_classes = pd.DataFrame()  # Empty classes dataframe
+            if node_file.exists() and edge_file.exists():
+                self.df_nodes = pd.read_csv(node_file)
+                self.df_edges = pd.read_csv(edge_file)
+                self.df_classes = pd.DataFrame()  # Empty classes dataframe
+            else:
+                raise FileNotFoundError(
+                    f"Neither kg_conversion CSVs nor model execution files found.\n"
+                    f"Tried: {nodes_file}, {edges_file}, {node_file}, {edge_file}\n"
+                    f"Please run: python kg_conversion/convert_owl_to_csv.py"
+                )
         
         # Get unique edge types
         if 'predicate' in self.df_edges.columns:
@@ -83,6 +106,29 @@ class MultiLayerNetworkManager:
                 self.edge_types = {'unknown'}
         
         print(f"Found {len(self.edge_types)} edge types: {list(self.edge_types)[:5]}...")
+    
+    def cache_sample_network(self, max_edges: int = 3000, max_nodes: int = 1200):
+        """Build a cached, lightweight subgraph for instant responses."""
+        try:
+            sample_filters = {
+                'layers': list(self.layer_definitions.keys()),
+                'edge_types': list(self.edge_types)[:1],
+                'layer_interactions': 'all',
+                'max_edges': max_edges,
+                'max_nodes': max_nodes,
+                'drop_singletons': True,
+                'lazy': True,
+            }
+            sample = self.get_filtered_network(sample_filters)
+            self.cached_nodes = sample['nodes']
+            self.cached_edges = sample['edges']
+            self.cached_stats = sample.get('stats', {})
+            print(f"Cached sample network: {len(self.cached_nodes)} nodes, {len(self.cached_edges)} edges")
+        except Exception as e:
+            print(f"Failed to cache sample network: {e}")
+            self.cached_nodes = []
+            self.cached_edges = []
+            self.cached_stats = {}
     
     def initialize_layers(self):
         """Define and initialize network layers."""
@@ -241,13 +287,20 @@ class MultiLayerNetworkManager:
             return {'type': 'Other', 'layer': 'Other_Layer', 'level': 7}
     
     def get_filtered_network(self, filters):
-        """Generate network data based on current filters with optimizations."""
+        """Generate network data based on current filters with optional lazy pagination."""
         import time
         t0 = time.time()
+        filters = filters or {}
         # Apply filters without limits - ensure we always have some layers and edge types
         active_layers = filters.get('layers') or list(self.layer_definitions.keys())
         active_edge_types = filters.get('edge_types') or list(self.edge_types)
         layer_interactions = filters.get('layer_interactions', 'all')
+        max_nodes = filters.get('max_nodes')
+        max_edges = filters.get('max_edges')
+        page_size = filters.get('page_size')
+        offset = filters.get('offset', 0)
+        seed = filters.get('seed')
+        drop_singletons = filters.get('drop_singletons', True)
         t1 = time.time()
         print(f"[PERF] Parsed filters in {t1-t0:.3f}s")
         # Ensure we have valid defaults
@@ -320,6 +373,44 @@ class MultiLayerNetworkManager:
         t8 = time.time()
         print(f"[PERF] Applied layer interaction filter in {t8-t7:.3f}s")
         print(f"Final edge count: {len(filtered_edges)}")
+
+        total_edges_prelimit = len(filtered_edges)
+        total_nodes_prelimit = len(filtered_node_ids)
+
+        if max_nodes and max_nodes > 0 and len(filtered_node_ids) > max_nodes:
+            degrees = pd.concat([
+                filtered_edges[edge_subject_col],
+                filtered_edges[edge_object_col]
+            ]).value_counts()
+            top_nodes = set(degrees.head(max_nodes).index)
+            filtered_edges = filtered_edges[
+                filtered_edges[edge_subject_col].isin(top_nodes) &
+                filtered_edges[edge_object_col].isin(top_nodes)
+            ]
+            filtered_node_ids = top_nodes
+            print(f"Applied max_nodes={max_nodes}: {len(filtered_edges)} edges remain")
+
+        if max_edges and max_edges > 0 and len(filtered_edges) > max_edges:
+            filtered_edges = filtered_edges.sample(n=max_edges, random_state=seed)
+            print(f"Applied max_edges={max_edges}: downsampled edges to {len(filtered_edges)}")
+
+        page_info = {
+            'offset': offset,
+            'page_size': page_size or len(filtered_edges),
+            'has_more': False,
+            'next_offset': None,
+            'total_edges_after_limits': len(filtered_edges),
+            'total_edges_before_limits': total_edges_prelimit,
+        }
+
+        if page_size and page_size > 0:
+            start = max(offset, 0)
+            end = start + page_size
+            page_info['has_more'] = end < len(filtered_edges)
+            page_info['next_offset'] = end if page_info['has_more'] else None
+            filtered_edges = filtered_edges.iloc[start:end]
+            print(f"Paged edges [{start}:{end}] -> {len(filtered_edges)} rows")
+
         nodes_data = []
         edges_data = []
         print("Building final network data...")
@@ -377,16 +468,20 @@ class MultiLayerNetworkManager:
                     })
         t12 = time.time()
         print(f"[PERF] Built edge data in {t12-t11:.3f}s")
-        nodes_data = self.remove_singletons(nodes_data, edges_data)
-        t13 = time.time()
-        print(f"[PERF] Removed singletons in {t13-t12:.3f}s")
+        if drop_singletons:
+            nodes_data = self.remove_singletons(nodes_data, edges_data)
+            t13 = time.time()
+            print(f"[PERF] Removed singletons in {t13-t12:.3f}s")
+        else:
+            t13 = t12
         layer_counts = {}
         for node in nodes_data:
             layer = node['layer']
             layer_counts[layer] = layer_counts.get(layer, 0) + 1
         t14 = time.time()
         print(f"[PERF] Counted layers in {t14-t13:.3f}s")
-        print(f"Final network: {len(nodes_data)} nodes, {len(edges_data)} edges (singletons removed)")
+        singleton_note = " (singletons removed)" if drop_singletons else ""
+        print(f"Final network: {len(nodes_data)} nodes, {len(edges_data)} edges{singleton_note}")
         print(f"[PERF] Total get_filtered_network time: {t14-t0:.3f}s")
         return {
             'nodes': nodes_data,
@@ -394,7 +489,12 @@ class MultiLayerNetworkManager:
             'stats': {
                 'node_count': len(nodes_data),
                 'edge_count': len(edges_data),
-                'layer_counts': layer_counts
+                'layer_counts': layer_counts,
+                'pre_limit': {
+                    'nodes': total_nodes_prelimit,
+                    'edges': total_edges_prelimit
+                },
+                'page': page_info
             }
         }
     
@@ -422,7 +522,11 @@ class MultiLayerNetworkManager:
             'edge_types': list(self.edge_types),
             'total_nodes': len(self.node_layers),
             'total_edges': len(self.df_edges),
-            'note': 'Singleton nodes (no connections) are automatically removed from network display'
+            'note': 'Singleton nodes (no connections) are automatically removed from network display',
+            'cache': {
+                'nodes': len(self.cached_nodes),
+                'edges': len(self.cached_edges)
+            }
         }
 
 # Global network manager
@@ -439,10 +543,18 @@ def get_network_data():
     try:
         manager = initialize_manager()
         # Get filter parameters from request
+        parse_bool = lambda val, default=False: default if val is None else str(val).lower() in ('1', 'true', 'yes', 'on')
         filters = {
             'layers': request.args.getlist('layers') or list(manager.layer_definitions.keys()),
             'edge_types': request.args.getlist('edge_types') or list(manager.edge_types),
-            'layer_interactions': request.args.get('layer_interactions', 'all')
+            'layer_interactions': request.args.get('layer_interactions', 'all'),
+            'max_nodes': request.args.get('max_nodes', type=int),
+            'max_edges': request.args.get('max_edges', type=int),
+            'page_size': request.args.get('page_size', type=int),
+            'offset': request.args.get('offset', default=0, type=int),
+            'seed': request.args.get('seed', type=int),
+            'drop_singletons': parse_bool(request.args.get('drop_singletons'), True),
+            'lazy': parse_bool(request.args.get('lazy'), False)
         }
         import time
         print(f"API request: {filters}")
@@ -481,6 +593,9 @@ def get_sample_network():
         manager = initialize_manager()
         
         print("Returning pre-cached sample network (instant)...")
+
+        if not manager.cached_nodes or not manager.cached_edges:
+            manager.cache_sample_network()
         
         # Return pre-computed cached data (instant response)
         result = {
@@ -513,24 +628,41 @@ def get_patient_similarity():
     # Implementation similar to your existing patient similarity code
     return jsonify({'message': 'Patient similarity computation not yet implemented'})
 
-def initialize_manager():
+def initialize_manager(kg_path=None):
     """Initialize the global network manager."""
     global network_manager
     if network_manager is None:
         print("Initializing network manager...")
-        network_manager = MultiLayerNetworkManager()
+        network_manager = MultiLayerNetworkManager(kg_path=kg_path)
         print(f"Available layers: {list(network_manager.layer_definitions.keys())}")
         print(f"Available edge types: {list(network_manager.edge_types)}")
     return network_manager
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Multi-Layer Network Visualization Server')
+    parser.add_argument('--kg-path', type=str, default=None,
+                       help='Path to KG directory (default: kg_conversion, use "kg_conversion/lean_kg" for lean export)')
+    parser.add_argument('--port', type=int, default=5002,
+                       help='Server port (default: 5002)')
+    parser.add_argument('--lean', action='store_true',
+                       help='Use lean KG export (shortcut for --kg-path kg_conversion/lean_kg)')
+    
+    args = parser.parse_args()
+    
+    # Determine kg_path
+    kg_path = args.kg_path
+    if args.lean and not kg_path:
+        kg_path = 'kg_conversion/lean_kg'
+    
     # Initialize network manager
-    initialize_manager()
+    initialize_manager(kg_path=kg_path)
     
     print("Starting Multi-Layer Network Visualization Server...")
-    print("\nOpen http://localhost:5002 in your browser to access the visualization")
+    if kg_path:
+        print(f"Using KG from: {kg_path}")
+    print(f"\nOpen http://localhost:{args.port} in your browser to access the visualization")
     
     # Create templates directory if it doesn't exist
     os.makedirs('templates', exist_ok=True)
     
-    app.run(debug=True, host='0.0.0.0', port=5002)
+    app.run(debug=True, host='0.0.0.0', port=args.port)

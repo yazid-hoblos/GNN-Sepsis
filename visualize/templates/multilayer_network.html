@@ -347,16 +347,6 @@
                         🎯 Network Layers
                     </div>
                     <div id="layer-controls"></div>
-                    
-                    <div class="section-title" style="margin-top: 20px;">
-                        🔗 Layer Interactions
-                    </div>
-                    <div class="interaction-controls">
-                        <div class="interaction-btn active" data-interaction="all">All</div>
-                        <div class="interaction-btn" data-interaction="intra">Intra-Layer</div>
-                        <div class="interaction-btn" data-interaction="inter">Inter-Layer</div>
-                        <div class="interaction-btn" data-interaction="custom">Custom</div>
-                    </div>
                 </div>
 
                 <!-- Edge Type Controls -->
@@ -371,32 +361,16 @@
                     <div id="edge-controls" style="max-height: 200px; overflow-y: auto;" class="scrollbar-thin"></div>
                 </div>
 
-                <!-- Performance Controls -->
+                <!-- Visualization Settings -->
                 <div class="control-section">
                     <div class="section-title">
-                        ⚙️ Visualization Settings
-                    </div>
-                    
-                    <div style="margin-bottom: 15px;">
-                        <button class="btn" onclick="loadFullNetwork()" style="width: 100%; margin-bottom: 10px;">
-                            🌐 Load All Edge Types
-                        </button>
-                        <button class="btn" onclick="clearFiltersAndReload()" style="width: 100%;">
-                            🔄 Reset to Minimal (1 Edge Type)
-                        </button>
-                    </div>
-                    
-                    <div style="margin-top: 15px;">
-                        <input type="checkbox" id="physics-toggle" checked>
-                        <label for="physics-toggle" style="font-size: 12px; cursor: pointer;">
-                            Enable Physics Simulation
-                        </label>
+                        ⚙️ Settings
                     </div>
                     
                     <div style="margin-top: 10px;">
-                        <input type="checkbox" id="quick-filter-toggle" checked>
-                        <label for="quick-filter-toggle" style="font-size: 12px; cursor: pointer;">
-                            Quick Visual Filter (instant preview)
+                        <input type="checkbox" id="physics-toggle" checked>
+                        <label for="physics-toggle" style="font-size: 12px; cursor: pointer;">
+                            Physics Simulation
                         </label>
                     </div>
                 </div>
@@ -421,8 +395,8 @@
 
             <!-- Action Buttons -->
             <div class="action-buttons">
-                <button class="btn" onclick="resetFilters()">Reset All</button>
-                <button class="btn primary" id="apply-btn" onclick="applyFilters()">Apply Filters</button>
+                <button class="btn" onclick="resetFilters()">Reset</button>
+                <button class="btn primary" onclick="loadFullNetwork()">Load All</button>
             </div>
         </div>
 
@@ -468,11 +442,6 @@
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             initializeApp();
-            // Auto-load the network on startup
-            setTimeout(() => {
-                console.log('Auto-loading network on startup...');
-                applyFilters();
-            }, 1000);
         });
 
         async function initializeApp() {
@@ -495,49 +464,16 @@
                 currentFilters.layers = Object.keys(layerInfo);
                 // Start with only the first edge type to prevent overload
                 currentFilters.edge_types = summary.edge_types.length > 0 ? [summary.edge_types[0]] : [];
+                const firstEdgeType = currentFilters.edge_types[0];
                 
                 // Initialize UI components
                 setupLayerControls();
-                setupEdgeControls();
+                await setupEdgeControls(firstEdgeType);
                 setupSliders();
-                setupInteractionControls();
                 
-                // Try to load sample network first, with fallback
-                console.log('Loading sample network for fast startup...');
-                try {
-                    const sampleResponse = await fetch('/api/sample_network');
-                    
-                    if (sampleResponse.ok) {
-                        const sampleData = await sampleResponse.json();
-                        console.log('Sample data loaded:', sampleData.stats);
-                        
-                        if (!sampleData.error && sampleData.nodes && sampleData.nodes.length > 0) {
-                            // Initialize with sample data
-                            updateNetworkVisualization(sampleData);
-                            updateStatistics(sampleData.stats);
-                        } else {
-                            throw new Error('Sample network returned no data');
-                        }
-                    } else {
-                        throw new Error(`Sample network failed: ${sampleResponse.status}`);
-                    }
-                } catch (sampleError) {
-                    console.warn('Sample network failed, creating empty visualization:', sampleError);
-                    
-                    // Create empty network for immediate UI response
-                    const emptyData = {
-                        nodes: [],
-                        edges: [],
-                        stats: { node_count: 0, edge_count: 0, layer_counts: {} }
-                    };
-                    
-                    updateNetworkVisualization(emptyData);
-                    updateStatistics(emptyData.stats);
-                    
-                    // Show message to user
-                    document.getElementById('loading-overlay').classList.add('hidden');
-                    console.log('Empty network initialized. Use Apply Filters to load data.');
-                }
+                // Load initial network data from server with first edge type only
+                console.log('Loading initial network with first edge type only...');
+                await refreshNetwork();
                 
             } catch (error) {
                 console.error('Failed to initialize app:', error);
@@ -581,100 +517,86 @@
                 container.appendChild(layerItem);
             });
             
-            // Add event listeners
+            // Add event listeners with instant client-side filtering
             container.addEventListener('change', function(e) {
                 if (e.target.classList.contains('layer-checkbox')) {
                     updateLayerFilters();
-                    updateApplyButtonState();
-                    
-                    // Quick visual filter if enabled
-                    if (document.getElementById('quick-filter-toggle').checked) {
-                        applyQuickFilter();
-                    }
+                    applyClientSideFilter();
                 }
             });
         }
 
-        function setupEdgeControls() {
-            const container = document.getElementById('edge-controls');
-            
-            // Get all available edge types and show them, but only check the ones in currentFilters
-            fetch('/api/layer_summary')
-                .then(response => response.json())
-                .then(summary => {
-                    summary.edge_types.forEach((edgeType) => {
-                        const isChecked = currentFilters.edge_types.includes(edgeType);
-                        const edgeItem = document.createElement('div');
-                        edgeItem.className = 'edge-item';
-                        edgeItem.innerHTML = `
-                            <input type="checkbox" class="edge-checkbox" 
-                                   id="edge-${edgeType}" data-edge="${edgeType}" ${isChecked ? 'checked' : ''}>
-                            <label for="edge-${edgeType}" style="font-size: 12px; cursor: pointer;">
-                                ${edgeType}
-                            </label>
-                        `;
-                        container.appendChild(edgeItem);
+        function setupEdgeControls(onlyCheckFirst = null) {
+            return new Promise((resolve) => {
+                const container = document.getElementById('edge-controls');
+                
+                // Get all available edge types and show them, but only check the first one
+                fetch('/api/layer_summary')
+                    .then(response => response.json())
+                    .then(summary => {
+                        summary.edge_types.forEach((edgeType, index) => {
+                            // Only first edge type is checked by default, unless overridden
+                            const isChecked = onlyCheckFirst ? (edgeType === onlyCheckFirst) : (index === 0);
+                            const edgeItem = document.createElement('div');
+                            edgeItem.className = 'edge-item';
+                            edgeItem.innerHTML = `
+                                <input type="checkbox" class="edge-checkbox" 
+                                       id="edge-${edgeType}" data-edge="${edgeType}" ${isChecked ? 'checked' : ''}>
+                                <label for="edge-${edgeType}" style="font-size: 12px; cursor: pointer;">
+                                    ${edgeType}
+                                </label>
+                            `;
+                            container.appendChild(edgeItem);
+                        });
+                        
+                        // After checkboxes are set, update filters to reflect first edge type only
+                        updateEdgeFilters();
+                        resolve();
+                    })
+                    .catch(error => {
+                        console.error('Failed to load edge types:', error);
+                        resolve();
                     });
-                })
-                .catch(error => {
-                    console.error('Failed to load edge types:', error);
-                });
+                
+                // Add event listeners with instant client-side filtering
+                // Use event delegation since checkboxes are added dynamically
+                setTimeout(() => {
+                    container.addEventListener('change', function(e) {
+                        if (e.target.classList.contains('edge-checkbox')) {
+                            updateEdgeFilters();
+                            applyClientSideFilter();
+                        }
+                    });
+                }, 100);
+            });
+        }
             
-            // Add event listeners
+            // Add event listeners with instant client-side filtering
             container.addEventListener('change', function(e) {
                 if (e.target.classList.contains('edge-checkbox')) {
                     updateEdgeFilters();
-                    // Don't auto-refresh, let user click Apply button
-                    updateApplyButtonState();
+                    applyClientSideFilter();
                 }
             });
         }
 
         function loadFullNetwork() {
-            console.log('Loading full network with all layers and edge types...');
-            // Reset filters to show everything
-            currentFilters = {
-                layers: [],
-                edge_types: [],
-                layer_interactions: 'all'
-            };
-            
-            // Clear all layer checkboxes to select all
-            document.querySelectorAll('input[name="layer"]').forEach(cb => cb.checked = false);
-            document.querySelectorAll('input[name="edge_type"]').forEach(cb => cb.checked = false);
-            
-            applyFilters();
-        }
-        
-        function refreshNetwork() {
-            console.log('Refreshing current network view...');
-            applyFilters();
-        }
-        
-        function loadFullNetwork() {
             console.log('Loading network with all layers and all edge types...');
+            
+            // Show loading
+            document.getElementById('loading-overlay').classList.remove('hidden');
+            document.getElementById('loading-overlay').innerHTML = `
+                <div style="text-align: center;">
+                    <div style="font-size: 32px; margin-bottom: 10px;">🔄</div>
+                    <div>Loading full network...</div>
+                </div>
+            `;
             
             // Check all checkboxes
             document.querySelectorAll('.layer-checkbox').forEach(cb => cb.checked = true);
             document.querySelectorAll('.edge-checkbox').forEach(cb => cb.checked = true);
             
-            // Update filters based on checked boxes
-            updateLayerFilters();
-            updateEdgeFilters();
-            
-            refreshNetwork();
-        }
-        
-        function clearFiltersAndReload() {
-            console.log('Resetting to minimal network (one edge type)...');
-            
-            // Check all layers, only first edge type
-            document.querySelectorAll('.layer-checkbox').forEach(cb => cb.checked = true);
-            document.querySelectorAll('.edge-checkbox').forEach((cb, index) => {
-                cb.checked = index === 0; // Only check first edge type
-            });
-            
-            // Update filters based on checked boxes
+            // Update filters and reload from server
             updateLayerFilters();
             updateEdgeFilters();
             
@@ -698,19 +620,7 @@
         }
 
         function setupInteractionControls() {
-            document.querySelectorAll('.interaction-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    // Update active state
-                    document.querySelectorAll('.interaction-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    // Update filter
-                    currentFilters.layer_interactions = this.dataset.interaction;
-                    
-                    // Don't auto-refresh, let user click Apply button
-                    updateApplyButtonState();
-                });
-            });
+            // Removed - layer interactions no longer needed
         }
 
         function updateLayerFilters() {
@@ -830,22 +740,23 @@
                     enabled: true,
                     stabilization: {
                         enabled: true,
-                        iterations: 200,
-                        updateInterval: 50,
+                        iterations: 100,
+                        updateInterval: 25,
                         onlyDynamicEdges: false,
                         fit: true
                     },
                     barnesHut: {
-                        gravitationalConstant: -2000,
-                        centralGravity: 0.1,
-                        springLength: 150,
-                        springConstant: 0.01,
-                        damping: 0.4,
-                        avoidOverlap: 0.2
+                        gravitationalConstant: -3000,
+                        centralGravity: 0.3,
+                        springLength: 120,
+                        springConstant: 0.04,
+                        damping: 0.5,
+                        avoidOverlap: 0.1
                     },
-                    maxVelocity: 15,
-                    minVelocity: 0.1,
-                    timestep: 0.5
+                    maxVelocity: 30,
+                    minVelocity: 0.75,
+                    timestep: 0.35,
+                    adaptiveTimestep: true
                 },
                 interaction: {
                     hover: true,
@@ -908,30 +819,16 @@
         }
 
         function resetFilters() {
-            // Reset checkboxes
+            // Reset checkboxes to initial state (all layers, first edge type only)
             document.querySelectorAll('.layer-checkbox').forEach(cb => cb.checked = true);
-            document.querySelectorAll('.edge-checkbox').forEach(cb => cb.checked = true);
+            document.querySelectorAll('.edge-checkbox').forEach((cb, index) => {
+                cb.checked = index === 0; // Only first edge type
+            });
             
-            // Reset sliders
-            // Removed slider resets - no limits to reset
-            
-            // Reset interaction type
-            document.querySelectorAll('.interaction-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelector('[data-interaction="all"]').classList.add('active');
-            
-            // Update filters
-            currentFilters = {
-                layers: Object.keys(layerInfo),
-                edge_types: currentFilters.edge_types.slice(), // Copy original edge types
-                layer_interactions: 'all'
-            };
-            
-            // Update filter objects
+            // Update filters and apply
             updateLayerFilters();
             updateEdgeFilters();
-            
-            // Refresh network
-            refreshNetwork();
+            applyClientSideFilter();
         }
         
         function toggleAllEdges(enable) {
@@ -939,35 +836,6 @@
                 cb.checked = enable;
             });
             updateEdgeFilters();
-            updateApplyButtonState();
-        }
-        
-        function updateApplyButtonState() {
-            const applyBtn = document.getElementById('apply-btn');
-            if (applyBtn) {
-                applyBtn.style.background = '#28a745';
-                applyBtn.style.borderColor = '#28a745';
-                applyBtn.textContent = 'Apply Filters ✨';
-            }
-        }
-        
-        function applyFilters() {
-            const applyBtn = document.getElementById('apply-btn');
-            if (applyBtn) {
-                applyBtn.style.background = '#667eea';
-                applyBtn.style.borderColor = '#667eea';
-                applyBtn.textContent = 'Apply Filters';
-            }
-            
-            // Read current checkbox states before applying
-            updateLayerFilters();
-            updateEdgeFilters();
-            
-            refreshNetwork();
-        }
-        
-        function applyQuickFilter() {
-            if (!network || !fullNetworkData.nodes) return;
             applyClientSideFilter();
         }
         
