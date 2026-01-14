@@ -28,7 +28,7 @@ def prepare_df_decorator(func):
     return wrapper
 
 @prepare_df_decorator
-def load_df(key: str, folder_version: str = "v2.9", normalization: str = "robust", gnn_version: str = "v2.9") -> pd.DataFrame:
+def load_df(key: str, folder_version: str = "v2.9", normalization: str = "robust", gnn_version: str = "v2.10") -> pd.DataFrame:
     """
     Generic interface to load expression data or Knowledge Graph embeddings.
 
@@ -483,7 +483,7 @@ def load_concatenate_protein_embeddings(folder_version: str = "v2.9", normalizat
 # GNN Embeddings Loading (from results/embeddings/)
 # ============================================================================
 
-def load_gnn_sample_embeddings(model_name: str, gnn_version: str = "v2.9") -> pd.DataFrame:
+def load_gnn_sample_embeddings(model_name: str, gnn_version: str = "v2.10") -> pd.DataFrame:
     """Load sample embeddings from GNN models (GraphSAGE, weighted_RGCN, GAT)."""
     # Remove weighted_ prefix if present
     clean_model_name = model_name.replace("weighted_", "")
@@ -526,14 +526,13 @@ def load_gnn_sample_embeddings(model_name: str, gnn_version: str = "v2.9") -> pd
     return _add_features_and_disease_status(df_embeddings, df_features)
 
 
-def _load_gnn_protein_node_ids() -> list:
+def _load_gnn_protein_node_ids(gnn_version: str = "v2.9") -> list:
     """Load protein node IDs from hetero_graph to get gene symbols."""
     import torch
-    from src.han.load_heterodata import _load_owl_graph, _extract_nodes_and_edges
+    from src.han.load_heterodata import _load_owl_graph, _extract_nodes_and_edges, get_owl_path
 
     # Load OWL to get node IDs in correct order (same version as used in hetero_graph)
-    owl_dir = project_root / "models" / "executions" / "GSE54514_enriched_ontology_degfilterv2.9"
-    owl_path = owl_dir / "GSE54514_enriched_ontology_degfilterv2.9.owl"
+    owl_path = get_owl_path(gnn_version)
 
     g = _load_owl_graph(owl_path)
     nodes, _, _ = _extract_nodes_and_edges(g, node_types_filter={'sample', 'protein', 'pathway', 'goterm'})
@@ -543,7 +542,7 @@ def _load_gnn_protein_node_ids() -> list:
     return protein_node_ids
 
 
-def load_gnn_protein_embeddings(model_name: str, gnn_version: str = "v2.9", normalization: str = "robust") -> pd.DataFrame:
+def load_gnn_protein_embeddings(model_name: str, gnn_version: str = "v2.10", normalization: str = "robust") -> pd.DataFrame:
     """Load protein embeddings from GNN models, weighted by gene expression."""
     # Remove weighted_ prefix if present
     clean_model_name = model_name.replace("weighted_", "")
@@ -572,7 +571,7 @@ def load_gnn_protein_embeddings(model_name: str, gnn_version: str = "v2.9", norm
     emb_cols = [f'emb_{i}' for i in range(embedding_dim)]
 
     # Load protein node IDs from hetero_graph to get gene symbols
-    protein_node_ids = _load_gnn_protein_node_ids()
+    protein_node_ids = _load_gnn_protein_node_ids(gnn_version)
 
     if len(protein_node_ids) != n_proteins:
         raise ValueError(f"Mismatch: {n_proteins} embeddings vs {len(protein_node_ids)} protein nodes")
