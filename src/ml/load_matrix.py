@@ -483,7 +483,7 @@ def load_gnn_sample_embeddings(model_name: str) -> pd.DataFrame:
 
     # Map model names to folder names
     model_folder_map = {
-        "GraphSAGE": "graphsage",
+        "GraphSAGE": "sage",
         "RGCN": "rgcn",
         "GAT": "gat"
     }
