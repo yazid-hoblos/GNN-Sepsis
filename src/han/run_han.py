@@ -9,9 +9,9 @@ import logging
 import torch
 from pathlib import Path
 
-from src.han.data_loader import load_hetero_graph
+from src.han.owl_data_loader import load_hetero_graph_from_owl
 from src.han.model import SepsisHANClassifier, HANTrainer
-from src.han.attention_analysis import AttentionAnalyzer
+from src.han.han_attention_extraction import HANAttentionExtractor
 
 
 logging.basicConfig(
@@ -34,11 +34,11 @@ def main(args):
     
     # Step 1: Load data
     logger.info("\n" + "="*80)
-    logger.info("Step 1: Loading Heterogeneous Graph")
+    logger.info("Step 1: Loading Heterogeneous Graph from OWL")
     logger.info("="*80)
     
-    data = load_hetero_graph(
-        data_dir=args.data_dir,
+    data = load_hetero_graph_from_owl(
+        owl_path=args.owl_path,
         train_ratio=args.train_ratio,
         val_ratio=args.val_ratio,
     )
@@ -102,38 +102,28 @@ def main(args):
     
     # Step 5: Attention Analysis
     logger.info("\n" + "="*80)
-    logger.info("Step 5: Attention Analysis")
+    logger.info("Step 5: HAN Attention Extraction & Analysis")
     logger.info("="*80)
     
-    analyzer = AttentionAnalyzer(model, data, {}, {})
-    analyzer.compute_predictions(return_embeddings=True)
-    
-    # Edge type importance
-    logger.info("\nEdge Type Importance:")
-    edge_imp = analyzer.get_edge_type_importance()
-    logger.info(edge_imp.to_string())
-    
-    # Save edge importance
+    # Create output directory
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    edge_imp.to_csv(output_dir / 'edge_type_importance.csv', index=False)
-    logger.info(f"Saved: {output_dir / 'edge_type_importance.csv'}")
+    # Initialize attention extractor
+    extractor = HANAttentionExtractor(model, data, device=device)
     
-    # Visualizations
-    logger.info("\nGenerating visualizations...")
+    # Extract attention weights
+    logger.info("Extracting attention weights...")
+    results = extractor.extract_attention(return_embeddings=True)
     
-    analyzer.plot_edge_type_importance(
-        output_path=str(output_dir / 'edge_type_importance.png')
-    )
+    # Export comprehensive attention analysis
+    logger.info("Generating attention analysis reports...")
+    extractor.export_attention_summary(str(output_dir))
     
-    # Visualize a few patient subgraphs
-    for sample_idx in range(min(3, data['Sample'].num_nodes)):
-        if data['Sample'].valid_mask[sample_idx]:
-            analyzer.plot_patient_subgraph(
-                sample_idx=sample_idx,
-                output_path=str(output_dir / f'patient_{sample_idx}_subgraph.png')
-            )
+    logger.info(f"\n✓ Attention analysis complete!")
+    logger.info(f"  - Edge type importance: {output_dir / 'edge_type_importance.csv'}")
+    logger.info(f"  - Sample predictions: {output_dir / 'sample_predictions.csv'}")
+    logger.info(f"  - Attention visualization: {output_dir / 'attention_distribution.png'}")
     
     # Step 6: Save results
     logger.info("\n" + "="*80)
@@ -170,10 +160,10 @@ if __name__ == '__main__':
     )
     
     # Data arguments
-    parser.add_argument('--data_dir',
+    parser.add_argument('--owl_path',
                        type=str,
-                       default='models/executions/GSE54514_enriched_ontology_degfilterv2.11',
-                       help='Path to graph data directory')
+                       default='output/new_outputs/GSE54514_enriched_ontology_degfilter_v2.11.owl',
+                       help='Path to OWL ontology file')
     
     # Model arguments
     parser.add_argument('--hidden_channels',

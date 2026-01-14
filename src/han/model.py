@@ -324,7 +324,11 @@ class HANTrainer:
             lr=learning_rate,
             weight_decay=weight_decay
         )
-        self.criterion = nn.CrossEntropyLoss()
+        
+        # Compute class weights to handle imbalance
+        # This helps the model learn the minority class better
+        class_weights = torch.tensor([1.0, 3.5], device=device)  # Septic (1) is 3.5x more important
+        self.criterion = nn.CrossEntropyLoss(weight=class_weights)
         
         self.train_losses = []
         self.val_accs = []
