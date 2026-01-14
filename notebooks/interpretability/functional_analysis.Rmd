@@ -125,9 +125,97 @@ dotplot(gsea_kegg, showCategory=20, title=paste0("GSEA KEGG pathways - Embedding
 
 
 
-### camera
+### automating
 
 ```{r}
-View(gsea_kegg@result)
+
+model_version <- paste(py$model, py$version, sep = "_")
+base_results_dir <- file.path("../../results/pathway_analysis", model_version)
+
+if (!dir.exists(base_results_dir)) {
+  dir.create(base_results_dir, recursive = TRUE)
+}
+
+# identify embedding columns
+embedding_cols <- grep("^emb_", colnames(df_raw), value = TRUE)
+length(embedding_cols)
+
+library(clusterProfiler)
+library(enrichplot)
+library(org.Hs.eg.db)
+library(ggplot2)
+
+for (col in embedding_cols) {
+
+  message("Processing ", col)
+
+  embedding_num <- gsub("emb_", "", col)
+
+  ## ---- rank genes
+  df_sorted <- df_raw[order(df_raw[[col]], decreasing = TRUE), ]
+  gene_list <- df_sorted[[col]]
+  names(gene_list) <- rownames(df_sorted)
+
+  ## ---- SYMBOL → ENTREZ
+  gene_df <- bitr(
+    names(gene_list),
+    fromType = "SYMBOL",
+    toType   = "ENTREZID",
+    OrgDb    = org.Hs.eg.db
+  )
+
+  if (nrow(gene_df) < 10) {
+    warning("Skipping ", col, " (too few mapped genes)")
+    next
+  }
+
+  gene_list_entrez <- gene_list[gene_df$SYMBOL]
+  names(gene_list_entrez) <- gene_df$ENTREZID
+  gene_list_entrez <- sort(gene_list_entrez, decreasing = TRUE)
+
+  ## ---- GSEA KEGG
+  gsea_kegg <- tryCatch(
+    gseKEGG(
+      geneList     = gene_list_entrez,
+      organism     = "hsa",
+      pvalueCutoff = 0.05
+    ),
+    error = function(e) NULL
+  )
+
+  if (is.null(gsea_kegg) || nrow(gsea_kegg@result) == 0) {
+    warning("No significant pathways for ", col)
+    next
+  }
+
+  ## ---- save table
+  table_path <- file.path(
+    base_results_dir,
+    paste0("gsea_kegg_embedding_", embedding_num, ".csv")
+  )
+
+  write.csv(gsea_kegg@result, table_path, row.names = FALSE)
+
+  ## ---- save plot
+  plot_path <- file.path(
+    base_results_dir,
+    paste0("gsea_kegg_embedding_", embedding_num, ".png")
+  )
+
+  p <- dotplot(
+    gsea_kegg,
+    showCategory = 20,
+    title = paste0("GSEA KEGG pathways – Embedding ", embedding_num)
+  )
+
+  ggsave(
+    filename = plot_path,
+    plot     = p,
+    width    = 8,
+    height   = 6,
+    dpi      = 300
+  )
+}
 ```
+
 
