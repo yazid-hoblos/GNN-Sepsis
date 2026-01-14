@@ -464,15 +464,14 @@
                 currentFilters.layers = Object.keys(layerInfo);
                 // Start with only the first edge type to prevent overload
                 currentFilters.edge_types = summary.edge_types.length > 0 ? [summary.edge_types[0]] : [];
-                const firstEdgeType = currentFilters.edge_types[0];
                 
                 // Initialize UI components
                 setupLayerControls();
-                await setupEdgeControls(firstEdgeType);
+                setupEdgeControls();
                 setupSliders();
                 
                 // Load initial network data from server with first edge type only
-                console.log('Loading initial network with first edge type only...');
+                console.log('Loading initial network...');
                 await refreshNetwork();
                 
             } catch (error) {
@@ -526,50 +525,34 @@
             });
         }
 
-        function setupEdgeControls(onlyCheckFirst = null) {
-            return new Promise((resolve) => {
-                const container = document.getElementById('edge-controls');
-                
-                // Get all available edge types and show them, but only check the first one
-                fetch('/api/layer_summary')
-                    .then(response => response.json())
-                    .then(summary => {
-                        summary.edge_types.forEach((edgeType, index) => {
-                            // Only first edge type is checked by default, unless overridden
-                            const isChecked = onlyCheckFirst ? (edgeType === onlyCheckFirst) : (index === 0);
-                            const edgeItem = document.createElement('div');
-                            edgeItem.className = 'edge-item';
-                            edgeItem.innerHTML = `
-                                <input type="checkbox" class="edge-checkbox" 
-                                       id="edge-${edgeType}" data-edge="${edgeType}" ${isChecked ? 'checked' : ''}>
-                                <label for="edge-${edgeType}" style="font-size: 12px; cursor: pointer;">
-                                    ${edgeType}
-                                </label>
-                            `;
-                            container.appendChild(edgeItem);
-                        });
-                        
-                        // After checkboxes are set, update filters to reflect first edge type only
-                        updateEdgeFilters();
-                        resolve();
-                    })
-                    .catch(error => {
-                        console.error('Failed to load edge types:', error);
-                        resolve();
+        function setupEdgeControls() {
+            const container = document.getElementById('edge-controls');
+            
+            // Get all available edge types and show them, but only check the first one
+            fetch('/api/layer_summary')
+                .then(response => response.json())
+                .then(summary => {
+                    summary.edge_types.forEach((edgeType, index) => {
+                        // Only first edge type is checked by default
+                        const isChecked = index === 0;
+                        const edgeItem = document.createElement('div');
+                        edgeItem.className = 'edge-item';
+                        edgeItem.innerHTML = `
+                            <input type="checkbox" class="edge-checkbox" 
+                                   id="edge-${edgeType}" data-edge="${edgeType}" ${isChecked ? 'checked' : ''}>
+                            <label for="edge-${edgeType}" style="font-size: 12px; cursor: pointer;">
+                                ${edgeType}
+                            </label>
+                        `;
+                        container.appendChild(edgeItem);
                     });
-                
-                // Add event listeners with instant client-side filtering
-                // Use event delegation since checkboxes are added dynamically
-                setTimeout(() => {
-                    container.addEventListener('change', function(e) {
-                        if (e.target.classList.contains('edge-checkbox')) {
-                            updateEdgeFilters();
-                            applyClientSideFilter();
-                        }
-                    });
-                }, 100);
-            });
-        }
+                    
+                    // After checkboxes are set, update filters to reflect first edge type only
+                    updateEdgeFilters();
+                })
+                .catch(error => {
+                    console.error('Failed to load edge types:', error);
+                });
             
             // Add event listeners with instant client-side filtering
             container.addEventListener('change', function(e) {

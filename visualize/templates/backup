@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Layer Network Visualization</title>
+    <script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.2/dist/vis-network.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            background: white;
+            margin: 10px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .control-panel {
+            min-width: 350px;
+            max-width: 400px;
+            width: 350px;
+            background: #f8f9fa;
+            border-right: 1px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            resize: horizontal;
+        }
+
+        .control-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .control-header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .control-header p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .control-content {
+            padding: 20px;
+            flex: 1;
+        }
+
+        .control-section {
+            margin-bottom: 25px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .edge-item {
+            display: flex;
+            align-items: center;
+            margin: 4px 0;
+            padding: 6px 8px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            font-size: 11px;
+        }
+
+        .layer-item:hover, .edge-item:hover {
+            background: #f1f3f4;
+        }
+
+        .layer-checkbox, .edge-checkbox {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .layer-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            margin-right: 8px;
+            border: 2px solid rgba(0,0,0,0.1);
+        }
+
+        .layer-info {
+            flex: 1;
+        }
+
+        .layer-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #212529;
+        }
+
+        .layer-count {
+            font-size: 11px;
+            color: #6c757d;
+            margin-top: 2px;
+        }
+
+        .interaction-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .interaction-btn {
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+            background: white;
+            border-radius: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .interaction-btn:hover {
+            background: #e9ecef;
+        }
+
+        .interaction-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #6c757d;
+            margin-top: 2px;
+        }
+
+        .slider-container {
+            margin: 15px 0;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #495057;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e9ecef;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .slider:hover {
+            opacity: 1;
+        }
+
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .network-container {
+            flex: 1;
+            position: relative;
+            background: white;
+        }
+
+        #network {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            font-size: 16px;
+            color: #495057;
+            backdrop-filter: blur(2px);
+        }
+
+        .loading-overlay.hidden {
+            display: none;
+        }
+
+        .action-buttons {
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            background: white;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: #e9ecef;
+        }
+
+        .btn.primary {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .btn.primary:hover {
+            background: #5a6fd8;
+        }
+
+        .network-info {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255,255,255,0.95);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            font-size: 12px;
+            z-index: 100;
+            min-width: 200px;
+        }
+
+        .info-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #495057;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 4px 0;
+        }
+
+        .scrollbar-thin {
+            scrollbar-width: thin;
+            scrollbar-color: #6c757d #f1f1f1;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: #6c757d;
+            border-radius: 4px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: #495057;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Control Panel -->
+        <div class="control-panel scrollbar-thin">
+            <div class="control-header">
+                <h1>🧬 Multi-Layer Network</h1>
+                <p>Interactive Knowledge Graph Exploration</p>
+            </div>
+            
+            <div class="control-content">
+                <!-- Layer Controls -->
+                <div class="control-section">
+                    <div class="section-title">
+                        🎯 Network Layers
+                    </div>
+                    <div id="layer-controls"></div>
+                </div>
+
+                <!-- Edge Type Controls -->
+                <div class="control-section">
+                    <div class="section-title" style="justify-content: space-between;">
+                        <span>⚡ Edge Types</span>
+                        <div style="display: flex; gap: 5px;">
+                            <button class="btn" style="padding: 4px 8px; font-size: 10px;" onclick="toggleAllEdges(true)">All</button>
+                            <button class="btn" style="padding: 4px 8px; font-size: 10px;" onclick="toggleAllEdges(false)">None</button>
+                        </div>
+                    </div>
+                    <div id="edge-controls" style="max-height: 200px; overflow-y: auto;" class="scrollbar-thin"></div>
+                </div>
+
+                <!-- Visualization Settings -->
+                <div class="control-section">
+                    <div class="section-title">
+                        ⚙️ Settings
+                    </div>
+                    
+                    <div style="margin-top: 10px;">
+                        <input type="checkbox" id="physics-toggle" checked>
+                        <label for="physics-toggle" style="font-size: 12px; cursor: pointer;">
+                            Physics Simulation
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Network Statistics -->
+                <div class="control-section">
+                    <div class="section-title">
+                        📊 Network Statistics
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="current-nodes">0</div>
+                            <div class="stat-label">Nodes</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="current-edges">0</div>
+                            <div class="stat-label">Edges</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn" onclick="resetFilters()">Reset</button>
+                <button class="btn primary" onclick="loadFullNetwork()">Load All</button>
+            </div>
+        </div>
+
+        <!-- Network Visualization -->
+        <div class="network-container">
+            <div id="loading-overlay" class="loading-overlay">
+                <div style="text-align: center;">
+                    <div style="font-size: 32px; margin-bottom: 10px;">🧬</div>
+                    <div>Loading network data...</div>
+                    <div style="margin-top: 10px; font-size: 12px; opacity: 0.7;">Please wait while we process the knowledge graph</div>
+                </div>
+            </div>
+            <div id="network"></div>
+            
+            <!-- Network Info Panel -->
+            <div class="network-info">
+                <div class="info-title">Selection Info</div>
+                <div class="info-item">
+                    <span>Selected Nodes:</span>
+                    <span id="selected-nodes">0</span>
+                </div>
+                <div class="info-item">
+                    <span>Connected Edges:</span>
+                    <span id="connected-edges">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let network = null;
+        let networkData = { nodes: [], edges: [] };
+        let fullNetworkData = { nodes: [], edges: [] }; // Store full dataset for client-side filtering
+        let layerInfo = {};
+        let currentFilters = {
+            layers: [],
+            edge_types: [], // Will be set to first edge type only during initialization
+            layer_interactions: 'all'
+        };
+        let lastAppliedFilters = null;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        async function initializeApp() {
+            try {
+                console.log('Initializing app...');
+                
+                // Load layer summary
+                console.log('Fetching layer summary...');
+                const response = await fetch('/api/layer_summary');
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch layer summary: ${response.status} ${response.statusText}`);
+                }
+                
+                const summary = await response.json();
+                console.log('Layer summary:', summary);
+                
+                layerInfo = summary.layers;
+                currentFilters.layers = Object.keys(layerInfo);
+                // Start with only the first edge type to prevent overload
+                currentFilters.edge_types = summary.edge_types.length > 0 ? [summary.edge_types[0]] : [];
+                const firstEdgeType = currentFilters.edge_types[0];
+                
+                // Initialize UI components
+                setupLayerControls();
+                await setupEdgeControls(firstEdgeType);
+                setupSliders();
+                
+                // Load initial network data from server with first edge type only
+                console.log('Loading initial network with first edge type only...');
+                await refreshNetwork();
+                
+            } catch (error) {
+                console.error('Failed to initialize app:', error);
+                document.getElementById('loading-overlay').innerHTML = `
+                    <div style="color: #dc3545; text-align: center;">
+                        <div style="font-size: 48px; margin-bottom: 10px;">⚠️</div>
+                        <div>Failed to load data</div>
+                        <div style="font-size: 12px; margin-top: 5px; opacity: 0.7;">${error.message}</div>
+                        <div style="font-size: 11px; margin-top: 10px; opacity: 0.5;">Try refreshing or using Apply Filters with reduced data size</div>
+                        <div style="margin-top: 15px;">
+                            <button class="btn" style="margin-right: 10px;" onclick="document.getElementById('loading-overlay').classList.add('hidden')">Continue Anyway</button>
+                            <button class="btn primary" onclick="window.location.reload()">Reload Page</button>
+                        </div>
+                    </div>
+                `;
+            } finally {
+                // Always ensure loading overlay can be dismissed
+                setTimeout(() => {
+                    if (!document.getElementById('loading-overlay').classList.contains('hidden')) {
+                        document.getElementById('loading-overlay').classList.add('hidden');
+                    }
+                }, 10000); // Hide after 10 seconds max
+            }
+        }
+
+        function setupLayerControls() {
+            const container = document.getElementById('layer-controls');
+            
+            Object.entries(layerInfo).forEach(([layerId, info]) => {
+                const layerItem = document.createElement('div');
+                layerItem.className = 'layer-item';
+                layerItem.innerHTML = `
+                    <input type="checkbox" class="layer-checkbox" 
+                           id="layer-${layerId}" data-layer="${layerId}" checked>
+                    <div class="layer-color" style="background-color: ${info.color}"></div>
+                    <div class="layer-info">
+                        <div class="layer-name">${info.name}</div>
+                        <div class="layer-count">${info.nodes.length} nodes</div>
+                    </div>
+                `;
+                container.appendChild(layerItem);
+            });
+            
+            // Add event listeners with instant client-side filtering
+            container.addEventListener('change', function(e) {
+                if (e.target.classList.contains('layer-checkbox')) {
+                    updateLayerFilters();
+                    applyClientSideFilter();
+                }
+            });
+        }
+
+        function setupEdgeControls(onlyCheckFirst = null) {
+            return new Promise((resolve) => {
+                const container = document.getElementById('edge-controls');
+                
+                // Get all available edge types and show them, but only check the first one
+                fetch('/api/layer_summary')
+                    .then(response => response.json())
+                    .then(summary => {
+                        summary.edge_types.forEach((edgeType, index) => {
+                            // Only first edge type is checked by default, unless overridden
+                            const isChecked = onlyCheckFirst ? (edgeType === onlyCheckFirst) : (index === 0);
+                            const edgeItem = document.createElement('div');
+                            edgeItem.className = 'edge-item';
+                            edgeItem.innerHTML = `
+                                <input type="checkbox" class="edge-checkbox" 
+                                       id="edge-${edgeType}" data-edge="${edgeType}" ${isChecked ? 'checked' : ''}>
+                                <label for="edge-${edgeType}" style="font-size: 12px; cursor: pointer;">
+                                    ${edgeType}
+                                </label>
+                            `;
+                            container.appendChild(edgeItem);
+                        });
+                        
+                        // After checkboxes are set, update filters to reflect first edge type only
+                        updateEdgeFilters();
+                        resolve();
+                    })
+                    .catch(error => {
+                        console.error('Failed to load edge types:', error);
+                        resolve();
+                    });
+                
+                // Add event listeners with instant client-side filtering
+                // Use event delegation since checkboxes are added dynamically
+                setTimeout(() => {
+                    container.addEventListener('change', function(e) {
+                        if (e.target.classList.contains('edge-checkbox')) {
+                            updateEdgeFilters();
+                            applyClientSideFilter();
+                        }
+                    });
+                }, 100);
+            });
+        }
+            
+            // Add event listeners with instant client-side filtering
+            container.addEventListener('change', function(e) {
+                if (e.target.classList.contains('edge-checkbox')) {
+                    updateEdgeFilters();
+                    applyClientSideFilter();
+                }
+            });
+        }
+
+        function loadFullNetwork() {
+            console.log('Loading network with all layers and all edge types...');
+            
+            // Show loading
+            document.getElementById('loading-overlay').classList.remove('hidden');
+            document.getElementById('loading-overlay').innerHTML = `
+                <div style="text-align: center;">
+                    <div style="font-size: 32px; margin-bottom: 10px;">🔄</div>
+                    <div>Loading full network...</div>
+                </div>
+            `;
+            
+            // Check all checkboxes
+            document.querySelectorAll('.layer-checkbox').forEach(cb => cb.checked = true);
+            document.querySelectorAll('.edge-checkbox').forEach(cb => cb.checked = true);
+            
+            // Update filters and reload from server
+            updateLayerFilters();
+            updateEdgeFilters();
+            
+            refreshNetwork();
+        }
+        
+        function setupSliders() {
+            // Performance sliders removed - no limits applied
+            console.log('Performance sliders disabled - processing full dataset');
+            
+            // Physics toggle
+            document.getElementById('physics-toggle').addEventListener('change', function() {
+                if (network) {
+                    network.setOptions({ physics: { enabled: this.checked } });
+                    if (this.checked) {
+                        // Re-stabilize when physics is enabled
+                        network.stabilize();
+                    }
+                }
+            });
+        }
+
+        function setupInteractionControls() {
+            // Removed - layer interactions no longer needed
+        }
+
+        function updateLayerFilters() {
+            const checkedLayers = [];
+            document.querySelectorAll('.layer-checkbox:checked').forEach(cb => {
+                checkedLayers.push(cb.dataset.layer);
+            });
+            currentFilters.layers = checkedLayers;
+        }
+
+        function updateEdgeFilters() {
+            const checkedEdges = [];
+            document.querySelectorAll('.edge-checkbox:checked').forEach(cb => {
+                checkedEdges.push(cb.dataset.edge);
+            });
+            currentFilters.edge_types = checkedEdges;
+        }
+
+        let isLoading = false;
+        
+        async function refreshNetwork() {
+            if (isLoading) {
+                console.log('Already loading, skipping request');
+                return;
+            }
+            // Always update filters before sending request
+            updateLayerFilters();
+            updateEdgeFilters();
+            isLoading = true;
+            document.getElementById('loading-overlay').classList.remove('hidden');
+            document.getElementById('loading-overlay').innerHTML = `
+                <div style="text-align: center;">
+                    <div style="font-size: 32px; margin-bottom: 10px;">🔄</div>
+                    <div>Loading network data...</div>
+                    <div style="margin-top: 5px; font-size: 12px; opacity: 0.7;">This may take a moment for large datasets</div>
+                </div>
+            `;
+            try {
+                const params = new URLSearchParams();
+                currentFilters.layers.forEach(layer => params.append('layers', layer));
+                currentFilters.edge_types.forEach(edge => params.append('edge_types', edge));
+                params.append('layer_interactions', currentFilters.layer_interactions);
+                const url = `/api/network_data?${params}`;
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+                const data = await response.json();
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                // Update network
+                updateNetworkVisualization(data);
+                updateStatistics(data.stats);
+            } catch (error) {
+                console.error('Failed to refresh network:', error);
+                let errorMessage = error.message;
+                let errorIcon = '⚠️';
+                if (error.name === 'AbortError') {
+                    errorMessage = 'Request timed out - try reducing the number of nodes/edges or select fewer layers';
+                    errorIcon = '⏰';
+                } else if (error.message.includes('Server error: 500')) {
+                    errorMessage = 'Server processing error - dataset might be too large';
+                }
+                document.getElementById('loading-overlay').innerHTML = `
+                    <div style="text-align: center; color: #dc3545;">
+                        <div style="font-size: 48px; margin-bottom: 10px;">${errorIcon}</div>
+                        <div>Failed to load network data</div>
+                        <div style="font-size: 12px; margin-top: 5px; opacity: 0.7;">${errorMessage}</div>
+                        <div style="margin-top: 15px;">
+                            <button class="btn" style="margin-right: 10px;" onclick="reduceDataSize()">Reduce Size</button>
+                            <button class="btn primary" onclick="refreshNetwork()">Retry</button>
+                        </div>
+                    </div>
+                `;
+                // Don't hide overlay on error, let user retry
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        function updateNetworkVisualization(data) {
+            // Store full data for client-side filtering
+            fullNetworkData = { nodes: data.nodes, edges: data.edges };
+            
+            // Prepare data for vis-network
+            const nodes = new vis.DataSet(data.nodes);
+            const edges = new vis.DataSet(data.edges);
+            
+            networkData = { nodes: nodes, edges: edges };
+            
+            // Network options
+            const options = {
+                nodes: {
+                    shape: 'dot',
+                    size: 15,
+                    font: {
+                        size: 12,
+                        color: '#333333'
+                    },
+                    borderWidth: 2,
+                    borderWidthSelected: 4
+                },
+                edges: {
+                    width: 2,
+                    color: {
+                        color: '#848484',
+                        highlight: '#3366cc',
+                        hover: '#3366cc'
+                    },
+                    smooth: {
+                        enabled: true,
+                        type: 'continuous'
+                    }
+                },
+                physics: {
+                    enabled: true,
+                    stabilization: {
+                        enabled: true,
+                        iterations: 100,
+                        updateInterval: 25,
+                        onlyDynamicEdges: false,
+                        fit: true
+                    },
+                    barnesHut: {
+                        gravitationalConstant: -3000,
+                        centralGravity: 0.3,
+                        springLength: 120,
+                        springConstant: 0.04,
+                        damping: 0.5,
+                        avoidOverlap: 0.1
+                    },
+                    maxVelocity: 30,
+                    minVelocity: 0.75,
+                    timestep: 0.35,
+                    adaptiveTimestep: true
+                },
+                interaction: {
+                    hover: true,
+                    selectConnectedEdges: false,
+                    tooltipDelay: 200
+                }
+            };
+            
+            // Create or update network
+            const container = document.getElementById('network');
+            if (network) {
+                network.setData(networkData);
+            } else {
+                network = new vis.Network(container, networkData, options);
+                
+                // Add event listeners
+                network.on('select', function(params) {
+                    updateSelectionInfo(params);
+                });
+                
+                network.on('click', function(params) {
+                    if (params.nodes.length > 0) {
+                        console.log('Selected node:', params.nodes[0]);
+                    }
+                });
+                
+                // Stabilization events
+                network.on('stabilizationProgress', function(params) {
+                    const progress = Math.round(params.iterations / params.total * 100);
+                    document.getElementById('loading-overlay').innerHTML = 
+                        `<div style="text-align: center;"><div style="font-size: 32px; margin-bottom: 10px;">⚙️</div><div>Stabilizing network...</div><div style="margin-top: 5px; font-size: 14px; color: #667eea;">${progress}%</div></div>`;
+                });
+                
+                network.on('stabilizationIterationsDone', function() {
+                    document.getElementById('loading-overlay').classList.add('hidden');
+                    console.log('Network stabilization complete');
+                });
+                
+                // Stop physics after initial stabilization to prevent constant movement
+                network.once('stabilizationIterationsDone', function() {
+                    setTimeout(() => {
+                        network.setOptions({ physics: { enabled: false } });
+                        document.getElementById('physics-toggle').checked = false;
+                    }, 1000);
+                });
+            }
+        }
+
+        function updateStatistics(stats) {
+            document.getElementById('current-nodes').textContent = stats.node_count;
+            document.getElementById('current-edges').textContent = stats.edge_count;
+        }
+
+        function updateSelectionInfo(params) {
+            const selectedNodes = params.nodes.length;
+            const selectedEdges = params.edges.length;
+            
+            document.getElementById('selected-nodes').textContent = selectedNodes;
+            document.getElementById('connected-edges').textContent = selectedEdges;
+        }
+
+        function resetFilters() {
+            // Reset checkboxes to initial state (all layers, first edge type only)
+            document.querySelectorAll('.layer-checkbox').forEach(cb => cb.checked = true);
+            document.querySelectorAll('.edge-checkbox').forEach((cb, index) => {
+                cb.checked = index === 0; // Only first edge type
+            });
+            
+            // Update filters and apply
+            updateLayerFilters();
+            updateEdgeFilters();
+            applyClientSideFilter();
+        }
+        
+        function toggleAllEdges(enable) {
+            document.querySelectorAll('.edge-checkbox').forEach(cb => {
+                cb.checked = enable;
+            });
+            updateEdgeFilters();
+            applyClientSideFilter();
+        }
+        
+        function applyClientSideFilter() {
+            if (!fullNetworkData.nodes) return;
+            
+            console.log('Applying client-side filter');
+            
+            // Get currently selected layers and edge types
+            const activeLayers = [];
+            document.querySelectorAll('.layer-checkbox:checked').forEach(cb => {
+                activeLayers.push(cb.dataset.layer);
+            });
+            
+            const activeEdgeTypes = [];
+            document.querySelectorAll('.edge-checkbox:checked').forEach(cb => {
+                activeEdgeTypes.push(cb.dataset.edge);
+            });
+            
+            // Filter nodes by layer - if no layers selected, show all
+            let filteredNodes = fullNetworkData.nodes.filter(node => {
+                return activeLayers.length === 0 || activeLayers.includes(node.layer);
+            });
+            
+            console.log(`Filtered to ${filteredNodes.length} nodes by layer`);
+                // No node limits applied
+                
+            // No limits applied - use all filtered nodes
+            
+            // Filter edges by connected nodes and edge types
+            const nodeIds = new Set(filteredNodes.map(n => n.id));
+            let filteredEdges = fullNetworkData.edges.filter(edge => {
+                return nodeIds.has(edge.from) && nodeIds.has(edge.to) && 
+                       (activeEdgeTypes.length === 0 || activeEdgeTypes.includes(edge.type));
+            });
+            
+            console.log(`Filtered to ${filteredEdges.length} edges`);
+            
+            // Remove singleton nodes (nodes with no connections)
+            const connectedNodeIds = new Set();
+            filteredEdges.forEach(edge => {
+                connectedNodeIds.add(edge.from);
+                connectedNodeIds.add(edge.to);
+            });
+            
+            const nonSingletonNodes = filteredNodes.filter(node => connectedNodeIds.has(node.id));
+            const removedSingletons = filteredNodes.length - nonSingletonNodes.length;
+            
+            if (removedSingletons > 0) {
+                console.log(`Removed ${removedSingletons} singleton nodes`);
+            }
+            
+            filteredNodes = nonSingletonNodes;
+            
+            // Update network with filtered data
+            const nodes = new vis.DataSet(filteredNodes);
+            const edges = new vis.DataSet(filteredEdges);
+            
+            if (network) {
+                network.setData({ nodes: nodes, edges: edges });
+            }
+            
+            // Update stats
+            updateStatistics({
+                node_count: nodes.length,
+                edge_count: edges.length
+            });
+            
+            console.log(`Client-side filter: ${nodes.length} nodes, ${edges.length} edges`);
+        }
+        
+        function reduceDataSize() {
+            // Automatically reduce the data size to manageable levels
+            // Slider elements removed - no limits to reset
+            
+            // Hide loading overlay and update button
+            document.getElementById('loading-overlay').classList.add('hidden');
+            updateApplyButtonState();
+        }
+    </script>
+</body>
+</html>
