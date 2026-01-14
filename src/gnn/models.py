@@ -46,7 +46,7 @@ class WeightedConv(nn.Module):
 
 
 class WeightedSAGEConv(nn.Module):
-    """SAGE convolution with edge weights (sum aggregation to avoid over-smoothing)."""
+    """SAGE convolution with edge weights (max aggregation to avoid over-smoothing)."""
 
     def __init__(self, in_channels: int, out_channels: int):
         super().__init__()
@@ -66,10 +66,12 @@ class WeightedSAGEConv(nn.Module):
         if edge_weight is not None:
             msg = msg * edge_weight.view(-1, 1)
 
-        out = torch.zeros(x_dst.size(0), self.out_channels, device=x_dst.device)
-        out.scatter_add_(0, dst_idx.unsqueeze(-1).expand_as(msg), msg)
+        # Max aggregation - better preserves distinguishing features
+        out = torch.full((x_dst.size(0), self.out_channels), float('-inf'), device=x_dst.device)
+        out.scatter_reduce_(0, dst_idx.unsqueeze(-1).expand_as(msg), msg, reduce='amax', include_self=False)
+        # Replace -inf with 0 for nodes with no incoming edges
+        out = torch.where(out == float('-inf'), torch.zeros_like(out), out)
 
-        # Sum aggregation (no normalization - preserves node degree info)
         return out + self.lin_self(x_dst)
 
 
@@ -113,7 +115,7 @@ class HeteroGAT(nn.Module):
 
 
 class HeteroGraphSAGE(nn.Module):
-    """Heterogeneous GraphSAGE with edge weight support and LayerNorm."""
+    """Heterogeneous GraphSAGE with edge weights, LayerNorm and skip connections."""
 
     def __init__(self, metadata, hidden_channels: int = 100, num_layers: int = 2, dropout: float = 0.5):
         super().__init__()
@@ -129,13 +131,22 @@ class HeteroGraphSAGE(nn.Module):
             # LayerNorm for each node type
             self.norms.append(nn.ModuleDict({nt: nn.LayerNorm(hidden_channels) for nt in node_types}))
 
+        # Projection for skip connection (input -> hidden_channels)
+        self.skip_proj = nn.ModuleDict({nt: Linear(-1, hidden_channels) for nt in node_types})
+
     def forward(self, x_dict, edge_index_dict, edge_weight_dict=None):
+        # Project input for skip connection
+        x_skip = {k: self.skip_proj[k](v) for k, v in x_dict.items()}
+
         for i, conv in enumerate(self.convs):
             x_dict = conv(x_dict, edge_index_dict, edge_weight_dict) if edge_weight_dict else conv(x_dict, edge_index_dict)
-            # Apply LayerNorm to re-spread embeddings
+            # LayerNorm -> ReLU -> Dropout
             x_dict = {k: self.norms[i][k](v) for k, v in x_dict.items()}
             if i < self.num_layers - 1:
                 x_dict = {k: F.dropout(F.relu(v), p=self.dropout, training=self.training) for k, v in x_dict.items()}
+
+        # Add skip connection (residual)
+        x_dict = {k: v + x_skip[k] for k, v in x_dict.items()}
         return x_dict
 
 
