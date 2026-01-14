@@ -1,0 +1,164 @@
+================================================================================
+INTERPRETABILITY CONSOLIDATION REPORT
+================================================================================
+
+OVERALL STATISTICS
+--------------------------------------------------------------------------------
+Total analyses: 12
+Successful: 12
+Failed: 0
+Mean test accuracy (successful): 0.657
+Unique features across all analyses: 212
+
+PER-DATASET PERFORMANCE
+--------------------------------------------------------------------------------
+                                test_accuracy                status
+                                         mean    std count <lambda>
+dataset                                                            
+Complex_protein_embeddings              0.659  0.147     4        4
+RGCN_protein_embeddings                 0.720  0.109     4        4
+concatenated_protein_embeddings         0.591  0.141     4        4
+
+PER-MODEL PERFORMANCE
+--------------------------------------------------------------------------------
+              test_accuracy                status
+                       mean    std count <lambda>
+model_type                                       
+random_forest         0.818  0.052     3        3
+sklearn_mlp           0.576  0.121     3        3
+svm                   0.586  0.017     3        3
+xgboost               0.646  0.149     3        3
+
+TOP 20 CONSENSUS BIOMARKERS
+--------------------------------------------------------------------------------
+ 1. Feature_63
+    Consensus Score: 1.4247
+    Appears in 6 models (54.5% coverage)
+    Mean Importance: 0.5400
+
+ 2. Feature_207
+    Consensus Score: 1.3333
+    Appears in 2 models (18.2% coverage)
+    Mean Importance: 1.0000
+
+ 3. Feature_93
+    Consensus Score: 1.3180
+    Appears in 5 models (45.5% coverage)
+    Mean Importance: 0.4621
+
+ 4. Feature_4
+    Consensus Score: 1.2101
+    Appears in 3 models (27.3% coverage)
+    Mean Importance: 0.7601
+
+ 5. Feature_73
+    Consensus Score: 1.1481
+    Appears in 7 models (63.6% coverage)
+    Mean Importance: 0.3061
+
+ 6. Feature_107
+    Consensus Score: 1.0192
+    Appears in 4 models (36.4% coverage)
+    Mean Importance: 0.6161
+
+ 7. Feature_177
+    Consensus Score: 1.0017
+    Appears in 4 models (36.4% coverage)
+    Mean Importance: 0.3228
+
+ 8. Feature_86
+    Consensus Score: 0.9048
+    Appears in 5 models (45.5% coverage)
+    Mean Importance: 0.3375
+
+ 9. Feature_26
+    Consensus Score: 0.8171
+    Appears in 7 models (63.6% coverage)
+    Mean Importance: 0.3186
+
+10. Feature_78
+    Consensus Score: 0.6372
+    Appears in 8 models (72.7% coverage)
+    Mean Importance: 0.1977
+
+11. Feature_128
+    Consensus Score: 0.5983
+    Appears in 4 models (36.4% coverage)
+    Mean Importance: 0.4399
+
+12. Feature_161
+    Consensus Score: 0.5967
+    Appears in 2 models (18.2% coverage)
+    Mean Importance: 0.5235
+
+13. Feature_145
+    Consensus Score: 0.5725
+    Appears in 3 models (27.3% coverage)
+    Mean Importance: 0.5058
+
+14. Feature_20
+    Consensus Score: 0.5706
+    Appears in 5 models (45.5% coverage)
+    Mean Importance: 0.3920
+
+15. Feature_95
+    Consensus Score: 0.5685
+    Appears in 4 models (36.4% coverage)
+    Mean Importance: 0.3789
+
+16. Feature_59
+    Consensus Score: 0.4996
+    Appears in 4 models (36.4% coverage)
+    Mean Importance: 0.1989
+
+17. Feature_44
+    Consensus Score: 0.4500
+    Appears in 7 models (63.6% coverage)
+    Mean Importance: 0.1614
+
+18. Feature_12
+    Consensus Score: 0.4103
+    Appears in 5 models (45.5% coverage)
+    Mean Importance: 0.2592
+
+19. Feature_8
+    Consensus Score: 0.4076
+    Appears in 8 models (72.7% coverage)
+    Mean Importance: 0.1714
+
+20. Feature_159
+    Consensus Score: 0.3939
+    Appears in 1 models (9.1% coverage)
+    Mean Importance: 0.7442
+
+BIOMARKER CONFIDENCE TIERS
+--------------------------------------------------------------------------------
+Based on 12 successful analyses:
+
+HIGH CONFIDENCE (≥75% coverage): 0 features
+
+MEDIUM CONFIDENCE (50-75% coverage): 13 features
+  • Feature_63
+  • Feature_73
+  • Feature_26
+  • Feature_78
+  • Feature_44
+  • Feature_8
+  • Feature_33
+  • Feature_77
+  • Feature_57
+  • Feature_25
+
+LOW CONFIDENCE (25-50% coverage): 75 features
+  • Feature_93
+  • Feature_4
+  • Feature_107
+  • Feature_177
+  • Feature_86
+  • Feature_128
+  • Feature_145
+  • Feature_20
+  • Feature_95
+  • Feature_59
+
+================================================================================
