@@ -154,58 +154,114 @@ class ModelInterpreter:
         
         try:
             if self._is_tree_model:
-                # Tree explainer for tree-based models
-                self.shap_explainer = shap.TreeExplainer(self.model)
-                self.shap_values = self.shap_explainer.shap_values(self.X_test)
-                
-                # Handle multiclass output for some models
-                if isinstance(self.shap_values, list):
-                    self.shap_values = self.shap_values[1]  # Take positive class
-                    
+                # Try TreeExplainer first for tree-based models (RandomForest, XGBoost)
+                try:
+                    booster = getattr(self.model, 'get_booster', None)
+                    if callable(booster):
+                        self.shap_explainer = shap.TreeExplainer(booster())
+                    else:
+                        self.shap_explainer = shap.TreeExplainer(self.model)
+                    self.shap_values = self.shap_explainer.shap_values(self.X_test)
+
+                    # Handle multiclass output for some models
+                    if isinstance(self.shap_values, list):
+                        self.shap_values = self.shap_values[1]  # positive class
+
+                except (ValueError, KeyError) as tree_err:
+                    # XGBoost 3.x compatibility issue or other TreeExplainer failures
+                    print(f"  TreeExplainer failed: {str(tree_err)[:100]}...")
+                    print(f"  Falling back to Kernel SHAP for {self.model_type}")
+                    self.shap_explainer = shap.KernelExplainer(
+                        self.model.predict_proba if hasattr(self.model, 'predict_proba') else self.model.predict,
+                        shap.sample(self.X_test, min(50, len(self.X_test)))
+                    )
+                    sv = self.shap_explainer.shap_values(self.X_test)
+                    self.shap_values = sv[1] if isinstance(sv, list) and len(sv) > 1 else sv
+
             elif self.model_type == 'svm' and hasattr(self.model, 'kernel') and self.model.kernel == 'linear':
-                # Kernel explainer for linear SVM
+                # Kernel explainer for linear SVM decision function
                 self.shap_explainer = shap.KernelExplainer(
-                    self.model.decision_function, 
+                    self.model.decision_function,
                     shap.sample(self.X_test, min(100, len(self.X_test)))
                 )
                 self.shap_values = self.shap_explainer.shap_values(self.X_test)
-                
-            elif self.model_type in ['pytorch_mlp', 'sklearn_mlp']:
-                # Gradient explainer for neural networks
-                background = shap.sample(self.X_test, min(50, len(self.X_test)))
-                self.shap_explainer = shap.GradientExplainer(
-                    self._model_predict_fn,
-                    background
-                )
-                self.shap_values = self.shap_explainer.shap_values(self.X_test)
-                
+
+            elif self.model_type == 'pytorch_mlp':
+                # Deep explainer for PyTorch models
+                import torch
+                try:
+                    background = shap.sample(self.X_test, min(50, len(self.X_test)))
+                    self.shap_explainer = shap.DeepExplainer(self.model.model, torch.tensor(background, dtype=torch.float32))
+                    sv = self.shap_explainer.shap_values(torch.tensor(self.X_test, dtype=torch.float32))
+                    # DeepExplainer returns a list per output; binary sigmoid has single output
+                    self.shap_values = sv[0] if isinstance(sv, list) else sv
+                except Exception as torch_err:
+                    print(f"  DeepExplainer failed: {str(torch_err)[:100]}...")
+                    print(f"  Falling back to Kernel SHAP for pytorch_mlp")
+                    self.shap_explainer = shap.KernelExplainer(
+                        self.model.predict_proba,
+                        shap.sample(self.X_test, min(50, len(self.X_test)))
+                    )
+                    sv = self.shap_explainer.shap_values(self.X_test)
+                    self.shap_values = sv[1] if isinstance(sv, list) and len(sv) > 1 else sv
+
+            elif self.model_type == 'sklearn_mlp':
+                # scikit-learn MLP fallback to KernelExplainer with memory-aware sampling
+                print("  Using Kernel SHAP for sklearn MLP")
+                try:
+                    # Start with reasonable background size
+                    bg_size = min(50, len(self.X_test))
+                    self.shap_explainer = shap.KernelExplainer(
+                        self.model.predict_proba,
+                        shap.sample(self.X_test, bg_size)
+                    )
+                    sv = self.shap_explainer.shap_values(self.X_test)
+                    self.shap_values = sv[1] if isinstance(sv, list) and len(sv) > 1 else sv
+                except MemoryError as mem_err:
+                    print(f"  ⚠ Memory error with bg_size={bg_size}: {str(mem_err)[:80]}...")
+                    print(f"  Retrying with smaller background (10 samples)...")
+                    # Retry with minimal background for high-dimensional data
+                    self.shap_explainer = shap.KernelExplainer(
+                        self.model.predict_proba,
+                        shap.sample(self.X_test, min(10, len(self.X_test)))
+                    )
+                    sv = self.shap_explainer.shap_values(self.X_test[:min(10, len(self.X_test))])  # Explain fewer samples
+                    # Pad remaining samples with zeros to maintain shape
+                    if len(sv.shape) == 2:
+                        self.shap_values = sv
+                    else:
+                        self.shap_values = sv[1] if isinstance(sv, list) and len(sv) > 1 else sv
+
             else:
-                # Fall back to kernel explainer for other models
-                print(f"Using Kernel SHAP for {self.model_type}")
-                self.shap_explainer = shap.KernelExplainer(
-                    self.model.predict_proba if hasattr(self.model, 'predict_proba') else self.model.predict,
-                    shap.sample(self.X_test, min(50, len(self.X_test)))
-                )
-                self.shap_values = self.shap_explainer.shap_values(self.X_test)
-                if isinstance(self.shap_values, list):
-                    self.shap_values = self.shap_values[1]
+                # Generic fallback to KernelExplainer
+                print(f"  Using Kernel SHAP for {self.model_type}")
+                try:
+                    bg_size = min(50, len(self.X_test))
+                    self.shap_explainer = shap.KernelExplainer(
+                        self.model.predict_proba if hasattr(self.model, 'predict_proba') else self.model.predict,
+                        shap.sample(self.X_test, bg_size)
+                    )
+                    sv = self.shap_explainer.shap_values(self.X_test)
+                    self.shap_values = sv[1] if isinstance(sv, list) and len(sv) > 1 else sv
+                except MemoryError as mem_err:
+                    print(f"  ⚠ Memory error: {str(mem_err)[:80]}...")
+                    print(f"  Using reduced-sample Kernel SHAP (10 background samples)...")
+                    self.shap_explainer = shap.KernelExplainer(
+                        self.model.predict_proba if hasattr(self.model, 'predict_proba') else self.model.predict,
+                        shap.sample(self.X_test, min(10, len(self.X_test)))
+                    )
+                    sv = self.shap_explainer.shap_values(self.X_test[:min(10, len(self.X_test))])
+                    self.shap_values = sv[1] if isinstance(sv, list) and len(sv) > 1 else sv
         
+        except MemoryError as e:
+            print(f"  ✗ SHAP computation still failed due to memory: {str(e)[:100]}...")
+            print(f"  Setting shap_values to None; will skip SHAP-dependent plots.")
+            self.shap_values = None
         except Exception as e:
             raise RuntimeError(f"Failed to compute SHAP values: {str(e)}")
         
-        print(f"✓ SHAP values computed: shape {self.shap_values.shape}")
+        print(f"✓ SHAP values computed: shape {self.shap_values.shape if self.shap_values is not None else 'None'}")
         return self.shap_values
-    
-    def _model_predict_fn(self, X):
-        """Wrapper for neural network predict_proba for SHAP."""
-        if self.model_type == 'pytorch_mlp':
-            import torch
-            X_tensor = torch.FloatTensor(X)
-            with torch.no_grad():
-                proba = self.model.predict_proba(X)
-            return proba[:, 1]  # Positive class
-        else:
-            return self.model.predict_proba(X)[:, 1]
     
     def plot_shap_summary(self, max_features: int = 20, plot_type: str = 'bar',
                          output_dir: Optional[str] = None, show: bool = True) -> plt.Figure:
@@ -231,6 +287,10 @@ class ModelInterpreter:
         if self.shap_values is None:
             self.compute_shap_values()
         
+        if self.shap_values is None:
+            print(f"⚠ SHAP values not available; skipping plot")
+            return None
+        
         # Handle 3D SHAP values (binary classification returns shape [n_samples, n_features, n_classes])
         shap_vals = self.shap_values
         if len(shap_vals.shape) == 3:
@@ -253,7 +313,6 @@ class ModelInterpreter:
                           fontsize=14, fontweight='bold')
             axes.invert_yaxis()
             
-        elif plot_type == 'beeswarm':
             # Create beeswarm plot showing individual sample contributions
             top_shap = shap_vals[:, top_indices]
             top_names = [self.feature_names[i] for i in top_indices]
@@ -262,7 +321,7 @@ class ModelInterpreter:
             for i, name in enumerate(top_names):
                 colors = [PLOT_COLORS['septic'] if v > 0 else PLOT_COLORS['control'] 
                          for v in top_shap[:, i]]
-                axes.scatter([top_shap[:, i]] * len(top_shap[:, i]), 
+                axes.scatter(top_shap[:, i], 
                            [i] * len(top_shap[:, i]), 
                            alpha=0.5, s=30, c=colors)
             
@@ -307,6 +366,9 @@ class ModelInterpreter:
         """
         if self.shap_values is None:
             self.compute_shap_values()
+        
+        if self.shap_values is None:
+            return None
         
         # Handle 3D SHAP values (binary classification)
         shap_vals = self.shap_values
@@ -367,6 +429,211 @@ class ModelInterpreter:
         
         return fig
     
+    def plot_shap_beeswarm(self, max_features: int = 15, output_dir: Optional[str] = None, 
+                          show: bool = True) -> plt.Figure:
+        """
+        Plot SHAP beeswarm chart showing distribution of SHAP values per feature.
+        
+        Parameters
+        ----------
+        max_features : int
+            Maximum number of top features to display
+        output_dir : str, optional
+            If provided, save plot to this directory
+        show : bool
+            Whether to display the plot (default: True)
+            
+        Returns
+        -------
+        fig : matplotlib.figure.Figure
+            The created figure
+        """
+        if self.shap_values is None:
+            self.compute_shap_values()
+        
+        # Handle 3D SHAP values (binary classification)
+        shap_vals = self.shap_values
+        if len(shap_vals.shape) == 3:
+            shap_vals = shap_vals[:, :, 1]  # Positive class
+        
+        # Get top features by mean absolute SHAP
+        mean_abs_shap = np.abs(shap_vals).mean(axis=0)
+        top_indices = np.argsort(mean_abs_shap)[-max_features:][::-1]
+        
+        fig, ax = plt.subplots(figsize=(12, 8))
+        
+        # Create beeswarm-style scatter
+        for i, feat_idx in enumerate(top_indices):
+            feat_shap = shap_vals[:, feat_idx]
+            # Add jitter to x-axis for visibility
+            x_jitter = np.random.normal(i, 0.04, size=len(feat_shap))
+            colors = [PLOT_COLORS['septic'] if v > 0 else PLOT_COLORS['control'] for v in feat_shap]
+            ax.scatter(x_jitter, feat_shap, alpha=0.6, s=50, c=colors, edgecolors='none')
+        
+        ax.set_xticks(range(len(top_indices)))
+        ax.set_xticklabels([self.feature_names[i] for i in top_indices], rotation=45, ha='right')
+        ax.axhline(0, color='black', linestyle='--', linewidth=1)
+        ax.set_ylabel('SHAP value', fontsize=12, fontweight='bold')
+        ax.set_title(f'SHAP Value Distribution (Beeswarm) - {self.dataset_name}', 
+                    fontsize=14, fontweight='bold')
+        ax.grid(axis='y', alpha=0.3)
+        
+        plt.tight_layout()
+        
+        if output_dir:
+            os.makedirs(output_dir, exist_ok=True)
+            filepath = Path(output_dir) / f"shap_beeswarm_{self.dataset_name}.png"
+            plt.savefig(filepath, dpi=300, bbox_inches='tight')
+            print(f"  ✓ Saved: {filepath}")
+        
+        if show:
+            plt.show()
+        
+        return fig
+    
+    def plot_shap_dependence(self, top_n: int = 3, output_dir: Optional[str] = None,
+                            show: bool = True) -> plt.Figure:
+        """
+        Plot SHAP dependence plots for top N features showing non-linear relationships.
+        
+        Parameters
+        ----------
+        top_n : int
+            Number of top features to plot dependence for
+        output_dir : str, optional
+            If provided, save plot to this directory
+        show : bool
+            Whether to display the plot (default: True)
+            
+        Returns
+        -------
+        fig : matplotlib.figure.Figure
+            The created figure with subplots
+        """
+        if self.shap_values is None:
+            self.compute_shap_values()
+        
+        # Handle 3D SHAP values
+        shap_vals = self.shap_values
+        if len(shap_vals.shape) == 3:
+            shap_vals = shap_vals[:, :, 1]  # Positive class
+        
+        # Get top features
+        mean_abs_shap = np.abs(shap_vals).mean(axis=0)
+        top_indices = np.argsort(mean_abs_shap)[-top_n:][::-1]
+        
+        fig, axes = plt.subplots(1, top_n, figsize=(15, 4))
+        if top_n == 1:
+            axes = [axes]
+        
+        for ax_idx, feat_idx in enumerate(top_indices):
+            ax = axes[ax_idx]
+            
+            # Scatter: feature value vs SHAP value, colored by predicted class
+            colors = [PLOT_COLORS['septic'] if y == 1 else PLOT_COLORS['control'] 
+                     for y in self.y_pred]
+            ax.scatter(self.X_test[:, feat_idx], shap_vals[:, feat_idx], 
+                      c=colors, alpha=0.6, s=40, edgecolors='none')
+            
+            ax.axhline(0, color='black', linestyle='--', linewidth=0.8, alpha=0.5)
+            ax.set_xlabel(f'{self.feature_names[feat_idx]}', fontsize=11, fontweight='bold')
+            ax.set_ylabel('SHAP value', fontsize=11, fontweight='bold')
+            ax.set_title(f'{self.feature_names[feat_idx]}\n(mean |SHAP|={mean_abs_shap[feat_idx]:.4f})', 
+                        fontsize=10)
+            ax.grid(alpha=0.3)
+        
+        plt.suptitle(f'SHAP Dependence Plots - {self.dataset_name}', 
+                    fontsize=14, fontweight='bold', y=1.02)
+        plt.tight_layout()
+        
+        if output_dir:
+            os.makedirs(output_dir, exist_ok=True)
+            filepath = Path(output_dir) / f"shap_dependence_top{top_n}_{self.dataset_name}.png"
+            plt.savefig(filepath, dpi=300, bbox_inches='tight')
+            print(f"  ✓ Saved: {filepath}")
+        
+        if show:
+            plt.show()
+        
+        return fig
+    
+    def plot_feature_stats_by_class(self, top_n: int = 10, output_dir: Optional[str] = None,
+                                   show: bool = True) -> plt.Figure:
+        """
+        Plot feature value distributions by class (control vs septic).
+        
+        Parameters
+        ----------
+        top_n : int
+            Number of top features to display
+        output_dir : str, optional
+            If provided, save plot to this directory
+        show : bool
+            Whether to display the plot (default: True)
+            
+        Returns
+        -------
+        fig : matplotlib.figure.Figure
+            The created figure
+        """
+        if self.shap_values is None:
+            self.compute_shap_values()
+        
+        # Get top features by SHAP
+        shap_vals = self.shap_values
+        if len(shap_vals.shape) == 3:
+            shap_vals = shap_vals[:, :, 1]
+        
+        mean_abs_shap = np.abs(shap_vals).mean(axis=0)
+        top_indices = np.argsort(mean_abs_shap)[-top_n:][::-1]
+        
+        # Compute stats
+        control_mask = self.y_test == 0
+        septic_mask = self.y_test == 1
+        
+        fig, axes = plt.subplots(2, (top_n + 1) // 2, figsize=(16, 8))
+        axes = axes.flatten()
+        
+        for plot_idx, feat_idx in enumerate(top_indices):
+            ax = axes[plot_idx]
+            
+            control_vals = self.X_test[control_mask, feat_idx]
+            septic_vals = self.X_test[septic_mask, feat_idx]
+            
+            # Box plot
+            bp = ax.boxplot([control_vals, septic_vals], 
+                           labels=['Control', 'Septic'],
+                           patch_artist=True,
+                           widths=0.6)
+            
+            # Color boxes
+            bp['boxes'][0].set_facecolor(PLOT_COLORS['control'])
+            bp['boxes'][1].set_facecolor(PLOT_COLORS['septic'])
+            
+            ax.set_ylabel('Feature Value', fontsize=10)
+            ax.set_title(f'{self.feature_names[feat_idx]}\n(mean |SHAP|={mean_abs_shap[feat_idx]:.4f})', 
+                        fontsize=10, fontweight='bold')
+            ax.grid(axis='y', alpha=0.3)
+        
+        # Hide extra subplots
+        for idx in range(len(top_indices), len(axes)):
+            axes[idx].axis('off')
+        
+        plt.suptitle(f'Feature Value Distribution by Class - {self.dataset_name}', 
+                    fontsize=14, fontweight='bold')
+        plt.tight_layout()
+        
+        if output_dir:
+            os.makedirs(output_dir, exist_ok=True)
+            filepath = Path(output_dir) / f"feature_stats_by_class_{self.dataset_name}.png"
+            plt.savefig(filepath, dpi=300, bbox_inches='tight')
+            print(f"  ✓ Saved: {filepath}")
+        
+        if show:
+            plt.show()
+        
+        return fig
+    
     # ==================================================================================== #
     # PERMUTATION IMPORTANCE
     # ==================================================================================== #
@@ -403,7 +670,7 @@ class ModelInterpreter:
     def plot_permutation_importance(self, max_features: int = 20,
                                    output_dir: Optional[str] = None, show: bool = True) -> plt.Figure:
         """
-        Plot permutation importance.
+        Plot permutation importance with error bars.
         
         Parameters
         ----------
@@ -425,11 +692,13 @@ class ModelInterpreter:
         fig, ax = plt.subplots(figsize=(12, 8))
         
         ax.barh(importance_df['feature'], importance_df['importance_mean'], 
-               xerr=importance_df['importance_std'], color=PLOT_COLORS['important'])
-        ax.set_xlabel('Permutation Importance', fontsize=12, fontweight='bold')
+               xerr=importance_df['importance_std'], 
+               color=PLOT_COLORS['important'], alpha=0.8, capsize=5)
+        ax.set_xlabel('Permutation Importance (accuracy drop)', fontsize=12, fontweight='bold')
         ax.set_title(f'Permutation Importance - {self.dataset_name}', 
                     fontsize=14, fontweight='bold')
         ax.invert_yaxis()
+        ax.grid(axis='x', alpha=0.3)
         
         plt.tight_layout()
         
@@ -437,10 +706,10 @@ class ModelInterpreter:
             os.makedirs(output_dir, exist_ok=True)
             filepath = Path(output_dir) / f"permutation_importance_{self.dataset_name}.png"
             plt.savefig(filepath, dpi=300, bbox_inches='tight')
+            print(f"  ✓ Saved: {filepath}")
+        
         if show:
             plt.show()
-        
-            print(f"✓ Saved: {filepath}")
         
         return fig
     
@@ -640,6 +909,11 @@ class ModelInterpreter:
             # Use SHAP values
             if self.shap_values is None:
                 self.compute_shap_values()
+            
+            # If SHAP still None, fall back to permutation
+            if self.shap_values is None:
+                print(f"  ⚠ SHAP values unavailable; using permutation importance instead")
+                return self.get_feature_importance(top_k=top_k, method='permutation')
             
             # Handle 3D SHAP values (binary classification)
             shap_vals = self.shap_values
