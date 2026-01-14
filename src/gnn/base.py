@@ -8,7 +8,24 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
-DATA_PATH = PROJECT_ROOT / "data" / "han" / "hetero_graph.pt"
+
+# Version configurations
+DATA_VERSIONS = {
+    'v2.9': PROJECT_ROOT / "data" / "han" / "v2.9" / "hetero_graph.pt",
+    'v2.10': PROJECT_ROOT / "data" / "han" / "v2.10" / "hetero_graph.pt",
+    'v2.11': PROJECT_ROOT / "data" / "han" / "v2.11" / "hetero_graph.pt",
+}
+DATA_PATH = DATA_VERSIONS['v2.11']  # Default
+
+def get_data_path(version: str = 'v2.11'):
+    """Get data path for a specific version."""
+    if version not in DATA_VERSIONS:
+        raise ValueError(f"Unknown version: {version}. Choose from {list(DATA_VERSIONS.keys())}")
+    return DATA_VERSIONS[version]
+
+def get_output_dir(version: str = 'v2.11'):
+    """Get output directory for embeddings."""
+    return PROJECT_ROOT / "results" / "embeddings" / version
 
 
 class EarlyStopping:

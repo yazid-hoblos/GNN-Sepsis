@@ -28,7 +28,7 @@ def prepare_df_decorator(func):
     return wrapper
 
 @prepare_df_decorator
-def load_df(key: str, folder_version: str = "v2.9", normalization: str = "robust") -> pd.DataFrame:
+def load_df(key: str, folder_version: str = "v2.9", normalization: str = "robust", gnn_version: str = "v2.9") -> pd.DataFrame:
     """
     Generic interface to load expression data or Knowledge Graph embeddings.
 
@@ -55,6 +55,12 @@ def load_df(key: str, folder_version: str = "v2.9", normalization: str = "robust
 
     folder_version : str, optional
         Version of embeddings folder in models/executions/ (default: 'v2.9')
+        Used for RGCN/ComplEx embeddings from Knowledge Graph.
+
+    gnn_version : str, optional
+        Version of GNN embeddings in results/embeddings/ (default: 'v2.9')
+        Options: 'v2.9', 'v2.10', 'v2.11', etc.
+        Used for GraphSAGE/weighted_RGCN/GAT embeddings.
 
     normalization : str, optional
         Normalization method to apply to gene expression data (default: 'robust')
@@ -69,7 +75,8 @@ def load_df(key: str, folder_version: str = "v2.9", normalization: str = "robust
     Examples
     --------
     >>> df = load_df('gene_expression', 'v2.9', normalization='robust')
-    >>> df = load_df('GraphSAGE_sample_embeddings')
+    >>> df = load_df('GraphSAGE_sample_embeddings', gnn_version='v2.10')
+    >>> df = load_df('GAT_protein_embeddings', gnn_version='v2.9')
     """
     # GNN models
     gnn_sample_keys = [
@@ -95,10 +102,10 @@ def load_df(key: str, folder_version: str = "v2.9", normalization: str = "robust
         return load_concatenate_protein_embeddings(folder_version, normalization=normalization)
     elif key in gnn_sample_keys:
         model_name = key.replace("_sample_embeddings", "")
-        return load_gnn_sample_embeddings(model_name)
+        return load_gnn_sample_embeddings(model_name, gnn_version=gnn_version)
     elif key in gnn_protein_keys:
         model_name = key.replace("_protein_embeddings", "")
-        return load_gnn_protein_embeddings(model_name, normalization=normalization)
+        return load_gnn_protein_embeddings(model_name, gnn_version=gnn_version, normalization=normalization)
     else:
         raise ValueError(f"Unknown data key: {key}")
 
@@ -476,7 +483,7 @@ def load_concatenate_protein_embeddings(folder_version: str = "v2.9", normalizat
 # GNN Embeddings Loading (from results/embeddings/)
 # ============================================================================
 
-def load_gnn_sample_embeddings(model_name: str) -> pd.DataFrame:
+def load_gnn_sample_embeddings(model_name: str, gnn_version: str = "v2.9") -> pd.DataFrame:
     """Load sample embeddings from GNN models (GraphSAGE, weighted_RGCN, GAT)."""
     # Remove weighted_ prefix if present
     clean_model_name = model_name.replace("weighted_", "")
@@ -492,7 +499,7 @@ def load_gnn_sample_embeddings(model_name: str) -> pd.DataFrame:
         raise ValueError(f"Unknown GNN model: {model_name}")
 
     folder_name = model_folder_map[clean_model_name]
-    embeddings_path = project_root / "results" / "embeddings" / folder_name / "sample_embeddings.csv"
+    embeddings_path = project_root / "results" / "embeddings" / gnn_version / folder_name / "sample_embeddings.csv"
 
     if not embeddings_path.exists():
         raise FileNotFoundError(f"Embeddings not found at {embeddings_path}. Run the model first.")
@@ -536,14 +543,14 @@ def _load_gnn_protein_node_ids() -> list:
     return protein_node_ids
 
 
-def load_gnn_protein_embeddings(model_name: str, normalization: str = "robust") -> pd.DataFrame:
+def load_gnn_protein_embeddings(model_name: str, gnn_version: str = "v2.9", normalization: str = "robust") -> pd.DataFrame:
     """Load protein embeddings from GNN models, weighted by gene expression."""
     # Remove weighted_ prefix if present
     clean_model_name = model_name.replace("weighted_", "")
 
     # Map model names to folder names
     model_folder_map = {
-        "GraphSAGE": "graphsage",
+        "GraphSAGE": "sage",
         "RGCN": "rgcn",
         "GAT": "gat"
     }
@@ -552,7 +559,7 @@ def load_gnn_protein_embeddings(model_name: str, normalization: str = "robust") 
         raise ValueError(f"Unknown GNN model: {model_name}")
 
     folder_name = model_folder_map[clean_model_name]
-    embeddings_path = project_root / "results" / "embeddings" / folder_name / "protein_embeddings.csv"
+    embeddings_path = project_root / "results" / "embeddings" / gnn_version / folder_name / "protein_embeddings.csv"
 
     if not embeddings_path.exists():
         raise FileNotFoundError(f"Embeddings not found at {embeddings_path}. Run the model first.")
