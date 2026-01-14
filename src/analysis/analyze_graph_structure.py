@@ -2,8 +2,7 @@
 Graph Structure Importance Analysis
 ------------------------------------
 
-Analyze which edges, nodes, and subgraphs contribute most to 
-RGCN's predictive power.
+Analyze which edges, nodes, and subgraphs contribute most to RGCN's predictive power.
 """
 
 import numpy as np
@@ -12,6 +11,7 @@ from pathlib import Path
 from typing import List, Tuple, Dict
 import matplotlib.pyplot as plt
 import networkx as nx
+import argparse
 
 
 class GraphStructureAnalyzer:
@@ -24,8 +24,8 @@ class GraphStructureAnalyzer:
     
     def __init__(self, 
                  entity_mapping_path: str,
-                 relation_mapping_path: str,
-                 triples_path: str):
+                 relation_mapping_path: str = None,
+                 triples_path: str = None):
         """
         Initialize graph structure analyzer.
         
@@ -38,13 +38,16 @@ class GraphStructureAnalyzer:
         triples_path : str
             Path to knowledge graph triples file
         """
-        self.entities = pd.read_csv(entity_mapping_path)
-        self.relations = pd.read_csv(relation_mapping_path)
+        self.entities = pd.read_csv(entity_mapping_path) if entity_mapping_path else pd.DataFrame()
+        self.relations = pd.read_csv(relation_mapping_path) if relation_mapping_path else pd.DataFrame(columns=['relation', 'label'])
         
         # Load triples (edges)
-        print(f"Loading knowledge graph from {triples_path}")
-        self.triples = self._load_triples(triples_path)
-        print(f"  Loaded {len(self.triples)} triples")
+        if triples_path:
+            print(f"Loading knowledge graph from {triples_path}")
+            self.triples = self._load_triples(triples_path)
+            print(f"  Loaded {len(self.triples)} triples")
+        else:
+            raise ValueError("triples_path is required")
         
         # Build NetworkX graph for analysis
         self.graph = self._build_networkx_graph()
@@ -116,8 +119,15 @@ class GraphStructureAnalyzer:
         nodes_data = []
         for node in self.graph.nodes():
             # Get entity label if available
-            entity_row = self.entities[self.entities['entity_id'] == node]
-            label = entity_row['label'].iloc[0] if len(entity_row) > 0 else f"Entity_{node}"
+            label = f"Entity_{node}"
+            if 'entity_id' in self.entities.columns:
+                entity_row = self.entities[self.entities['entity_id'] == node]
+                if len(entity_row) > 0 and 'label' in entity_row.columns:
+                    label = entity_row['label'].iloc[0]
+            elif 'node_id' in self.entities.columns:
+                entity_row = self.entities[self.entities['node_id'] == node]
+                if len(entity_row) > 0:
+                    label = entity_row.get('label', pd.Series([node])).iloc[0]
             
             nodes_data.append({
                 'entity_id': node,
@@ -196,8 +206,15 @@ class GraphStructureAnalyzer:
         # Convert to DataFrame
         results = []
         for entity_id, count in entity_counts.items():
-            entity_row = self.entities[self.entities['entity_id'] == entity_id]
-            label = entity_row['label'].iloc[0] if len(entity_row) > 0 else f"Entity_{entity_id}"
+            label = f"Entity_{entity_id}"
+            if 'entity_id' in self.entities.columns:
+                entity_row = self.entities[self.entities['entity_id'] == entity_id]
+                if len(entity_row) > 0 and 'label' in entity_row.columns:
+                    label = entity_row['label'].iloc[0]
+            elif 'node_id' in self.entities.columns:
+                entity_row = self.entities[self.entities['node_id'] == entity_id]
+                if len(entity_row) > 0:
+                    label = entity_row.get('label', pd.Series([entity_id])).iloc[0]
             
             results.append({
                 'entity_id': entity_id,
@@ -242,29 +259,53 @@ class GraphStructureAnalyzer:
 
 def main():
     """Run graph structure analysis."""
+    parser = argparse.ArgumentParser(description="Graph structure analysis for RGCN")
+    parser.add_argument('--version', default='v2.11', help='Model version tag (e.g., v2.11)')
+    parser.add_argument('--use-owl', action='store_true', help='Convert OWL to CSV and use it instead of edge_attributes.csv')
+    parser.add_argument('--owl-path', default='output/GSE54514_enriched_ontology_degfilterv2.11.owl',
+                        help='Path to OWL file (v2.11) for conversion')
+    args = parser.parse_args()
+
     print("="*80)
     print("GRAPH STRUCTURE ANALYSIS")
+    print(f"Version={args.version}")
     print("="*80)
     
-    # Configuration
-    model_dir = Path("models/executions/GSE54514_enriched_ontology_degfilterv2.11")
-    
-    # The edge attributes file is the main KG triples source
-    triples_path = model_dir / "edge_attributes.csv"
-    
-    if not triples_path.exists():
-        print("✗ Could not find edge_attributes.csv. Looked for:")
-        print(f"  - {triples_path}")
-        return
-    
+    model_dir = Path(f"models/executions/GSE54514_enriched_ontology_degfilter{args.version}")
+    output_dir = Path(f"results/graph_structure/{args.version}")
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    if args.use_owl:
+        # Convert OWL to CSV
+        try:
+            from kg_conversion.convert_owl_to_csv import parse_owl_to_csv
+        except Exception:
+            print("✗ Could not import kg_conversion.convert_owl_to_csv; ensure it exists")
+            return
+
+        owl_export_dir = output_dir / "owl_export"
+        owl_export_dir.mkdir(parents=True, exist_ok=True)
+        df_nodes, df_edges, _ = parse_owl_to_csv(args.owl_path, output_dir=str(owl_export_dir))
+        if df_edges is None:
+            print("✗ OWL conversion failed")
+            return
+        triples_path = owl_export_dir / "edges.csv"
+        entity_mapping_path = owl_export_dir / "nodes.csv"
+        relation_mapping_path = None
+    else:
+        triples_path = model_dir / "edge_attributes.csv"
+        if not triples_path.exists():
+            print("✗ Could not find edge_attributes.csv. Looked for:")
+            print(f"  - {triples_path}")
+            return
+        entity_mapping_path = model_dir / "outputmodel_RGCN_entity_mapping.csv"
+        relation_mapping_path = model_dir / "outputmodel_RGCN_relation_mapping.csv"
+
     analyzer = GraphStructureAnalyzer(
-        entity_mapping_path=str(model_dir / "outputmodel_RGCN_entity_mapping.csv"),
-        relation_mapping_path=str(model_dir / "outputmodel_RGCN_relation_mapping.csv"),
+        entity_mapping_path=str(entity_mapping_path),
+        relation_mapping_path=str(relation_mapping_path) if relation_mapping_path else None,
         triples_path=str(triples_path)
     )
-    
-    output_dir = Path("results/graph_structure")
-    output_dir.mkdir(parents=True, exist_ok=True)
     
     # Node centrality
     centrality = analyzer.analyze_node_centrality(top_k=50)

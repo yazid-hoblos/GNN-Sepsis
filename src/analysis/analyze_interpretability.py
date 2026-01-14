@@ -1,140 +1,102 @@
 """
-Quick interpretability analysis script
-Compare embeddings vs gene expression and cross-model consistency
+Compare consolidated interpretability outputs between two runs
+Defaults: v2.11_none vs v2.11_minmax consolidated directories.
+Reports overlap and coverage shifts in consensus biomarkers.
 """
 
-import pandas as pd
 from pathlib import Path
-import numpy as np
+import pandas as pd
 
-results_dir = Path('results/interpretability/v2.11_none')
 
-print("="*80)
-print("INTERPRETABILITY ANALYSIS SUMMARY")
-print("="*80)
+def load_consensus(run_dir: Path) -> pd.DataFrame:
+    path = run_dir / "consensus_biomarkers.csv"
+    if not path.exists():
+        raise FileNotFoundError(f"Missing consensus_biomarkers.csv in {run_dir}")
+    df = pd.read_csv(path)
+    return df
 
-# 1. Compare embedding types (ComplEx vs RGCN)
-print("\n1. EMBEDDING TYPE COMPARISON")
-print("-"*80)
 
-complex_path = results_dir / 'random_forest_Complex_protein_embeddings' / 'feature_importance.csv'
-rgcn_path = results_dir / 'random_forest_RGCN_protein_embeddings' / 'feature_importance.csv'
+def summarize(df: pd.DataFrame, label: str, top_k: int = 20):
+    print(f"\n--- {label} ---")
+    print(f"Models contributing: {df['n_models'].max():.0f}? (max in table)")
+    print(f"Rows: {len(df)}; Top-{top_k} preview:")
+    preview = df.head(top_k)[['feature', 'consensus_score', 'pct_models']]
+    for _, row in preview.iterrows():
+        print(f"  {row['feature']:12s} score={row['consensus_score']:.3f} coverage={row['pct_models']:.1f}%")
 
-if complex_path.exists() and rgcn_path.exists():
-    complex_df = pd.read_csv(complex_path)
-    rgcn_df = pd.read_csv(rgcn_path)
-    
-    print(f"ComplEx top importance:  {complex_df.iloc[0]['importance']:.4f}")
-    print(f"RGCN top importance:     {rgcn_df.iloc[0]['importance']:.4f}")
-    print(f"RGCN advantage:          {rgcn_df.iloc[0]['importance']/complex_df.iloc[0]['importance']:.2f}x")
-    print(f"\nComplEx mean importance: {complex_df['importance'].mean():.4f}")
-    print(f"RGCN mean importance:    {rgcn_df['importance'].mean():.4f}")
-else:
-    print("⚠ Run: python -m src.ml.run_interpretability --model random_forest --dataset RGCN_protein_embeddings")
 
-# 2. Compare with gene expression
-print("\n2. EMBEDDINGS VS GENE EXPRESSION")
-print("-"*80)
+def overlap(df_a: pd.DataFrame, df_b: pd.DataFrame, k: int = 20):
+    top_a = set(df_a.head(k)['feature'])
+    top_b = set(df_b.head(k)['feature'])
+    common = top_a & top_b
+    return common, top_a, top_b
 
-gene_path = results_dir / 'random_forest_gene_expression' / 'feature_importance.csv'
 
-if gene_path.exists():
-    gene_df = pd.read_csv(gene_path)
-    
-    print(f"Gene expression top:     {gene_df.iloc[0]['importance']:.4f}")
-    if rgcn_path.exists():
-        print(f"RGCN top:                {rgcn_df.iloc[0]['importance']:.4f}")
-        print(f"\nEmbedding advantage:     {rgcn_df.iloc[0]['importance']/gene_df.iloc[0]['importance']:.2f}x")
-    
-    print(f"\nGene expr mean:          {gene_df['importance'].mean():.4f}")
-    if rgcn_path.exists():
-        print(f"RGCN mean:               {rgcn_df['importance'].mean():.4f}")
-else:
-    print("⚠ Run: python -m src.ml.run_interpretability --model random_forest --dataset gene_expression")
+def coverage_stats(df: pd.DataFrame, k: int = 20):
+    top = df.head(k)
+    return {
+        'mean_cov': top['pct_models'].mean(),
+        'max_cov': top['pct_models'].max(),
+        'min_cov': top['pct_models'].min(),
+    }
 
-# 3. Cross-model consistency
-print("\n3. CROSS-MODEL CONSISTENCY (ComplEx embeddings)")
-print("-"*80)
 
-models = ['random_forest', 'xgboost', 'sklearn_mlp', 'svm']
-available_models = []
+def main():
+    run_none = Path('results/interpretability/v2.11_none/consolidated')
+    run_minmax = Path('results/interpretability/v2.11_minmax/consolidated')
 
-for model in models:
-    path = results_dir / f"{model}_Complex_protein_embeddings" / "feature_importance.csv"
-    if path.exists():
-        available_models.append(model)
-        df = pd.read_csv(path)
-        print(f"\n{model.upper()}")
-        print(f"  Top feature:  {df.iloc[0]['feature']} (importance: {df.iloc[0]['importance']:.4f})")
-        print(f"  Top 3: {', '.join(df.head(3)['feature'].tolist())}")
+    df_none = load_consensus(run_none)
+    df_minmax = load_consensus(run_minmax)
 
-if len(available_models) >= 2:
-    print(f"\n✓ Found {len(available_models)} models")
-    
-    # Check overlap in top 10 features
-    top_features = {}
-    for model in available_models:
-        path = results_dir / f"{model}_Complex_protein_embeddings" / "feature_importance.csv"
-        df = pd.read_csv(path)
-        top_features[model] = set(df.head(10)['feature'].tolist())
-    
-    # Compute pairwise overlap
-    if len(available_models) >= 2:
-        model1, model2 = available_models[0], available_models[1]
-        overlap = len(top_features[model1] & top_features[model2])
-        print(f"\nTop-10 overlap ({model1} vs {model2}): {overlap}/10 features")
-else:
-    print("\n⚠ Run more models: python -m src.ml.run_interpretability --dataset Complex_protein_embeddings --all-models")
+    print("=" * 80)
+    print("CONSOLIDATED INTERPRETABILITY COMPARISON")
+    print("v2.11_none vs v2.11_minmax")
+    print("=" * 80)
 
-# 4. Load summary statistics
-print("\n4. ANALYSIS SUMMARY")
-print("-"*80)
+    summarize(df_none, "v2.11_none (none)")
+    summarize(df_minmax, "v2.11_minmax (minmax)")
 
-summary_path = results_dir / 'analysis_summary.csv'
-if summary_path.exists():
-    summary_df = pd.read_csv(summary_path)
-    print(f"\nTotal analyses: {len(summary_df)}")
-    print(f"Successful: {(summary_df['status'] == 'success').sum()}")
-    
-    if 'test_accuracy' in summary_df.columns:
-        print("\nTest Accuracies:")
-        for _, row in summary_df.iterrows():
-            if pd.notna(row.get('test_accuracy')):
-                print(f"  {row['model_type']:15s} on {row['dataset']:35s}: {row['test_accuracy']:.3f}")
-else:
-    print("⚠ No summary file found yet")
+    common, top_none, top_min = overlap(df_none, df_minmax, k=20)
+    print("\nTop-20 overlap: {}/20".format(len(common)))
+    if common:
+        print("  Shared:", ", ".join(sorted(common)))
 
-# 5. Key recommendations
-print("\n" + "="*80)
-print("KEY FINDINGS & RECOMMENDATIONS")
-print("="*80)
+    cov_none = coverage_stats(df_none, k=20)
+    cov_min = coverage_stats(df_minmax, k=20)
+    print("\nCoverage (mean/max/min) among top-20:")
+    print(f"  none   : {cov_none['mean_cov']:.1f}% / {cov_none['max_cov']:.1f}% / {cov_none['min_cov']:.1f}%")
+    print(f"  minmax : {cov_min['mean_cov']:.1f}% / {cov_min['max_cov']:.1f}% / {cov_min['min_cov']:.1f}%")
 
-if rgcn_path.exists() and complex_path.exists():
-    rgcn_importance = rgcn_df.iloc[0]['importance']
-    complex_importance = complex_df.iloc[0]['importance']
-    
-    if rgcn_importance > complex_importance * 1.5:
-        print("✓ RGCN embeddings are significantly more predictive than ComplEx")
-        print("  → Focus on RGCN for GNN interpretability")
-    elif complex_importance > rgcn_importance * 1.5:
-        print("✓ ComplEx embeddings are significantly more predictive than RGCN")
-        print("  → Focus on ComplEx for GNN interpretability")
-    else:
-        print("✓ ComplEx and RGCN have similar predictive power")
-        print("  → Investigate both architectures")
+    # Features that appear in top-20 of one run but not the other
+    only_none = top_none - top_min
+    only_min = top_min - top_none
+    if only_none:
+        print("\nUnique to none (top-20):", ", ".join(sorted(only_none)))
+    if only_min:
+        print("Unique to minmax (top-20):", ", ".join(sorted(only_min)))
 
-if gene_path.exists() and rgcn_path.exists():
-    if rgcn_df['importance'].mean() > gene_df['importance'].mean():
-        print("✓ Graph embeddings capture more predictive information than raw expression")
-        print("  → Graph structure adds value")
-    else:
-        print("⚠ Raw gene expression may be as good as embeddings")
-        print("  → Consider if graph complexity is justified")
+    # Quick check of consensus score shift for shared features
+    if common:
+        merged = (
+            df_none[['feature', 'consensus_score', 'pct_models']].rename(columns={
+                'consensus_score': 'score_none', 'pct_models': 'cov_none'
+            })
+            .merge(
+                df_minmax[['feature', 'consensus_score', 'pct_models']].rename(columns={
+                    'consensus_score': 'score_min', 'pct_models': 'cov_min'
+                }),
+                on='feature', how='inner'
+            )
+            .query('feature in @common')
+        )
+        print("\nShared feature score deltas (top-20 sets):")
+        for _, row in merged.iterrows():
+            delta = row['score_min'] - row['score_none']
+            print(
+                f"  {row['feature']:12s} Δscore={delta:+.3f} "
+                f"cov none={row['cov_none']:.1f}% → min={row['cov_min']:.1f}%"
+            )
 
-print("\nNext steps:")
-print("  1. Map important dimensions back to biological entities")
-print("  2. Implement HAN architecture with attention mechanisms")
-print("  3. Use GNNExplainer to identify important subgraphs")
-print("  4. Analyze pathway-level importance")
 
-print("\n" + "="*80)
+if __name__ == "__main__":
+    main()
