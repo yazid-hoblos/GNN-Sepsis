@@ -28,7 +28,7 @@ def prepare_df_decorator(func):
     return wrapper
 
 @prepare_df_decorator
-def load_df(key: str, folder_version: str = "v2.9", normalization: str = "robust", gnn_version: str = "v2.10") -> pd.DataFrame:
+def load_df(key: str, folder_version: str = "v2.9", normalization: str = "robust") -> pd.DataFrame:
     """
     Generic interface to load expression data or Knowledge Graph embeddings.
 
@@ -75,8 +75,8 @@ def load_df(key: str, folder_version: str = "v2.9", normalization: str = "robust
     Examples
     --------
     >>> df = load_df('gene_expression', 'v2.9', normalization='robust')
-    >>> df = load_df('GraphSAGE_sample_embeddings', gnn_version='v2.10')
-    >>> df = load_df('GAT_protein_embeddings', gnn_version='v2.9')
+    >>> df = load_df('GraphSAGE_sample_embeddings', folder_version='v2.10')
+    >>> df = load_df('GAT_protein_embeddings', folder_version='v2.9')
     """
     # GNN models
     gnn_sample_keys = [
@@ -102,10 +102,10 @@ def load_df(key: str, folder_version: str = "v2.9", normalization: str = "robust
         return load_concatenate_protein_embeddings(folder_version, normalization=normalization)
     elif key in gnn_sample_keys:
         model_name = key.replace("_sample_embeddings", "")
-        return load_gnn_sample_embeddings(model_name, gnn_version=gnn_version)
+        return load_gnn_sample_embeddings(model_name, gnn_version=folder_version)
     elif key in gnn_protein_keys:
         model_name = key.replace("_protein_embeddings", "")
-        return load_gnn_protein_embeddings(model_name, gnn_version=gnn_version, normalization=normalization)
+        return load_gnn_protein_embeddings(model_name, gnn_version=folder_version, normalization=normalization)
     else:
         raise ValueError(f"Unknown data key: {key}")
 
