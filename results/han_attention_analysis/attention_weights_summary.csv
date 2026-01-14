@@ -1,0 +1,7 @@
+patient_idx,prediction,prob_septic,total_neighbors,num_metapaths,top_metapath,top_metapath_weight,top_neighbor,top_neighbor_attention
+11,🔴,0.49945703,745,1,Sample->hasGeneExpressionOA->Protein,347.0777822082532,0,0.4658762177291989
+6,🔴,0.49226022,794,1,Sample->hasGeneExpressionOA->Protein,369.90571687698394,0,0.4658762177291989
+159,🔴,0.48921168,738,1,Sample->hasGeneExpressionOA->Protein,343.8166486841488,0,0.4658762177291989
+63,🟢,0.50131124,744,1,Sample->hasGeneExpressionOA->Protein,346.611905990524,0,0.4658762177291989
+22,🟢,0.5070525,692,1,Sample->hasGeneExpressionOA->Protein,322.38634266860566,9,0.4658762177291989
+137,🟢,0.5070808,748,1,Sample->hasGeneExpressionOA->Protein,348.47541086144076,0,0.4658762177291989

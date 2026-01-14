@@ -1,0 +1,22 @@
+================================================================================
+PATIENT 137 - ATTENTION ANALYSIS (WITH NODE TYPES)
+================================================================================
+
+PREDICTION: 🟢 HEALTHY
+  Probability (septic): 0.5071
+
+INFLUENTIAL NODE TYPES
+--------------------------------------------------------------------------------
+Node Type            Count                                               Metapaths
+--------------------------------------------------------------------------------
+Protein              748                      Sample->hasGeneExpressionOA->Protein
+
+SEMANTIC-LEVEL ATTENTION (Metapath Importance)
+--------------------------------------------------------------------------------
+Metapath                                                      Neighbor Count
+--------------------------------------------------------------------------------
+Sample->hasGeneExpressionOA->Protein                                     748
+
+INTERPRETATION:
+  This patient has 748 total neighbors across 1 metapaths
+  Most influential node type: Protein (748 nodes)

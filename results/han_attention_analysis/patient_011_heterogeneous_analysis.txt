@@ -1,0 +1,51 @@
+==========================================================================================
+PATIENT 11 - HETEROGENEOUS NEIGHBORHOOD ANALYSIS
+==========================================================================================
+
+PREDICTION: 🔴 SEPTIC
+  Probability (septic): 0.4995
+  Probability (healthy): 0.5005
+
+NODE TYPE DISTRIBUTION
+------------------------------------------------------------------------------------------
+Node Type                 Total Connected                                 Via Relations
+------------------------------------------------------------------------------------------
+GO_Term                               387 Protein-[isAssociatedWithGO]->GO_Term, Protein-[hasModification]->GO_Term
+Pathway                              1324 Protein-[isAssociatedWithProteinPathway]->Pathway
+Protein                              1174 Sample-[hasGeneExpressionOA]->Protein, Protein-[hasPhysicalInteractionWith]->Protein, Protein-[hasFunctionalInteractionWith]->Protein, Protein-[hasGeneticInteractionWith]->Protein
+Reaction                             4172            Protein-[participatedIn]->Reaction
+
+
+RELATION TYPE BREAKDOWN
+------------------------------------------------------------------------------------------
+Relation                                                                    Edge Count
+------------------------------------------------------------------------------------------
+Protein-[isAssociatedWithGO]->GO_Term                                            41288
+Protein-[participatedIn]->Reaction                                                7423
+Protein-[isAssociatedWithProteinPathway]->Pathway                                 7408
+Protein-[hasPhysicalInteractionWith]->Protein                                     4130
+Protein-[hasFunctionalInteractionWith]->Protein                                   4052
+Sample-[hasGeneExpressionOA]->Protein                                              745
+Protein-[hasGeneticInteractionWith]->Protein                                       126
+Protein-[hasModification]->GO_Term                                                 102
+
+
+INTERPRETATION
+------------------------------------------------------------------------------------------
+This patient is connected to 7057 entities across 4 different node types through 8 relation types.
+
+Node types by importance (count):
+  1. Reaction: 4172 nodes
+  • Pathway: 1324 nodes
+  • Protein: 1174 nodes
+  • GO_Term: 387 nodes
+
+GRAPH STRUCTURE INSIGHT:
+This heterogeneous neighborhood captures:
+  • Gene expression signature (Proteins via hasGeneExpressionOA)
+  • Biological context (Pathways, GO Terms, Reactions)
+  • Multiple levels of annotation and interaction
+
+The model uses this rich heterogeneous structure to determine
+whether the patient's expression signature matches septic or healthy
+patterns learned during training.

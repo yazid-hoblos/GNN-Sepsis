@@ -1,0 +1,10 @@
+Patient 63 Neighborhood Analysis
+============================================================
+
+Prediction: HEALTHY
+Probability (septic): 0.5013
+Total neighbors: 744
+
+Edge Type Distribution:
+------------------------------------------------------------
+  Sample->hasGeneExpressionOA->Protein: 744 nodes

@@ -1,0 +1,10 @@
+Patient 137 Neighborhood Analysis
+============================================================
+
+Prediction: HEALTHY
+Probability (septic): 0.5071
+Total neighbors: 748
+
+Edge Type Distribution:
+------------------------------------------------------------
+  Sample->hasGeneExpressionOA->Protein: 748 nodes
