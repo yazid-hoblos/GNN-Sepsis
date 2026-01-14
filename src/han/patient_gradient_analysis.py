@@ -446,7 +446,7 @@ def main():
     analyzer.generate_comprehensive_report(
         'results/han_model_balanced/sample_predictions.csv',
         output_dir='results/patient_gradient_analysis',
-        num_patients=30  # Analyze 30 patients for detailed report
+        num_patients=3  # Analyze 30 patients for detailed report
     )
 
 

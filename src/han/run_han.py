@@ -1,7 +1,8 @@
 """
 Main HAN Training Script for Sepsis Prediction
 
-Trains HAN model end-to-end and performs attention analysis.
+Trains HAN model with gene expression features (not identity matrices).
+Provides real biological signal for the model to learn discriminative patterns.
 """
 
 import argparse
@@ -9,7 +10,7 @@ import logging
 import torch
 from pathlib import Path
 
-from src.han.owl_data_loader import load_hetero_graph_from_owl
+from src.han.owl_data_loader_with_features import load_hetero_graph_from_owl
 from src.han.model import SepsisHANClassifier, HANTrainer
 from src.han.han_attention_extraction import HANAttentionExtractor
 
