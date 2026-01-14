@@ -45,6 +45,14 @@ def load_df(key: str, folder_version: str = "v2.9", normalization: str = "robust
         - 'Complex_protein_embeddings' : Protein embeddings from ComplEx, weighted by gene expression
         - 'concatenated_protein_embeddings' : Both RGCN + ComplEx protein embeddings (256 dims)
 
+        GNN models from results/embeddings/ (100 dims):
+        - 'GraphSAGE_sample_embeddings' : Sample embeddings from GraphSAGE
+        - 'weighted_RGCN_sample_embeddings' : Sample embeddings from RGCN with edge weights
+        - 'GAT_sample_embeddings' : Sample embeddings from GAT
+        - 'GraphSAGE_protein_embeddings' : Protein embeddings from GraphSAGE, weighted by expression
+        - 'weighted_RGCN_protein_embeddings' : Protein embeddings from RGCN with edge weights, weighted by expression
+        - 'GAT_protein_embeddings' : Protein embeddings from GAT, weighted by expression
+
     folder_version : str, optional
         Version of embeddings folder in models/executions/ (default: 'v2.9')
 
@@ -61,7 +69,20 @@ def load_df(key: str, folder_version: str = "v2.9", normalization: str = "robust
     Examples
     --------
     >>> df = load_df('gene_expression', 'v2.9', normalization='robust')
+    >>> df = load_df('GraphSAGE_sample_embeddings')
     """
+    # GNN models
+    gnn_sample_keys = [
+        "GraphSAGE_sample_embeddings",
+        "weighted_RGCN_sample_embeddings",
+        "GAT_sample_embeddings"
+    ]
+    gnn_protein_keys = [
+        "GraphSAGE_protein_embeddings",
+        "weighted_RGCN_protein_embeddings",
+        "GAT_protein_embeddings"
+    ]
+
     if key == "gene_expression":
         return load_gene_expression(normalization=normalization)
     elif key in ("RGCN_sample_embeddings", "Complex_sample_embeddings"):
@@ -72,6 +93,12 @@ def load_df(key: str, folder_version: str = "v2.9", normalization: str = "robust
         return load_protein_embeddings(key.split("_")[0], folder_version, normalization=normalization)
     elif key == "concatenated_protein_embeddings":
         return load_concatenate_protein_embeddings(folder_version, normalization=normalization)
+    elif key in gnn_sample_keys:
+        model_name = key.replace("_sample_embeddings", "")
+        return load_gnn_sample_embeddings(model_name)
+    elif key in gnn_protein_keys:
+        model_name = key.replace("_protein_embeddings", "")
+        return load_gnn_protein_embeddings(model_name, normalization=normalization)
     else:
         raise ValueError(f"Unknown data key: {key}")
 
@@ -443,3 +470,129 @@ def load_protein_embeddings(model_name: str, folder_version: str = "v2.9", norma
 def load_concatenate_protein_embeddings(folder_version: str = "v2.9", normalization: str = "robust") -> pd.DataFrame:
     """ Concatenate RGCN and ComplEx protein embeddings at sample level. """
     return _concatenate_model_embeddings(load_protein_embeddings, folder_version, normalization)
+
+
+# ============================================================================
+# GNN Embeddings Loading (from results/embeddings/)
+# ============================================================================
+
+def load_gnn_sample_embeddings(model_name: str) -> pd.DataFrame:
+    """Load sample embeddings from GNN models (GraphSAGE, weighted_RGCN, GAT)."""
+    # Remove weighted_ prefix if present
+    clean_model_name = model_name.replace("weighted_", "")
+
+    # Map model names to folder names
+    model_folder_map = {
+        "GraphSAGE": "graphsage",
+        "RGCN": "rgcn",
+        "GAT": "gat"
+    }
+
+    if clean_model_name not in model_folder_map:
+        raise ValueError(f"Unknown GNN model: {model_name}")
+
+    folder_name = model_folder_map[clean_model_name]
+    embeddings_path = project_root / "results" / "embeddings" / folder_name / "sample_embeddings.csv"
+
+    if not embeddings_path.exists():
+        raise FileNotFoundError(f"Embeddings not found at {embeddings_path}. Run the model first.")
+
+    # Load embeddings array from CSV
+    embeddings_array = pd.read_csv(embeddings_path).values
+    n_samples, embedding_dim = embeddings_array.shape
+
+    # Create DataFrame with embedding columns
+    emb_cols = [f'emb_{i}' for i in range(embedding_dim)]
+    df_embeddings = pd.DataFrame(embeddings_array, columns=emb_cols)
+
+    # Load sample features to get GSM IDs and metadata
+    df_features = _load_sample_features()
+
+    # Match embeddings to samples (assuming same order as in hetero_graph.pt)
+    if len(df_embeddings) != len(df_features):
+        raise ValueError(f"Mismatch: {len(df_embeddings)} embeddings vs {len(df_features)} samples")
+
+    df_embeddings['gsm_id'] = df_features['gsm_id'].values
+    df_embeddings = df_embeddings.set_index('gsm_id')
+
+    # Combine features + embeddings + disease_status
+    return _add_features_and_disease_status(df_embeddings, df_features)
+
+
+def _load_gnn_protein_node_ids() -> list:
+    """Load protein node IDs from hetero_graph to get gene symbols."""
+    import torch
+    from src.han.load_heterodata import _load_owl_graph, _extract_nodes_and_edges
+
+    # Load OWL to get node IDs in correct order (same version as used in hetero_graph)
+    owl_dir = project_root / "models" / "executions" / "GSE54514_enriched_ontology_degfilterv2.9"
+    owl_path = owl_dir / "GSE54514_enriched_ontology_degfilterv2.9.owl"
+
+    g = _load_owl_graph(owl_path)
+    nodes, _, _ = _extract_nodes_and_edges(g, node_types_filter={'sample', 'protein', 'pathway', 'goterm'})
+
+    # Return protein node IDs in same order as in hetero_graph
+    protein_node_ids = nodes['protein']
+    return protein_node_ids
+
+
+def load_gnn_protein_embeddings(model_name: str, normalization: str = "robust") -> pd.DataFrame:
+    """Load protein embeddings from GNN models, weighted by gene expression."""
+    # Remove weighted_ prefix if present
+    clean_model_name = model_name.replace("weighted_", "")
+
+    # Map model names to folder names
+    model_folder_map = {
+        "GraphSAGE": "graphsage",
+        "RGCN": "rgcn",
+        "GAT": "gat"
+    }
+
+    if clean_model_name not in model_folder_map:
+        raise ValueError(f"Unknown GNN model: {model_name}")
+
+    folder_name = model_folder_map[clean_model_name]
+    embeddings_path = project_root / "results" / "embeddings" / folder_name / "protein_embeddings.csv"
+
+    if not embeddings_path.exists():
+        raise FileNotFoundError(f"Embeddings not found at {embeddings_path}. Run the model first.")
+
+    # Load protein embeddings array from CSV
+    protein_embeddings_array = pd.read_csv(embeddings_path).values
+    n_proteins, embedding_dim = protein_embeddings_array.shape
+
+    # Create DataFrame with protein embeddings
+    emb_cols = [f'emb_{i}' for i in range(embedding_dim)]
+
+    # Load protein node IDs from hetero_graph to get gene symbols
+    protein_node_ids = _load_gnn_protein_node_ids()
+
+    if len(protein_node_ids) != n_proteins:
+        raise ValueError(f"Mismatch: {n_proteins} embeddings vs {len(protein_node_ids)} protein nodes")
+
+    # Create DataFrame with protein embeddings and gene symbols
+    df_proteins = pd.DataFrame(protein_embeddings_array, columns=emb_cols)
+    df_proteins['label'] = protein_node_ids
+    df_proteins['gene_symbol'] = df_proteins['label'].str.replace('Protein_', '', regex=False)
+
+    # Load gene expression and mapping
+    gse = GEOparse.get_GEO(filepath=geo_filepath, silent=True)
+    expression_data = create_expression_data(gse)
+    probe_to_gene = load_probe_to_gene_mapping()
+    gene_expr_matrix = aggregate_probes_to_genes(expression_data, probe_to_gene)
+    gene_expr_matrix = normalize_gene_expression(gene_expr_matrix, method=normalization)
+
+    # Map proteins to genes (same as RGCN/Complex)
+    df_proteins = map_proteins_to_genes(df_proteins, probe_to_gene)
+
+    # Filter proteins that have expression data
+    df_proteins = df_proteins[df_proteins['entrez_gene_id'].isin(gene_expr_matrix.columns)]
+
+    # Create weighted embeddings (same approach as RGCN/Complex)
+    df_protein_embeddings = create_weighted_protein_embeddings(df_proteins, gene_expr_matrix)
+
+    # Load sample features
+    df_features = _load_sample_features()
+
+    # Combine features + protein embeddings + disease_status
+    return _add_features_and_disease_status(df_protein_embeddings, df_features)
