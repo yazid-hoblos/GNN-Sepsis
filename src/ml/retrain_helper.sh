@@ -57,15 +57,21 @@ done
 # -- training gnn sample embeddings 
 for seed in 6 7 8 9; do
   for norm in "none" "minmax" "log1p" "standard" "robust"; do
-    python -m src.ml.train_all --cache-dir ./dump_seeds/dump_$seed --threads 1 --model-types sklearn_mlp xgboost svm random_forest --normalization $norm --versions v2.11 --dataset GraphSAGE_sample_embeddings weighted_RGCN_sample_embeddings GAT_sample_embeddings --random-state $seed --split-ratio 0.3
+    python -m src.ml.train_all --cache-dir ./dump_seeds/dump_$seed --threads 1 --model-types sklearn_mlp xgboost svm random_forest --normalization $norm --versions v2.10 --dataset GraphSAGE_sample_embeddings weighted_RGCN_sample_embeddings GAT_sample_embeddings --random-state $seed --split-ratio 0.3
   done
 done
 
 #0 1 2 v11
 
-# -- training 3 model types on 5 seeds
 for seed in 0; do
-  for norm in "none" "minmax" "log1p"; do
-    python -m src.ml.train_all --cache-dir ./dump_seeds/dump_$seed --threads 1 --model-types sklearn_mlp xgboost svm random_forest --normalization $norm --versions v2.11 --dataset GraphSAGE_protein_embeddings weighted_RGCN_protein_embeddings GAT_protein_embeddings --random-state $seed --split-ratio 0.3
+  for norm in "log1p"; do
+    python -m src.ml.train_all --cache-dir ./dump_seeds/dump_$seed --threads 1 --model-types sklearn_mlp xgboost svm random_forest --normalization $norm --versions v2.10 v2.11 --dataset GraphSAGE_protein_embeddings weighted_RGCN_protein_embeddings GAT_protein_embeddings --random-state $seed --split-ratio 0.3
+  done
+done
+
+# -- training only 2 norms on gnn protein embeddings
+for seed in 1 2 3 4; do
+  for norm in "none" "minmax" ; do
+    python -m src.ml.train_all --cache-dir ./dump_seeds/dump_$seed --threads 1 --model-types sklearn_mlp xgboost svm random_forest --normalization $norm --versions v2.10 v2.11 --dataset GraphSAGE_protein_embeddings weighted_RGCN_protein_embeddings GAT_protein_embeddings --random-state $seed --split-ratio 0.3
   done
 done
