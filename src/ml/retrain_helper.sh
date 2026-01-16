@@ -63,7 +63,7 @@ done
 
 #0 1 2 v11
 
-for seed in 0; do
+for seed in 2 3; do
   for norm in "log1p"; do
     python -m src.ml.train_all --cache-dir ./dump_seeds/dump_$seed --threads 1 --model-types sklearn_mlp xgboost svm random_forest --normalization $norm --versions v2.10 v2.11 --dataset GraphSAGE_protein_embeddings weighted_RGCN_protein_embeddings GAT_protein_embeddings --random-state $seed --split-ratio 0.3
   done
@@ -75,3 +75,7 @@ for seed in 1 2 3 4; do
     python -m src.ml.train_all --cache-dir ./dump_seeds/dump_$seed --threads 1 --model-types sklearn_mlp xgboost svm random_forest --normalization $norm --versions v2.10 v2.11 --dataset GraphSAGE_protein_embeddings weighted_RGCN_protein_embeddings GAT_protein_embeddings --random-state $seed --split-ratio 0.3
   done
 done
+
+
+seed=9
+python -m src.ml.train_all --cache-dir ./dump_seeds/dump_$seed --threads 1 --model-types sklearn_mlp xgboost svm random_forest --normalization minmax --versions v2.11 --dataset GraphSAGE_protein_embeddings weighted_RGCN_protein_embeddings GAT_protein_embeddings --random-state $seed --split-ratio 0.3
