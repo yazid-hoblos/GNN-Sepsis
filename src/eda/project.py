@@ -6,15 +6,14 @@ If wanna plot pca/tsne/umap without normalization, use the scripts pca, tsne, um
 
 # -- to run on all data
 for v in v2.10 v2.11; do
+    for norm in minmax standard robust log1p; do
+        python -m src.eda.project.py --version "$v" --normalization "$norm" --method pca --dataset_name GAT_protein_embeddings weighted_RGCN_protein_embeddings GraphSAGE_protein_embeddings
+        python -m src.eda.project.py --version "$v" --normalization "$norm" --method tsne --dataset_name GAT_protein_embeddings weighted_RGCN_protein_embeddings GraphSAGE_protein_embeddings
+        python -m src.eda.project.py --version "$v" --normalization "$norm" --method umap --dataset_name GAT_protein_embeddings weighted_RGCN_protein_embeddings GraphSAGE_protein_embeddings
+    done
     python -m src.eda.project.py --version "$v" --normalization none --method pca
     python -m src.eda.project.py --version "$v" --normalization none --method tsne
     python -m src.eda.project.py --version "$v" --normalization none --method umap
-
-    for norm in minmax standard robust log1p; do
-        python -m src.eda.project.py --version "$v" --normalization "$norm" --method pca --dataset_name Complex_protein_embeddings RGCN_protein_embeddings concatenated_protein_embeddings
-        python -m src.eda.project.py --version "$v" --normalization "$norm" --method tsne --dataset_name Complex_protein_embeddings RGCN_protein_embeddings concatenated_protein_embeddings
-        python -m src.eda.project.py --version "$v" --normalization "$norm" --method umap --dataset_name Complex_protein_embeddings RGCN_protein_embeddings concatenated_protein_embeddings
-    done
 done
 
 
