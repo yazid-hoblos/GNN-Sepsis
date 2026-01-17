@@ -1,0 +1,1299 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script>function neighbourhoodHighlight(params) {
+  // console.log("in nieghbourhoodhighlight");
+  allNodes = nodes.get({ returnType: "Object" });
+  // originalNodes = JSON.parse(JSON.stringify(allNodes));
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    highlightActive = true;
+    var i, j;
+    var selectedNode = params.nodes[0];
+    var degrees = 2;
+
+    // mark all nodes as hard to read.
+    for (let nodeId in allNodes) {
+      // nodeColors[nodeId] = allNodes[nodeId].color;
+      allNodes[nodeId].color = "rgba(200,200,200,0.5)";
+      if (allNodes[nodeId].hiddenLabel === undefined) {
+        allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+    var connectedNodes = network.getConnectedNodes(selectedNode);
+    var allConnectedNodes = [];
+
+    // get the second degree nodes
+    for (i = 1; i < degrees; i++) {
+      for (j = 0; j < connectedNodes.length; j++) {
+        allConnectedNodes = allConnectedNodes.concat(
+          network.getConnectedNodes(connectedNodes[j])
+        );
+      }
+    }
+
+    // all second degree nodes get a different color and their label back
+    for (i = 0; i < allConnectedNodes.length; i++) {
+      // allNodes[allConnectedNodes[i]].color = "pink";
+      allNodes[allConnectedNodes[i]].color = "rgba(150,150,150,0.75)";
+      if (allNodes[allConnectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[allConnectedNodes[i]].label =
+          allNodes[allConnectedNodes[i]].hiddenLabel;
+        allNodes[allConnectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // all first degree nodes get their own color and their label back
+    for (i = 0; i < connectedNodes.length; i++) {
+      // allNodes[connectedNodes[i]].color = undefined;
+      allNodes[connectedNodes[i]].color = nodeColors[connectedNodes[i]];
+      if (allNodes[connectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[connectedNodes[i]].label =
+          allNodes[connectedNodes[i]].hiddenLabel;
+        allNodes[connectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // the main node gets its own color and its label back.
+    // allNodes[selectedNode].color = undefined;
+    allNodes[selectedNode].color = nodeColors[selectedNode];
+    if (allNodes[selectedNode].hiddenLabel !== undefined) {
+      allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
+      allNodes[selectedNode].hiddenLabel = undefined;
+    }
+  } else if (highlightActive === true) {
+    // console.log("highlightActive was true");
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      // allNodes[nodeId].color = "purple";
+      allNodes[nodeId].color = nodeColors[nodeId];
+      // delete allNodes[nodeId].color;
+      if (allNodes[nodeId].hiddenLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].hiddenLabel;
+        allNodes[nodeId].hiddenLabel = undefined;
+      }
+    }
+    highlightActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    // console.log("Nothing was selected");
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        // allNodes[nodeId].color = {};
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function filterHighlight(params) {
+  allNodes = nodes.get({ returnType: "Object" });
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    filterActive = true;
+    let selectedNodes = params.nodes;
+
+    // hiding all nodes and saving the label
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = true;
+      if (allNodes[nodeId].savedLabel === undefined) {
+        allNodes[nodeId].savedLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+
+    for (let i=0; i < selectedNodes.length; i++) {
+      allNodes[selectedNodes[i]].hidden = false;
+      if (allNodes[selectedNodes[i]].savedLabel !== undefined) {
+        allNodes[selectedNodes[i]].label = allNodes[selectedNodes[i]].savedLabel;
+        allNodes[selectedNodes[i]].savedLabel = undefined;
+      }
+    }
+
+  } else if (filterActive === true) {
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = false;
+      if (allNodes[nodeId].savedLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].savedLabel;
+        allNodes[nodeId].savedLabel = undefined;
+      }
+    }
+    filterActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function selectNode(nodes) {
+  network.selectNodes(nodes);
+  neighbourhoodHighlight({ nodes: nodes });
+  return nodes;
+}
+
+function selectNodes(nodes) {
+  network.selectNodes(nodes);
+  filterHighlight({nodes: nodes});
+  return nodes;
+}
+
+function highlightFilter(filter) {
+  let selectedNodes = []
+  let selectedProp = filter['property']
+  if (filter['item'] === 'node') {
+    let allNodes = nodes.get({ returnType: "Object" });
+    for (let nodeId in allNodes) {
+      if (allNodes[nodeId][selectedProp] && filter['value'].includes((allNodes[nodeId][selectedProp]).toString())) {
+        selectedNodes.push(nodeId)
+      }
+    }
+  }
+  else if (filter['item'] === 'edge'){
+    let allEdges = edges.get({returnType: 'object'});
+    // check if the selected property exists for selected edge and select the nodes connected to the edge
+    for (let edge in allEdges) {
+      if (allEdges[edge][selectedProp] && filter['value'].includes((allEdges[edge][selectedProp]).toString())) {
+        selectedNodes.push(allEdges[edge]['from'])
+        selectedNodes.push(allEdges[edge]['to'])
+      }
+    }
+  }
+  selectNodes(selectedNodes)
+}</script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+            
+            
+            
+            
+            
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tom-select/2.0.0-rc.4/css/tom-select.min.css" integrity="sha512-43fHB3GLgZfz8QXl1RPQ8O66oIgv3po9cJ5erMt1c4QISq9dYb195T3vr5ImnJPXuVroKcGBPXBFKETW8jrPNQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/tom-select/2.0.0-rc.4/js/tom-select.complete.js" integrity="sha512-jeF9CfnvzDiw9G9xiksVjxR2lib44Gnovvkv+3CgCG6NXCD4gqlA5nDAVW5WjpA+i+/zKsUWV5xNEbW1X/HH0Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 800px;
+                 background-color: #e8f1ff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+             #loadingBar {
+                 position:absolute;
+                 top:0px;
+                 left:0px;
+                 width: 100%;
+                 height: 800px;
+                 background-color:rgba(200,200,200,0.8);
+                 -webkit-transition: all 0.5s ease;
+                 -moz-transition: all 0.5s ease;
+                 -ms-transition: all 0.5s ease;
+                 -o-transition: all 0.5s ease;
+                 transition: all 0.5s ease;
+                 opacity:1;
+             }
+
+             #bar {
+                 position:absolute;
+                 top:0px;
+                 left:0px;
+                 width:20px;
+                 height:20px;
+                 margin:auto auto auto auto;
+                 border-radius:11px;
+                 border:2px solid rgba(30,30,30,0.05);
+                 background: rgb(0, 173, 246); /* Old browsers */
+                 box-shadow: 2px 0px 4px rgba(0,0,0,0.4);
+             }
+
+             #border {
+                 position:absolute;
+                 top:10px;
+                 left:10px;
+                 width:500px;
+                 height:23px;
+                 margin:auto auto auto auto;
+                 box-shadow: 0px 0px 4px rgba(0,0,0,0.2);
+                 border-radius:10px;
+             }
+
+             #text {
+                 position:absolute;
+                 top:8px;
+                 left:530px;
+                 width:30px;
+                 height:50px;
+                 margin:auto auto auto auto;
+                 font-size:22px;
+                 color: #000000;
+             }
+
+             div.outerBorder {
+                 position:relative;
+                 top:400px;
+                 width:600px;
+                 height:44px;
+                 margin:auto auto auto auto;
+                 border:8px solid rgba(0,0,0,0.1);
+                 background: rgb(252,252,252); /* Old browsers */
+                 background: -moz-linear-gradient(top,  rgba(252,252,252,1) 0%, rgba(237,237,237,1) 100%); /* FF3.6+ */
+                 background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(252,252,252,1)), color-stop(100%,rgba(237,237,237,1))); /* Chrome,Safari4+ */
+                 background: -webkit-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* Chrome10+,Safari5.1+ */
+                 background: -o-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* Opera 11.10+ */
+                 background: -ms-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* IE10+ */
+                 background: linear-gradient(to bottom,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* W3C */
+                 filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fcfcfc', endColorstr='#ededed',GradientType=0 ); /* IE6-9 */
+                 border-radius:72px;
+                 box-shadow: 0px 0px 10px rgba(0,0,0,0.2);
+             }
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+                <div id="select-menu" class="card-header">
+                    <div class="row no-gutters">
+                        <div class="col-10 pb-2">
+                            <select
+                            class="form-select"
+                            aria-label="Default select example"
+                            onchange="selectNode([value]);"
+                            id="select-node"
+                            placeholder="Select node..."
+                            >
+                                <option selected>Select a Node by ID</option>
+                                
+                                    <option value="Sample_GSM1317896">Sample_GSM1317896</option>
+                                
+                                    <option value="Sample_GSM1317897">Sample_GSM1317897</option>
+                                
+                                    <option value="Sample_GSM1317898">Sample_GSM1317898</option>
+                                
+                                    <option value="Sample_GSM1317899">Sample_GSM1317899</option>
+                                
+                                    <option value="Sample_GSM1317900">Sample_GSM1317900</option>
+                                
+                                    <option value="Sample_GSM1317901">Sample_GSM1317901</option>
+                                
+                                    <option value="Sample_GSM1317902">Sample_GSM1317902</option>
+                                
+                                    <option value="Sample_GSM1317903">Sample_GSM1317903</option>
+                                
+                                    <option value="Sample_GSM1317904">Sample_GSM1317904</option>
+                                
+                                    <option value="Sample_GSM1317905">Sample_GSM1317905</option>
+                                
+                                    <option value="Sample_GSM1317906">Sample_GSM1317906</option>
+                                
+                                    <option value="Sample_GSM1317907">Sample_GSM1317907</option>
+                                
+                                    <option value="Sample_GSM1317908">Sample_GSM1317908</option>
+                                
+                                    <option value="Sample_GSM1317909">Sample_GSM1317909</option>
+                                
+                                    <option value="Sample_GSM1317910">Sample_GSM1317910</option>
+                                
+                                    <option value="Sample_GSM1317911">Sample_GSM1317911</option>
+                                
+                                    <option value="Sample_GSM1317912">Sample_GSM1317912</option>
+                                
+                                    <option value="Sample_GSM1317913">Sample_GSM1317913</option>
+                                
+                                    <option value="Sample_GSM1317914">Sample_GSM1317914</option>
+                                
+                                    <option value="Sample_GSM1317915">Sample_GSM1317915</option>
+                                
+                                    <option value="Sample_GSM1317916">Sample_GSM1317916</option>
+                                
+                                    <option value="Sample_GSM1317917">Sample_GSM1317917</option>
+                                
+                                    <option value="Sample_GSM1317918">Sample_GSM1317918</option>
+                                
+                                    <option value="Sample_GSM1317919">Sample_GSM1317919</option>
+                                
+                                    <option value="Sample_GSM1317920">Sample_GSM1317920</option>
+                                
+                                    <option value="Sample_GSM1317921">Sample_GSM1317921</option>
+                                
+                                    <option value="Sample_GSM1317922">Sample_GSM1317922</option>
+                                
+                                    <option value="Sample_GSM1317923">Sample_GSM1317923</option>
+                                
+                                    <option value="Sample_GSM1317924">Sample_GSM1317924</option>
+                                
+                                    <option value="Sample_GSM1317925">Sample_GSM1317925</option>
+                                
+                                    <option value="Sample_GSM1317926">Sample_GSM1317926</option>
+                                
+                                    <option value="Sample_GSM1317927">Sample_GSM1317927</option>
+                                
+                                    <option value="Sample_GSM1317928">Sample_GSM1317928</option>
+                                
+                                    <option value="Sample_GSM1317929">Sample_GSM1317929</option>
+                                
+                                    <option value="Sample_GSM1317930">Sample_GSM1317930</option>
+                                
+                                    <option value="Sample_GSM1317931">Sample_GSM1317931</option>
+                                
+                                    <option value="Sample_GSM1317932">Sample_GSM1317932</option>
+                                
+                                    <option value="Sample_GSM1317933">Sample_GSM1317933</option>
+                                
+                                    <option value="Sample_GSM1317934">Sample_GSM1317934</option>
+                                
+                                    <option value="Sample_GSM1317935">Sample_GSM1317935</option>
+                                
+                                    <option value="Sample_GSM1317936">Sample_GSM1317936</option>
+                                
+                                    <option value="Sample_GSM1317937">Sample_GSM1317937</option>
+                                
+                                    <option value="Sample_GSM1317938">Sample_GSM1317938</option>
+                                
+                                    <option value="Sample_GSM1317939">Sample_GSM1317939</option>
+                                
+                                    <option value="Sample_GSM1317940">Sample_GSM1317940</option>
+                                
+                                    <option value="Sample_GSM1317941">Sample_GSM1317941</option>
+                                
+                                    <option value="Sample_GSM1317942">Sample_GSM1317942</option>
+                                
+                                    <option value="Sample_GSM1317943">Sample_GSM1317943</option>
+                                
+                                    <option value="Sample_GSM1317944">Sample_GSM1317944</option>
+                                
+                                    <option value="Sample_GSM1317945">Sample_GSM1317945</option>
+                                
+                                    <option value="Sample_GSM1317946">Sample_GSM1317946</option>
+                                
+                                    <option value="Sample_GSM1317947">Sample_GSM1317947</option>
+                                
+                                    <option value="Sample_GSM1317948">Sample_GSM1317948</option>
+                                
+                                    <option value="Sample_GSM1317949">Sample_GSM1317949</option>
+                                
+                                    <option value="Sample_GSM1317950">Sample_GSM1317950</option>
+                                
+                                    <option value="Sample_GSM1317951">Sample_GSM1317951</option>
+                                
+                                    <option value="Sample_GSM1317952">Sample_GSM1317952</option>
+                                
+                                    <option value="Sample_GSM1317953">Sample_GSM1317953</option>
+                                
+                                    <option value="Sample_GSM1317954">Sample_GSM1317954</option>
+                                
+                                    <option value="Sample_GSM1317955">Sample_GSM1317955</option>
+                                
+                                    <option value="Sample_GSM1317956">Sample_GSM1317956</option>
+                                
+                                    <option value="Sample_GSM1317957">Sample_GSM1317957</option>
+                                
+                                    <option value="Sample_GSM1317958">Sample_GSM1317958</option>
+                                
+                                    <option value="Sample_GSM1317959">Sample_GSM1317959</option>
+                                
+                                    <option value="Sample_GSM1317960">Sample_GSM1317960</option>
+                                
+                                    <option value="Sample_GSM1317961">Sample_GSM1317961</option>
+                                
+                                    <option value="Sample_GSM1317962">Sample_GSM1317962</option>
+                                
+                                    <option value="Sample_GSM1317963">Sample_GSM1317963</option>
+                                
+                                    <option value="Sample_GSM1317964">Sample_GSM1317964</option>
+                                
+                                    <option value="Sample_GSM1317965">Sample_GSM1317965</option>
+                                
+                                    <option value="Sample_GSM1317966">Sample_GSM1317966</option>
+                                
+                                    <option value="Sample_GSM1317967">Sample_GSM1317967</option>
+                                
+                                    <option value="Sample_GSM1317968">Sample_GSM1317968</option>
+                                
+                                    <option value="Sample_GSM1317969">Sample_GSM1317969</option>
+                                
+                                    <option value="Sample_GSM1317970">Sample_GSM1317970</option>
+                                
+                                    <option value="Sample_GSM1317971">Sample_GSM1317971</option>
+                                
+                                    <option value="Sample_GSM1317972">Sample_GSM1317972</option>
+                                
+                                    <option value="Sample_GSM1317973">Sample_GSM1317973</option>
+                                
+                                    <option value="Sample_GSM1317974">Sample_GSM1317974</option>
+                                
+                                    <option value="Sample_GSM1317975">Sample_GSM1317975</option>
+                                
+                                    <option value="Sample_GSM1317976">Sample_GSM1317976</option>
+                                
+                                    <option value="Sample_GSM1317977">Sample_GSM1317977</option>
+                                
+                                    <option value="Sample_GSM1317978">Sample_GSM1317978</option>
+                                
+                                    <option value="Sample_GSM1317979">Sample_GSM1317979</option>
+                                
+                                    <option value="Sample_GSM1317980">Sample_GSM1317980</option>
+                                
+                                    <option value="Sample_GSM1317981">Sample_GSM1317981</option>
+                                
+                                    <option value="Sample_GSM1317982">Sample_GSM1317982</option>
+                                
+                                    <option value="Sample_GSM1317983">Sample_GSM1317983</option>
+                                
+                                    <option value="Sample_GSM1317984">Sample_GSM1317984</option>
+                                
+                                    <option value="Sample_GSM1317985">Sample_GSM1317985</option>
+                                
+                                    <option value="Sample_GSM1317986">Sample_GSM1317986</option>
+                                
+                                    <option value="Sample_GSM1317987">Sample_GSM1317987</option>
+                                
+                                    <option value="Sample_GSM1317988">Sample_GSM1317988</option>
+                                
+                                    <option value="Sample_GSM1317989">Sample_GSM1317989</option>
+                                
+                                    <option value="Sample_GSM1317990">Sample_GSM1317990</option>
+                                
+                                    <option value="Sample_GSM1317991">Sample_GSM1317991</option>
+                                
+                                    <option value="Sample_GSM1317992">Sample_GSM1317992</option>
+                                
+                                    <option value="Sample_GSM1317993">Sample_GSM1317993</option>
+                                
+                                    <option value="Sample_GSM1317994">Sample_GSM1317994</option>
+                                
+                                    <option value="Sample_GSM1317995">Sample_GSM1317995</option>
+                                
+                                    <option value="Sample_GSM1317996">Sample_GSM1317996</option>
+                                
+                                    <option value="Sample_GSM1317997">Sample_GSM1317997</option>
+                                
+                                    <option value="Sample_GSM1317998">Sample_GSM1317998</option>
+                                
+                                    <option value="Sample_GSM1317999">Sample_GSM1317999</option>
+                                
+                                    <option value="Sample_GSM1318000">Sample_GSM1318000</option>
+                                
+                                    <option value="Sample_GSM1318001">Sample_GSM1318001</option>
+                                
+                                    <option value="Sample_GSM1318002">Sample_GSM1318002</option>
+                                
+                                    <option value="Sample_GSM1318003">Sample_GSM1318003</option>
+                                
+                                    <option value="Sample_GSM1318004">Sample_GSM1318004</option>
+                                
+                                    <option value="Sample_GSM1318005">Sample_GSM1318005</option>
+                                
+                                    <option value="Sample_GSM1318006">Sample_GSM1318006</option>
+                                
+                                    <option value="Sample_GSM1318007">Sample_GSM1318007</option>
+                                
+                                    <option value="Sample_GSM1318008">Sample_GSM1318008</option>
+                                
+                                    <option value="Sample_GSM1318009">Sample_GSM1318009</option>
+                                
+                                    <option value="Sample_GSM1318010">Sample_GSM1318010</option>
+                                
+                                    <option value="Sample_GSM1318011">Sample_GSM1318011</option>
+                                
+                                    <option value="Sample_GSM1318012">Sample_GSM1318012</option>
+                                
+                                    <option value="Sample_GSM1318013">Sample_GSM1318013</option>
+                                
+                                    <option value="Sample_GSM1318014">Sample_GSM1318014</option>
+                                
+                                    <option value="Sample_GSM1318015">Sample_GSM1318015</option>
+                                
+                                    <option value="Sample_GSM1318016">Sample_GSM1318016</option>
+                                
+                                    <option value="Sample_GSM1318017">Sample_GSM1318017</option>
+                                
+                                    <option value="Sample_GSM1318018">Sample_GSM1318018</option>
+                                
+                                    <option value="Sample_GSM1318019">Sample_GSM1318019</option>
+                                
+                                    <option value="Sample_GSM1318020">Sample_GSM1318020</option>
+                                
+                                    <option value="Sample_GSM1318021">Sample_GSM1318021</option>
+                                
+                                    <option value="Sample_GSM1318022">Sample_GSM1318022</option>
+                                
+                                    <option value="Sample_GSM1318023">Sample_GSM1318023</option>
+                                
+                                    <option value="Sample_GSM1318024">Sample_GSM1318024</option>
+                                
+                                    <option value="Sample_GSM1318025">Sample_GSM1318025</option>
+                                
+                                    <option value="Sample_GSM1318026">Sample_GSM1318026</option>
+                                
+                                    <option value="Sample_GSM1318027">Sample_GSM1318027</option>
+                                
+                                    <option value="Sample_GSM1318028">Sample_GSM1318028</option>
+                                
+                                    <option value="Sample_GSM1318029">Sample_GSM1318029</option>
+                                
+                                    <option value="Sample_GSM1318030">Sample_GSM1318030</option>
+                                
+                                    <option value="Sample_GSM1318031">Sample_GSM1318031</option>
+                                
+                                    <option value="Sample_GSM1318032">Sample_GSM1318032</option>
+                                
+                                    <option value="Sample_GSM1318033">Sample_GSM1318033</option>
+                                
+                                    <option value="Sample_GSM1318034">Sample_GSM1318034</option>
+                                
+                                    <option value="Sample_GSM1318035">Sample_GSM1318035</option>
+                                
+                                    <option value="Sample_GSM1318036">Sample_GSM1318036</option>
+                                
+                                    <option value="Sample_GSM1318037">Sample_GSM1318037</option>
+                                
+                                    <option value="Sample_GSM1318038">Sample_GSM1318038</option>
+                                
+                                    <option value="Sample_GSM1318039">Sample_GSM1318039</option>
+                                
+                                    <option value="Sample_GSM1318040">Sample_GSM1318040</option>
+                                
+                                    <option value="Sample_GSM1318041">Sample_GSM1318041</option>
+                                
+                                    <option value="Sample_GSM1318042">Sample_GSM1318042</option>
+                                
+                                    <option value="Sample_GSM1318043">Sample_GSM1318043</option>
+                                
+                                    <option value="Sample_GSM1318044">Sample_GSM1318044</option>
+                                
+                                    <option value="Sample_GSM1318045">Sample_GSM1318045</option>
+                                
+                                    <option value="Sample_GSM1318046">Sample_GSM1318046</option>
+                                
+                                    <option value="Sample_GSM1318047">Sample_GSM1318047</option>
+                                
+                                    <option value="Sample_GSM1318048">Sample_GSM1318048</option>
+                                
+                                    <option value="Sample_GSM1318049">Sample_GSM1318049</option>
+                                
+                                    <option value="Sample_GSM1318050">Sample_GSM1318050</option>
+                                
+                                    <option value="Sample_GSM1318051">Sample_GSM1318051</option>
+                                
+                                    <option value="Sample_GSM1318052">Sample_GSM1318052</option>
+                                
+                                    <option value="Sample_GSM1318053">Sample_GSM1318053</option>
+                                
+                                    <option value="Sample_GSM1318054">Sample_GSM1318054</option>
+                                
+                                    <option value="Sample_GSM1318055">Sample_GSM1318055</option>
+                                
+                                    <option value="Sample_GSM1318056">Sample_GSM1318056</option>
+                                
+                                    <option value="Sample_GSM1318057">Sample_GSM1318057</option>
+                                
+                                    <option value="Sample_GSM1318058">Sample_GSM1318058</option>
+                                
+                            </select>
+                        </div>
+                        <div class="col-2 pb-2">
+                            <button type="button" class="btn btn-primary btn-block" onclick="neighbourhoodHighlight({nodes: []});">Reset Selection</button>
+                        </div>
+                    </div>
+                </div>
+            
+            
+              <div id="filter-menu" class="card-header">
+                <div class="row no-gutters">
+                  <div class="col-3 pb-2">
+                    <select
+                            class="form-select"
+                            aria-label="Default select example"
+                            onchange="updateFilter(value, 'item')"
+                            id="select-item"
+                        >
+                        <option value="">Select a network item</option>
+                        <option value="edge">edge</option>
+                        <option value="node">node</option>
+                    </select>
+                  </div>
+                  <div class="col-3 pb-2">
+                    <select
+                            class="form-select"
+                            aria-label="Default select example"
+                            onchange="updateFilter(value, 'property')"
+                            id="select-property"
+                        >
+                        <option value="">Select a property...</option>
+                    </select>
+                  </div>
+                  <div class="col-3 pb-2">
+                    <select
+                            class="form-select"
+                            aria-label="Default select example"
+                            id="select-value"
+                        >
+                        <option value="">Select value(s)...</option>
+                    </select>
+                  </div>
+                  <div class="col-1 pb-2">
+                    <button type="button" class="btn btn-primary btn-block" onclick="highlightFilter(filter);">Filter</button>
+                  </div>
+                  <div class="col-2 pb-2">
+                    <button type="button" class="btn btn-primary btn-block" onclick="clearFilter(true)">Reset Selection</button>
+                  </div>
+                </div>
+              </div>
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+            <div id="loadingBar">
+              <div class="outerBorder">
+                <div id="text">0%</div>
+                <div id="border">
+                  <div id="bar"></div>
+                </div>
+              </div>
+            </div>
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+                  new TomSelect("#select-node",{
+                      create: false,
+                      sortField: {
+                          field: "text",
+                          direction: "asc"
+                      }
+                  });
+              
+
+              
+                  // explicitly using onItemAdd and this function as we need to save multiple values
+                  let updateValueFilter = function() {
+                      return function () {
+                      filter['value'].push(arguments[0])
+                      }
+                  }
+
+                  let valueControl = new TomSelect("#select-value",{
+                      maxItems: null,
+                      valueField: 'id',
+                      labelField: 'title',
+                      searchField: 'title',
+                      create: false,
+                      sortField: {
+                          field: "text",
+                          direction: "asc"
+                      },
+                      onItemAdd: updateValueFilter()
+                  });
+
+                  let addValues = function() {
+                      return function () {
+                          // clear the current value options and add the selected attribute values
+                          // tom-select handles duplicates
+                          let selectedProperty = arguments[0];
+                          valueControl.clear();
+                          valueControl.clearOptions();
+                          filter['value'] = []
+                          if (filter['item'] === 'node') {
+                              for (let each in allNodes) {
+                                  valueControl.addOption({
+                                      id:allNodes[each][selectedProperty],
+                                      title:allNodes[each][selectedProperty]
+                                  })
+                              }
+                          }
+                          else if (filter['item'] === 'edge') {
+                              for (let each in allEdges) {
+                                  valueControl.addOption({
+                                      id:allEdges[each][selectedProperty],
+                                      title:allEdges[each][selectedProperty]
+                                  })
+                              }
+                          }
+                      }
+                  };
+
+                  let propControl = new TomSelect("#select-property",{
+                      valueField: 'id',
+                      labelField: 'title',
+                      searchField: 'title',
+                      create: false,
+                      sortField: {
+                          field: "text",
+                          direction: "asc"
+                      },
+                      onItemAdd: addValues()
+                  });
+
+                  let addProperties = function() {
+                      return function () {
+                          // loops through the selected network item and adds the attributes to dropdown
+                          // tom-select handles duplicates
+                          clearFilter(false)
+                          if (arguments[0] === 'edge') {
+                              for (let each in allEdges) {
+                                  if (allEdges.hasOwnProperty(each)) {
+                                      for (let eachProp in allEdges[each]) {
+                                          if (allEdges[each].hasOwnProperty(eachProp)) {
+                                              propControl.addOption({id: eachProp, title: eachProp})
+                                          }
+                                      }
+                                  }
+                              }
+                          }
+                          else if (arguments[0] === 'node') {
+                              for (let each in allNodes) {
+                                  if (allNodes.hasOwnProperty(each)) {
+                                      for (let eachProp in allNodes[each]) {
+                                          if (allNodes[each].hasOwnProperty(eachProp)
+                                              && (eachProp !== 'hidden' && eachProp !== 'savedLabel'
+                                                  && eachProp !== 'hiddenLabel')) {
+                                              propControl.addOption({id: eachProp, title: eachProp})
+
+                                          }
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  };
+
+                  let itemControl = new TomSelect("#select-item",{
+                      create: false,
+                      sortField:{
+                          field: "text",
+                          direction: "asc"
+                      },
+                      onItemAdd: addProperties()
+                  });
+
+                  function clearFilter(reset) {
+                      // utility function to clear all the selected filter options
+                      // if reset is set to true, the existing filter will be removed
+                      // else, only the dropdown options are cleared
+                      propControl.clear();
+                      propControl.clearOptions();
+                      valueControl.clear();
+                      valueControl.clearOptions();
+                      filter = {
+                          item : '',
+                          property : '',
+                          value : []
+                      }
+                      if (reset) {
+                          itemControl.clear();
+                          filterHighlight({nodes: []})
+                      }
+                  }
+
+                  function updateFilter(value, key) {
+                      // key could be 'item' or 'property' and value is as selected in dropdown
+                      filter[key] = value
+                  }
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317896", "label": "Sample_GSM1317896", "shape": "dot", "size": 50.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317896\u003cbr\u003e\n        Degree: 3\u003cbr\u003e\n        ID: Sample_GSM1317896", "value": 3}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317897", "label": "Sample_GSM1317897", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317897\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317897", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317898", "label": "Sample_GSM1317898", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317898\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317898", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317899", "label": "Sample_GSM1317899", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317899\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317899", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317900", "label": "Sample_GSM1317900", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317900\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317900", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317901", "label": "Sample_GSM1317901", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317901\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317901", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317902", "label": "Sample_GSM1317902", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317902\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317902", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317903", "label": "Sample_GSM1317903", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317903\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317903", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317904", "label": "Sample_GSM1317904", "shape": "dot", "size": 36.666666666666664, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317904\u003cbr\u003e\n        Degree: 2\u003cbr\u003e\n        ID: Sample_GSM1317904", "value": 2}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317905", "label": "Sample_GSM1317905", "shape": "dot", "size": 36.666666666666664, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317905\u003cbr\u003e\n        Degree: 2\u003cbr\u003e\n        ID: Sample_GSM1317905", "value": 2}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317906", "label": "Sample_GSM1317906", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317906\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317906", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317907", "label": "Sample_GSM1317907", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317907\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317907", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317908", "label": "Sample_GSM1317908", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317908\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317908", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317909", "label": "Sample_GSM1317909", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317909\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317909", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317910", "label": "Sample_GSM1317910", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317910\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317910", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317911", "label": "Sample_GSM1317911", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317911\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317911", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317912", "label": "Sample_GSM1317912", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317912\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317912", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317913", "label": "Sample_GSM1317913", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317913\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317913", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317914", "label": "Sample_GSM1317914", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317914\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317914", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317915", "label": "Sample_GSM1317915", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317915\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317915", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317916", "label": "Sample_GSM1317916", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317916\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317916", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317917", "label": "Sample_GSM1317917", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317917\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317917", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317918", "label": "Sample_GSM1317918", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317918\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317918", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317919", "label": "Sample_GSM1317919", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317919\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317919", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317920", "label": "Sample_GSM1317920", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317920\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317920", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317921", "label": "Sample_GSM1317921", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317921\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317921", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317922", "label": "Sample_GSM1317922", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317922\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317922", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317923", "label": "Sample_GSM1317923", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317923\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317923", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317924", "label": "Sample_GSM1317924", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317924\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317924", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317925", "label": "Sample_GSM1317925", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317925\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317925", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317926", "label": "Sample_GSM1317926", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317926\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317926", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317927", "label": "Sample_GSM1317927", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317927\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317927", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317928", "label": "Sample_GSM1317928", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317928\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317928", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317929", "label": "Sample_GSM1317929", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317929\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317929", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317930", "label": "Sample_GSM1317930", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317930\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317930", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317931", "label": "Sample_GSM1317931", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317931\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317931", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317932", "label": "Sample_GSM1317932", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317932\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317932", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317933", "label": "Sample_GSM1317933", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317933\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317933", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317934", "label": "Sample_GSM1317934", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317934\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317934", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317935", "label": "Sample_GSM1317935", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317935\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317935", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317936", "label": "Sample_GSM1317936", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317936\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317936", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317937", "label": "Sample_GSM1317937", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317937\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317937", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317938", "label": "Sample_GSM1317938", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317938\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317938", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317939", "label": "Sample_GSM1317939", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317939\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317939", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317940", "label": "Sample_GSM1317940", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317940\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317940", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317941", "label": "Sample_GSM1317941", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317941\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317941", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317942", "label": "Sample_GSM1317942", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317942\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317942", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317943", "label": "Sample_GSM1317943", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317943\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317943", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317944", "label": "Sample_GSM1317944", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317944\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317944", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317945", "label": "Sample_GSM1317945", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317945\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317945", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317946", "label": "Sample_GSM1317946", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317946\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317946", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317947", "label": "Sample_GSM1317947", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317947\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317947", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317948", "label": "Sample_GSM1317948", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317948\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317948", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317949", "label": "Sample_GSM1317949", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317949\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317949", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317950", "label": "Sample_GSM1317950", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317950\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317950", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317951", "label": "Sample_GSM1317951", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317951\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317951", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317952", "label": "Sample_GSM1317952", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317952\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317952", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317953", "label": "Sample_GSM1317953", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317953\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317953", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317954", "label": "Sample_GSM1317954", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317954\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317954", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317955", "label": "Sample_GSM1317955", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317955\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317955", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317956", "label": "Sample_GSM1317956", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317956\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317956", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317957", "label": "Sample_GSM1317957", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317957\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317957", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317958", "label": "Sample_GSM1317958", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317958\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317958", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317959", "label": "Sample_GSM1317959", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317959\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317959", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317960", "label": "Sample_GSM1317960", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317960\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317960", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317961", "label": "Sample_GSM1317961", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317961\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317961", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317962", "label": "Sample_GSM1317962", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317962\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317962", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317963", "label": "Sample_GSM1317963", "shape": "dot", "size": 36.666666666666664, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317963\u003cbr\u003e\n        Degree: 2\u003cbr\u003e\n        ID: Sample_GSM1317963", "value": 2}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317964", "label": "Sample_GSM1317964", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317964\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317964", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317965", "label": "Sample_GSM1317965", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317965\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317965", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317966", "label": "Sample_GSM1317966", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317966\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317966", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317967", "label": "Sample_GSM1317967", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317967\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317967", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317968", "label": "Sample_GSM1317968", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317968\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317968", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317969", "label": "Sample_GSM1317969", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317969\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317969", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317970", "label": "Sample_GSM1317970", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317970\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317970", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317971", "label": "Sample_GSM1317971", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317971\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317971", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317972", "label": "Sample_GSM1317972", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317972\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317972", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317973", "label": "Sample_GSM1317973", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317973\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317973", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317974", "label": "Sample_GSM1317974", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317974\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317974", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317975", "label": "Sample_GSM1317975", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317975\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317975", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317976", "label": "Sample_GSM1317976", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317976\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317976", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317977", "label": "Sample_GSM1317977", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317977\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317977", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317978", "label": "Sample_GSM1317978", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317978\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317978", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317979", "label": "Sample_GSM1317979", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317979\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317979", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317980", "label": "Sample_GSM1317980", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317980\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317980", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317981", "label": "Sample_GSM1317981", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317981\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317981", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317982", "label": "Sample_GSM1317982", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317982\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317982", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317983", "label": "Sample_GSM1317983", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317983\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317983", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317984", "label": "Sample_GSM1317984", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317984\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317984", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317985", "label": "Sample_GSM1317985", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317985\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317985", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317986", "label": "Sample_GSM1317986", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317986\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317986", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317987", "label": "Sample_GSM1317987", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317987\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317987", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317988", "label": "Sample_GSM1317988", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317988\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317988", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317989", "label": "Sample_GSM1317989", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317989\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317989", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317990", "label": "Sample_GSM1317990", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317990\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317990", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317991", "label": "Sample_GSM1317991", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317991\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317991", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317992", "label": "Sample_GSM1317992", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317992\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317992", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317993", "label": "Sample_GSM1317993", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317993\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317993", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317994", "label": "Sample_GSM1317994", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317994\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1317994", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317995", "label": "Sample_GSM1317995", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317995\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317995", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317996", "label": "Sample_GSM1317996", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317996\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317996", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317997", "label": "Sample_GSM1317997", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317997\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317997", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317998", "label": "Sample_GSM1317998", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317998\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1317998", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1317999", "label": "Sample_GSM1317999", "shape": "dot", "size": 36.666666666666664, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1317999\u003cbr\u003e\n        Degree: 2\u003cbr\u003e\n        ID: Sample_GSM1317999", "value": 2}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318000", "label": "Sample_GSM1318000", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318000\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318000", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318001", "label": "Sample_GSM1318001", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318001\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1318001", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318002", "label": "Sample_GSM1318002", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318002\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1318002", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318003", "label": "Sample_GSM1318003", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318003\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318003", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318004", "label": "Sample_GSM1318004", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318004\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318004", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318005", "label": "Sample_GSM1318005", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318005\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318005", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318006", "label": "Sample_GSM1318006", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318006\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318006", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318007", "label": "Sample_GSM1318007", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318007\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318007", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318008", "label": "Sample_GSM1318008", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318008\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318008", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318009", "label": "Sample_GSM1318009", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318009\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318009", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318010", "label": "Sample_GSM1318010", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318010\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318010", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318011", "label": "Sample_GSM1318011", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318011\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318011", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318012", "label": "Sample_GSM1318012", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318012\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1318012", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318013", "label": "Sample_GSM1318013", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318013\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1318013", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318014", "label": "Sample_GSM1318014", "shape": "dot", "size": 36.666666666666664, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318014\u003cbr\u003e\n        Degree: 2\u003cbr\u003e\n        ID: Sample_GSM1318014", "value": 2}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318015", "label": "Sample_GSM1318015", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318015\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318015", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318016", "label": "Sample_GSM1318016", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318016\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318016", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318017", "label": "Sample_GSM1318017", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318017\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1318017", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318018", "label": "Sample_GSM1318018", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318018\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318018", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318019", "label": "Sample_GSM1318019", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318019\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318019", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318020", "label": "Sample_GSM1318020", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318020\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318020", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318021", "label": "Sample_GSM1318021", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318021\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318021", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318022", "label": "Sample_GSM1318022", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318022\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318022", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318023", "label": "Sample_GSM1318023", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318023\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318023", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318024", "label": "Sample_GSM1318024", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318024\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318024", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318025", "label": "Sample_GSM1318025", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318025\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318025", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318026", "label": "Sample_GSM1318026", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318026\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318026", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318027", "label": "Sample_GSM1318027", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318027\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318027", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318028", "label": "Sample_GSM1318028", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318028\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318028", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318029", "label": "Sample_GSM1318029", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318029\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318029", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318030", "label": "Sample_GSM1318030", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318030\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318030", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318031", "label": "Sample_GSM1318031", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318031\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318031", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318032", "label": "Sample_GSM1318032", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318032\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318032", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318033", "label": "Sample_GSM1318033", "shape": "dot", "size": 36.666666666666664, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318033\u003cbr\u003e\n        Degree: 2\u003cbr\u003e\n        ID: Sample_GSM1318033", "value": 2}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318034", "label": "Sample_GSM1318034", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318034\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318034", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318035", "label": "Sample_GSM1318035", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318035\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318035", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318036", "label": "Sample_GSM1318036", "shape": "dot", "size": 36.666666666666664, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318036\u003cbr\u003e\n        Degree: 2\u003cbr\u003e\n        ID: Sample_GSM1318036", "value": 2}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318037", "label": "Sample_GSM1318037", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318037\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318037", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318038", "label": "Sample_GSM1318038", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318038\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318038", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318039", "label": "Sample_GSM1318039", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318039\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1318039", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318040", "label": "Sample_GSM1318040", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318040\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318040", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318041", "label": "Sample_GSM1318041", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318041\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1318041", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318042", "label": "Sample_GSM1318042", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318042\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318042", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318043", "label": "Sample_GSM1318043", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318043\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318043", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318044", "label": "Sample_GSM1318044", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318044\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318044", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318045", "label": "Sample_GSM1318045", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318045\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318045", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318046", "label": "Sample_GSM1318046", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318046\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318046", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318047", "label": "Sample_GSM1318047", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318047\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318047", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318048", "label": "Sample_GSM1318048", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318048\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318048", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318049", "label": "Sample_GSM1318049", "shape": "dot", "size": 50.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318049\u003cbr\u003e\n        Degree: 3\u003cbr\u003e\n        ID: Sample_GSM1318049", "value": 3}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318050", "label": "Sample_GSM1318050", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318050\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318050", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318051", "label": "Sample_GSM1318051", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318051\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318051", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318052", "label": "Sample_GSM1318052", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318052\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318052", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318053", "label": "Sample_GSM1318053", "shape": "dot", "size": 23.333333333333332, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318053\u003cbr\u003e\n        Degree: 1\u003cbr\u003e\n        ID: Sample_GSM1318053", "value": 1}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318054", "label": "Sample_GSM1318054", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318054\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318054", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318055", "label": "Sample_GSM1318055", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318055\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318055", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318056", "label": "Sample_GSM1318056", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318056\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318056", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318057", "label": "Sample_GSM1318057", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318057\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318057", "value": 0}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#ff2146", "font": {"color": "#000c1f"}, "id": "Sample_GSM1318058", "label": "Sample_GSM1318058", "shape": "dot", "size": 10.0, "title": "\u003cb\u003ePatient\u003c/b\u003e\u003cbr\u003e\n        Name: Sample_GSM1318058\u003cbr\u003e\n        Degree: 0\u003cbr\u003e\n        ID: Sample_GSM1318058", "value": 0}]);
+                  edges = new vis.DataSet([{"color": "#cdaede", "from": "Sample_GSM1317896", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.408\u003cbr\u003eSample_GSM1317896 \u2192 Sample_GSM1317905", "to": "Sample_GSM1317905", "value": 0.4081120193004608, "width": 1.6643047117097334}, {"color": "#9b59b6", "from": "Sample_GSM1317896", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.439\u003cbr\u003eSample_GSM1317896 \u2192 Sample_GSM1317961", "to": "Sample_GSM1317961", "value": 0.4386683702468872, "width": 5.0}, {"color": "#ac75c3", "from": "Sample_GSM1317896", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.428\u003cbr\u003eSample_GSM1317896 \u2192 Sample_GSM1318014", "to": "Sample_GSM1318014", "value": 0.42848435044288635, "width": 3.8882577328811134}, {"color": "#ceb0df", "from": "Sample_GSM1317900", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.407\u003cbr\u003eSample_GSM1317900 \u2192 Sample_GSM1317920", "to": "Sample_GSM1317920", "value": 0.40745145082473755, "width": 1.5921935111306313}, {"color": "#bc91d1", "from": "Sample_GSM1317901", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.418\u003cbr\u003eSample_GSM1317901 \u2192 Sample_GSM1318049", "to": "Sample_GSM1318049", "value": 0.4184069335460663, "width": 2.788152811328274}, {"color": "#cfb1e0", "from": "Sample_GSM1317904", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.407\u003cbr\u003eSample_GSM1317904 \u2192 Sample_GSM1317978", "to": "Sample_GSM1317978", "value": 0.40692704916000366, "width": 1.5349470105490894}, {"color": "#a469bd", "from": "Sample_GSM1317904", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.433\u003cbr\u003eSample_GSM1317904 \u2192 Sample_GSM1318012", "to": "Sample_GSM1318012", "value": 0.433074951171875, "width": 4.389392349673441}, {"color": "#b281c9", "from": "Sample_GSM1317905", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.424\u003cbr\u003eSample_GSM1317905 \u2192 Sample_GSM1317963", "to": "Sample_GSM1317963", "value": 0.4244464933872223, "width": 3.4474635824610202}, {"color": "#b17fc8", "from": "Sample_GSM1317924", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.425\u003cbr\u003eSample_GSM1317924 \u2192 Sample_GSM1317963", "to": "Sample_GSM1317963", "value": 0.4249808192253113, "width": 3.5057934590765276}, {"color": "#d7bfe6", "from": "Sample_GSM1317925", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.402\u003cbr\u003eSample_GSM1317925 \u2192 Sample_GSM1317973", "to": "Sample_GSM1317973", "value": 0.4020267128944397, "width": 1.0}, {"color": "#b788cc", "from": "Sample_GSM1317931", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.422\u003cbr\u003eSample_GSM1317931 \u2192 Sample_GSM1317940", "to": "Sample_GSM1317940", "value": 0.421730637550354, "width": 3.1509861812621494}, {"color": "#9f60b9", "from": "Sample_GSM1317932", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.436\u003cbr\u003eSample_GSM1317932 \u2192 Sample_GSM1317970", "to": "Sample_GSM1317970", "value": 0.43624264001846313, "width": 4.735194267541827}, {"color": "#c19ad4", "from": "Sample_GSM1317934", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.415\u003cbr\u003eSample_GSM1317934 \u2192 Sample_GSM1318053", "to": "Sample_GSM1318053", "value": 0.4154459834098816, "width": 2.464919600810092}, {"color": "#a86fc0", "from": "Sample_GSM1317935", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.431\u003cbr\u003eSample_GSM1317935 \u2192 Sample_GSM1317945", "to": "Sample_GSM1317945", "value": 0.4308010935783386, "width": 4.141165849254569}, {"color": "#caa8db", "from": "Sample_GSM1317948", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.410\u003cbr\u003eSample_GSM1317948 \u2192 Sample_GSM1317959", "to": "Sample_GSM1317959", "value": 0.41015154123306274, "width": 1.8869498735247947}, {"color": "#9f60b9", "from": "Sample_GSM1317952", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.436\u003cbr\u003eSample_GSM1317952 \u2192 Sample_GSM1318036", "to": "Sample_GSM1318036", "value": 0.4360593259334564, "width": 4.7151827180375605}, {"color": "#cfb2e0", "from": "Sample_GSM1317953", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.407\u003cbr\u003eSample_GSM1317953 \u2192 Sample_GSM1318002", "to": "Sample_GSM1318002", "value": 0.4067796766757965, "width": 1.5188590391137788}, {"color": "#d1b5e1", "from": "Sample_GSM1317956", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.406\u003cbr\u003eSample_GSM1317956 \u2192 Sample_GSM1318039", "to": "Sample_GSM1318039", "value": 0.4057311415672302, "width": 1.4043953183840454}, {"color": "#ba8ecf", "from": "Sample_GSM1317969", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.420\u003cbr\u003eSample_GSM1317969 \u2192 Sample_GSM1317982", "to": "Sample_GSM1317982", "value": 0.419629842042923, "width": 2.92165206711726}, {"color": "#c29bd5", "from": "Sample_GSM1317971", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.415\u003cbr\u003eSample_GSM1317971 \u2192 Sample_GSM1317987", "to": "Sample_GSM1317987", "value": 0.41502267122268677, "width": 2.4187085702201725}, {"color": "#b687cc", "from": "Sample_GSM1317972", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.422\u003cbr\u003eSample_GSM1317972 \u2192 Sample_GSM1317992", "to": "Sample_GSM1317992", "value": 0.42224201560020447, "width": 3.2068109541354546}, {"color": "#d7bee6", "from": "Sample_GSM1317986", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.402\u003cbr\u003eSample_GSM1317986 \u2192 Sample_GSM1318014", "to": "Sample_GSM1318014", "value": 0.40224406123161316, "width": 1.0237269111582852}, {"color": "#d3b9e3", "from": "Sample_GSM1317994", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.404\u003cbr\u003eSample_GSM1317994 \u2192 Sample_GSM1318001", "to": "Sample_GSM1318001", "value": 0.4042287766933441, "width": 1.2403891044254123}, {"color": "#b484ca", "from": "Sample_GSM1317999", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.423\u003cbr\u003eSample_GSM1317999 \u2192 Sample_GSM1318013", "to": "Sample_GSM1318013", "value": 0.42333105206489563, "width": 3.3256960203011006}, {"color": "#d3b9e3", "from": "Sample_GSM1317999", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.404\u003cbr\u003eSample_GSM1317999 \u2192 Sample_GSM1318041", "to": "Sample_GSM1318041", "value": 0.40421006083488464, "width": 1.23834598085385}, {"color": "#c8a6da", "from": "Sample_GSM1318017", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.411\u003cbr\u003eSample_GSM1318017 \u2192 Sample_GSM1318033", "to": "Sample_GSM1318033", "value": 0.41107943654060364, "width": 1.988243906009809}, {"color": "#b88acd", "from": "Sample_GSM1318033", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.421\u003cbr\u003eSample_GSM1318033 \u2192 Sample_GSM1318049", "to": "Sample_GSM1318049", "value": 0.42097797989845276, "width": 3.0688220318994053}, {"color": "#cfb1e0", "from": "Sample_GSM1318036", "physics": true, "title": "similar_to\u003cbr\u003eWeight: 0.407\u003cbr\u003eSample_GSM1318036 \u2192 Sample_GSM1318049", "to": "Sample_GSM1318049", "value": 0.40692511200904846, "width": 1.5347355407526697}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "forceAtlas2Based": {
+            "avoidOverlap": 0,
+            "centralGravity": 0.01,
+            "damping": 0.4,
+            "gravitationalConstant": -50,
+            "springConstant": 0.08,
+            "springLength": 100
+        },
+        "solver": "forceAtlas2Based",
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+                    network.on("selectNode", neighbourhoodHighlight);
+                  
+
+                  
+
+
+                  
+                      network.on("stabilizationProgress", function(params) {
+                          document.getElementById('loadingBar').removeAttribute("style");
+                          var maxWidth = 496;
+                          var minWidth = 20;
+                          var widthFactor = params.iterations/params.total;
+                          var width = Math.max(minWidth,maxWidth * widthFactor);
+                          document.getElementById('bar').style.width = width + 'px';
+                          document.getElementById('text').innerHTML = Math.round(widthFactor*100) + '%';
+                      });
+                      network.once("stabilizationIterationsDone", function() {
+                          document.getElementById('text').innerHTML = '100%';
+                          document.getElementById('bar').style.width = '496px';
+                          document.getElementById('loadingBar').style.opacity = 0;
+                          // really clean the dom element
+                          setTimeout(function () {document.getElementById('loadingBar').style.display = 'none';}, 500);
+                      });
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    
+    <style>
+        /* Match the disease network styling */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .control-panel {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+            max-width: 320px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .control-panel h3 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            border-bottom: 2px solid #e8f1ff;
+            padding-bottom: 10px;
+        }
+        
+        .control-section {
+            margin: 15px 0;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .control-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+        
+        .filter-checkbox {
+            margin: 6px 0;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .filter-checkbox input {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        
+        .filter-checkbox label {
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            margin-top: 15px;
+        }
+        
+        .info-box strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        
+        .stat-item {
+            margin: 4px 0;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 6px 0;
+            font-size: 12px;
+        }
+        
+        .legend-color {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            margin-right: 8px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .toggle-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 500;
+            margin: 3px;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        
+        .toggle-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+        
+        .toggle-btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 8px;
+        }
+        
+        /* Scrollbar styling */
+        .control-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .control-panel::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        
+        .control-panel::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+        
+        .control-panel::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+    
+    
+    <script type="text/javascript">
+        // Store original data
+        let hiddenNodes = new Set();
+        let hiddenEdges = new Set();
+        
+        // Initialize after network is loaded
+        network.on("stabilizationIterationsDone", function () {
+            updateStats();
+        });
+        
+        function updateStats() {
+            const nodes = network.body.data.nodes;
+            const edges = network.body.data.edges;
+            document.getElementById('nodeCount').textContent = nodes.length;
+            document.getElementById('edgeCount').textContent = edges.length;
+            document.getElementById('hiddenCount').textContent = hiddenNodes.size + hiddenEdges.size;
+        }
+        
+        function filterNodeType(nodeType, show) {
+            const nodes = network.body.data.nodes.get();
+            const nodesToUpdate = nodes.filter(node => node.type === nodeType);
+            
+            nodesToUpdate.forEach(node => {
+                if (show) {
+                    hiddenNodes.delete(node.id);
+                    network.body.data.nodes.update({id: node.id, hidden: false});
+                } else {
+                    hiddenNodes.add(node.id);
+                    network.body.data.nodes.update({id: node.id, hidden: true});
+                }
+            });
+            
+            updateStats();
+        }
+        
+        function filterEdgeType(edgeType, show) {
+            const edges = network.body.data.edges.get();
+            const edgesToUpdate = edges.filter(edge => edge.type === edgeType);
+            
+            edgesToUpdate.forEach(edge => {
+                if (show) {
+                    hiddenEdges.delete(edge.id);
+                    network.body.data.edges.update({id: edge.id, hidden: false});
+                } else {
+                    hiddenEdges.add(edge.id);
+                    network.body.data.edges.update({id: edge.id, hidden: true});
+                }
+            });
+            
+            updateStats();
+        }
+        
+        function selectAllNodes() {
+            const nodes = network.body.data.nodes.get().filter(n => !n.hidden);
+            network.selectNodes(nodes.map(n => n.id));
+            updateSelectedCount();
+        }
+        
+        function deselectAll() {
+            network.unselectAll();
+            updateSelectedCount();
+        }
+        
+        function resetFilters() {
+            // Reset all checkboxes
+            document.querySelectorAll('.filter-checkbox input').forEach(cb => cb.checked = true);
+            
+            // Show all nodes and edges
+            const nodes = network.body.data.nodes.get();
+            nodes.forEach(node => {
+                network.body.data.nodes.update({id: node.id, hidden: false});
+            });
+            
+            const edges = network.body.data.edges.get();
+            edges.forEach(edge => {
+                network.body.data.edges.update({id: edge.id, hidden: false});
+            });
+            
+            hiddenNodes.clear();
+            hiddenEdges.clear();
+            updateStats();
+        }
+        
+        function isolateSelected() {
+            const selectedNodes = network.getSelectedNodes();
+            if (selectedNodes.length === 0) {
+                alert('Please select some nodes first!');
+                return;
+            }
+            
+            // Get connected edges
+            const connectedEdges = new Set();
+            selectedNodes.forEach(nodeId => {
+                network.getConnectedEdges(nodeId).forEach(edgeId => {
+                    connectedEdges.add(edgeId);
+                });
+            });
+            
+            // Get nodes connected to selected nodes
+            const connectedNodes = new Set(selectedNodes);
+            const edges = network.body.data.edges.get();
+            edges.forEach(edge => {
+                if (connectedEdges.has(edge.id)) {
+                    connectedNodes.add(edge.from);
+                    connectedNodes.add(edge.to);
+                }
+            });
+            
+            // Hide all other nodes
+            const nodes = network.body.data.nodes.get();
+            nodes.forEach(node => {
+                if (!connectedNodes.has(node.id)) {
+                    network.body.data.nodes.update({id: node.id, hidden: true});
+                    hiddenNodes.add(node.id);
+                }
+            });
+            
+            // Hide edges not connected to selected nodes
+            edges.forEach(edge => {
+                if (!connectedEdges.has(edge.id)) {
+                    network.body.data.edges.update({id: edge.id, hidden: true});
+                    hiddenEdges.add(edge.id);
+                }
+            });
+            
+            updateStats();
+        }
+        
+        function exportSelection() {
+            const selectedNodes = network.getSelectedNodes();
+            if (selectedNodes.length === 0) {
+                alert('Please select some nodes first!');
+                return;
+            }
+            
+            const nodes = network.body.data.nodes.get(selectedNodes);
+            const exportData = {
+                nodes: nodes.map(n => ({
+                    id: n.id,
+                    label: n.label,
+                    type: n.type
+                })),
+                count: nodes.length
+            };
+            
+            console.log('Exported selection:', exportData);
+            alert(`Exported ${nodes.length} nodes to console. Check browser developer tools.`);
+        }
+        
+        function updateSelectedCount() {
+            const count = network.getSelectedNodes().length;
+            document.getElementById('selectedCount').textContent = count;
+        }
+        
+        // Update selected count on selection change
+        network.on("select", function(params) {
+            updateSelectedCount();
+        });
+        
+        // Log clicks for debugging
+        network.on("click", function(params) {
+            if (params.nodes.length > 0) {
+                const nodeId = params.nodes[0];
+                const node = network.body.data.nodes.get(nodeId);
+                console.log('Clicked node:', node);
+            }
+        });
+        
+        // Update stats periodically
+        setInterval(updateStats, 2000);
+    </script>
+    </body>
+</html>

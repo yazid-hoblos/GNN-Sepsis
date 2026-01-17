@@ -1,0 +1,10 @@
+Patient 11 Neighborhood Analysis
+============================================================
+
+Prediction: SEPTIC
+Probability (septic): 0.4995
+Total neighbors: 745
+
+Edge Type Distribution:
+------------------------------------------------------------
+  Sample->hasGeneExpressionOA->Protein: 745 nodes

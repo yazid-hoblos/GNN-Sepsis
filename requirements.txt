@@ -1,5 +1,5 @@
 pandas
-scikit-learn
+scikit-learn>=1.3.0
 matplotlib
 xgboost
 umap-learn
@@ -8,8 +8,8 @@ torch
 GEOparse
 rdflib
 torch-geometric
-<<<<<<< HEAD
-shap
-=======
-shap
->>>>>>> 856b5f562505fe0ec83df43dd24fe7bbb3c3fe5d
+networkx
+seaborn
+numpy
+pyarrow
+

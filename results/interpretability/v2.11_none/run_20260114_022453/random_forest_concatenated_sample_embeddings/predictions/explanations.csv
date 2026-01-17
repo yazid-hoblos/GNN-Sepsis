@@ -1,0 +1,4 @@
+sample_idx,true_label,predicted_label,prediction_proba,top_feature,top_shap
+0,Control,Control,0.4227481222752782,Feature_83,-0.015619397787959536
+1,Septic,Septic,0.9225431183529342,Feature_83,0.014413562337482358
+2,Septic,Septic,0.8715289553873196,Feature_299,-0.025955373122475

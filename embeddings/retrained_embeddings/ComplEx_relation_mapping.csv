@@ -1,0 +1,7 @@
+relation_id,label
+0,hasGeneEGroup_1T
+1,hasGeneEGroup_2T
+2,hasGeneEGroup_3T
+3,hasGeneEGroup_4T
+4,hasGeneticInteractionWith
+5,hasPhysicalInteractionWith

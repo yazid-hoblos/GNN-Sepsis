@@ -25,7 +25,7 @@ def map_probes_to_genes(gpl_annotations: pd.DataFrame) -> pd.DataFrame:
     pd.DataFrame
         DataFrame mapping probes to gene IDs.
     """
-    probe_to_gene = gpl_annotations[['ID', 'Entrez_Gene_ID']]
+    probe_to_gene = gpl_annotations[['ID', 'Entrez_Gene_ID']].dropna(subset=['Entrez_Gene_ID'])
     probe_to_gene['Entrez_Gene_ID'] = pd.to_numeric(probe_to_gene['Entrez_Gene_ID'], errors='coerce')
     probe_to_gene = probe_to_gene.dropna(subset=['Entrez_Gene_ID'])
     probe_to_gene['Entrez_Gene_ID'] = probe_to_gene['Entrez_Gene_ID'].astype(int)
@@ -39,7 +39,7 @@ def create_expression_data(gse) -> pd.DataFrame:
 
     Parameters
     ----------
-    gse
+    gse : GEOparse.GEO
         GEO dataset object.
 
     Returns
@@ -72,7 +72,7 @@ def load_geo_data(filepath: str, gpl_filepath: str, dataset_name: str):
 
     Returns
     -------
-    gse
+    gse : GEOparse.GEO
         Loaded GEO dataset.
     gpl_annotations : pd.DataFrame
         Processed GPL annotations mapping probes to genes.
@@ -94,7 +94,7 @@ def extract_sample_status(gse, dataset_name: str) -> list:
 
     Parameters
     ----------
-    gse
+    gse : GEOparse.GEO
         GEO dataset object.
     dataset_name : str
         Dataset name to determine extraction method.
@@ -115,8 +115,59 @@ def extract_sample_status(gse, dataset_name: str) -> list:
         sample_status = [gsm.metadata["characteristics_ch1"][1].split(": ")[1] for gsm in gse.gsms.values()]
     else:
         raise ValueError("Dataset not recognized for sample status extraction.")
-
+    
     return sample_status
+
+def calculate_differential_expression(expression_data, sample_status, dataset_name):
+    """
+    Calculate differentially expressed genes and create patient-gene links
+    based on the average gene expression value per patient.
+
+    @param expression_data: DataFrame with rows as patients and columns as genes
+    @param sample_status: List with status of each patient
+    @param dataset_name: Dataset name (used for control labeling and log2FC thresholds)
+    @param filter: "deg" to consider only significant genes
+    @return: degs DataFrame, patient_gene_links DataFrame
+    """
+
+    import pandas as pd
+    import numpy as np
+    from scipy.stats import ttest_ind
+    from statsmodels.stats.multitest import multipletests
+
+    # --- Step 1: Define control group ---
+    control_labels = {
+        "GSE54514": "healthy"
+    }
+    if dataset_name not in control_labels:
+        raise ValueError("Dataset not recognized for control group labeling.")
+    control_label = control_labels[dataset_name]
+
+    # --- Step 2: Split patients into control vs others ---
+    sample_info = pd.DataFrame({"Sample": expression_data.index, "Status": sample_status})
+    group1 = sample_info[sample_info["Status"].str.contains(control_label, case=False, na=False)]["Sample"]
+    group2 = sample_info[~sample_info["Status"].str.contains(control_label, case=False, na=False)]["Sample"]
+
+    # --- Step 3: Perform t-test and adjust p-values ---
+    p_values = np.array([
+        ttest_ind(expression_data.loc[group1, gene],
+                  expression_data.loc[group2, gene])[1]
+        for gene in expression_data.columns
+    ])
+    _, p_adjusted, _, _ = multipletests(p_values, method='fdr_bh')
+
+    results = pd.DataFrame({
+        "Gene": expression_data.columns,
+        "P_Value": p_values,
+        "Adjusted_P_Value": p_adjusted
+    })
+
+    
+    # Filtrar a DEGs si se desea
+    degs = results[results["Adjusted_P_Value"] < 0.01]
+    significant_genes = degs['Gene'].tolist()
+
+    return expression_data[significant_genes]
 
 
 
@@ -133,6 +184,9 @@ def process_dataset(dataset: dict):
     probe_to_gene = map_probes_to_genes(gpl_annotations)
     sample_status = extract_sample_status(gse, dataset['name'])
     expression_data = create_expression_data(gse)
+
+    expression_data = calculate_differential_expression(expression_data, sample_status, dataset['name'])
+
     sample_info = pd.DataFrame({"Sample": expression_data.index, "Status": sample_status})
     # Further processing can be added here
     return expression_data, sample_info

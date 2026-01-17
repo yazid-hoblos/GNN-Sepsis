@@ -1,0 +1,49 @@
+================================================================================
+PATIENT 137 - ATTENTION WEIGHT ANALYSIS
+================================================================================
+
+PREDICTION: 🟢 HEALTHY
+  Probability (septic): 0.5071
+  Probability (healthy): 0.4929
+
+SEMANTIC-LEVEL ATTENTION (Metapath Importance)
+--------------------------------------------------------------------------------
+Edge Type                                     Importance  Neighbors     Weight
+--------------------------------------------------------------------------------
+Sample->hasGeneExpressionOA->Protein              0.4659        748   348.4754
+
+INTERPRETATION:
+  The most important metapaths (edge types) for this patient's prediction are:
+  1. Sample->hasGeneExpressionOA->Protein (34847.54% of total attention)
+
+
+NODE-LEVEL ATTENTION (Influential Neighbors)
+--------------------------------------------------------------------------------
+Neighbor ID              Attention Weight  Relative Importance
+--------------------------------------------------------------------------------
+0                                  0.4659               100.0%
+9                                  0.4659               100.0%
+12                                 0.4659               100.0%
+14                                 0.4659               100.0%
+15                                 0.4659               100.0%
+17                                 0.4659               100.0%
+18                                 0.4659               100.0%
+19                                 0.4659               100.0%
+20                                 0.4659               100.0%
+21                                 0.4659               100.0%
+
+INTERPRETATION:
+  The 5 most influential neighbors are:
+  1. Node 0 (attention weight: 0.4659)
+  2. Node 9 (attention weight: 0.4659)
+  3. Node 12 (attention weight: 0.4659)
+  4. Node 14 (attention weight: 0.4659)
+  5. Node 15 (attention weight: 0.4659)
+
+
+SUMMARY
+--------------------------------------------------------------------------------
+Total neighbors influencing prediction: 748
+Number of metapath types: 1
+Most important metapath: Sample->hasGeneExpressionOA->Protein
+Most influential neighbor: Node 0

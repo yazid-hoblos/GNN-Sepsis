@@ -1,0 +1,7 @@
+patient_idx,prediction,prob_septic,num_neighbors,num_edge_types,top_edge_type
+11,SEPTIC,0.49945703,745,1,Sample->hasGeneExpressionOA->Protein
+6,SEPTIC,0.49226022,794,1,Sample->hasGeneExpressionOA->Protein
+159,SEPTIC,0.48921168,738,1,Sample->hasGeneExpressionOA->Protein
+63,HEALTHY,0.50131124,744,1,Sample->hasGeneExpressionOA->Protein
+22,HEALTHY,0.5070525,692,1,Sample->hasGeneExpressionOA->Protein
+137,HEALTHY,0.5070808,748,1,Sample->hasGeneExpressionOA->Protein

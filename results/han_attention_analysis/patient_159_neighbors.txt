@@ -1,0 +1,10 @@
+Patient 159 Neighborhood Analysis
+============================================================
+
+Prediction: SEPTIC
+Probability (septic): 0.4892
+Total neighbors: 738
+
+Edge Type Distribution:
+------------------------------------------------------------
+  Sample->hasGeneExpressionOA->Protein: 738 nodes

@@ -1,0 +1,4 @@
+edge_type,source_type,target_type,num_edges,importance,percentage
+hasGeneExpressionOA,Sample,Protein,128390,0.937646062164057,93.8%
+hasPhysicalInteractionWith,Protein,Protein,8371,0.061134318766066835,6.1%
+hasGeneticInteractionWith,Protein,Protein,167,0.0012196190698761393,0.1%

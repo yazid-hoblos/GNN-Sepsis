@@ -1,0 +1,22 @@
+================================================================================
+PATIENT 11 - ATTENTION ANALYSIS (WITH NODE TYPES)
+================================================================================
+
+PREDICTION: 🔴 SEPTIC
+  Probability (septic): 0.4995
+
+INFLUENTIAL NODE TYPES
+--------------------------------------------------------------------------------
+Node Type            Count                                               Metapaths
+--------------------------------------------------------------------------------
+Protein              745                      Sample->hasGeneExpressionOA->Protein
+
+SEMANTIC-LEVEL ATTENTION (Metapath Importance)
+--------------------------------------------------------------------------------
+Metapath                                                      Neighbor Count
+--------------------------------------------------------------------------------
+Sample->hasGeneExpressionOA->Protein                                     745
+
+INTERPRETATION:
+  This patient has 745 total neighbors across 1 metapaths
+  Most influential node type: Protein (745 nodes)
