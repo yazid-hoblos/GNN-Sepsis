@@ -54,7 +54,7 @@ sys.path.append('../../src/ml')
 from load_matrix import load_protein_embeddings, _load_raw_protein_embeddings
 
 model='Complex'
-version='v2.10'
+version='v2.11'
 
 df_raw=_load_raw_protein_embeddings(model,version)
 df_raw.index=df_raw.iloc[:,-1] #-- gene symbol as index
@@ -65,13 +65,18 @@ df_raw.iloc[:,5:] # -- showing the embeddings columns
 df_raw = py$df_raw
 df_raw = as.data.frame(df_raw)
 
-head(df_raw)
+# head(df_raw)
 ```
+
+```{r}
+# df=read.csv("../../results/temp_datasets/weighted_RGCN_protein_embeddings_v2.11_minmax.csv")
+```
+
 
 ### Embedding 
 
 ```{r}
-embedding_num=127
+embedding_num=128
 
 col=paste0('emb_',embedding_num)
 # -- soring based on col
@@ -89,7 +94,7 @@ library(umap)
 set.seed(42)
 
 numeric_data <- df_raw[, sapply(df_raw, is.numeric)]
-embedding <- umap(as.matrix(numeric_data))
+embedding <- umap(as.matrix(t(numeric_data)))
 
 plot(embedding$layout, main="UMAP of Protein Embeddings", xlab="UMAP1", ylab="UMAP2")
 ```
