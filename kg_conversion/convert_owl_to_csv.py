@@ -149,12 +149,12 @@ def parse_owl_to_csv(owl_file='output/GSE54514_enriched_ontology_degfilterv2.9.o
                     # This is an object property (edge)
                     target = clean_uri(child.get(f'{{{ns["rdf"]}}}resource'))
                     
-                    # Add as edge
+                    # Add as edge (annotations will be added later from Axioms)
                     edges_data.append({
                         'source': ind_id,
                         'relation': tag,
                         'target': target,
-                        'weight': 1.0
+                        'weight': 1.0  # Default, will be updated from Axioms
                     })
             
             # Add node
@@ -171,6 +171,65 @@ def parse_owl_to_csv(owl_file='output/GSE54514_enriched_ontology_degfilterv2.9.o
         
         print(f"✅ Extracted {len(nodes_data)} nodes")
         print(f"✅ Extracted {len(edges_data)} edges")
+        
+        # Process Axioms (for edge annotations like hasScoreInteraction)
+        print("\n🔗 Processing axioms for edge annotations...")
+        all_axioms = root.findall('.//owl:Axiom', ns)
+        print(f"Found {len(all_axioms)} axioms")
+        
+        # Build edge annotation map: (source, property, target) -> {annotations}
+        edge_annotations = {}
+        for axiom in all_axioms:
+            source_elem = axiom.find('.//owl:annotatedSource', ns)
+            property_elem = axiom.find('.//owl:annotatedProperty', ns)
+            target_elem = axiom.find('.//owl:annotatedTarget', ns)
+            
+            if source_elem is not None and property_elem is not None and target_elem is not None:
+                source = clean_uri(source_elem.get(f'{{{ns["rdf"]}}}resource', ''))
+                prop = clean_uri(property_elem.get(f'{{{ns["rdf"]}}}resource', ''))
+                target = clean_uri(target_elem.get(f'{{{ns["rdf"]}}}resource', ''))
+                
+                # Collect all annotation properties
+                annotations = {}
+                for child in axiom:
+                    tag = child.tag.split('}')[-1]
+                    if tag not in ['annotatedSource', 'annotatedProperty', 'annotatedTarget']:
+                        if child.text:
+                            try:
+                                annotations[tag] = float(child.text)
+                            except ValueError:
+                                annotations[tag] = child.text
+                
+                edge_key = (source, prop, target)
+                edge_annotations[edge_key] = annotations
+        
+        print(f"Found annotations for {len(edge_annotations)} edges")
+        
+        # Update edges with annotation data
+        if edge_annotations:
+            updated_edges = []
+            for edge in edges_data:
+                edge_key = (edge['source'], edge['relation'], edge['target'])
+                if edge_key in edge_annotations:
+                    annotations = edge_annotations[edge_key]
+                    # Use score/expression as weight (only if numeric)
+                    if 'hasScoreInteraction' in annotations:
+                        val = annotations['hasScoreInteraction']
+                        if isinstance(val, (int, float)):
+                            edge['weight'] = abs(val)
+                    elif 'hasExpressionValue' in annotations:
+                        val = annotations['hasExpressionValue']
+                        if isinstance(val, (int, float)):
+                            edge['weight'] = abs(val)
+                    elif 'hasLog2_FC' in annotations:
+                        val = annotations['hasLog2_FC']
+                        if isinstance(val, (int, float)):
+                            edge['weight'] = abs(val)
+                    # Add all annotations as columns
+                    edge.update(annotations)
+                updated_edges.append(edge)
+            edges_data = updated_edges
+            print(f"✅ Updated {len([e for e in edges_data if e['weight'] != 1.0])} edges with weights")
         
         # Convert to DataFrames
         print("\n💾 Converting to DataFrames...")
