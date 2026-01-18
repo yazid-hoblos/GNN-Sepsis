@@ -1,0 +1,39 @@
+:root {
+    /* Primary Colors */
+    --primary-1: #63003C;  /* prune-paris-saclay */
+    --primary-2: #313E48;  /* pms-432 */
+    --primary-3: #7C8790;  /* pms-7545 */
+    --primary-4: #D6DBDF;  /* pms-428 */
+
+    /* Secondary Colors */
+    --secondary-1: #C60B46;   /* pms-1945 */
+    --secondary-2: #ED145B;   /* pms-206 */
+    --secondary-3: #EE3524;   /* pms-1795 */
+    --secondary-4: #F37320;   /* pms-1665 */
+    --secondary-5: #7C2A90;   /* pms-2602 */
+    --secondary-6: #7D6AAF;   /* pms-2725 */
+    --secondary-7: #C6671D;   /* pms-153 */
+    --secondary-8: #FEBC18;   /* pms-123 */
+    --secondary-9: #004E7D;   /* pms-295 */
+    --secondary-10: #0E87C9;  /* pms-2935 */
+    --secondary-11: #0094B5;  /* pms-314 */
+    --secondary-12: #46C3D2;  /* pms-3115 */
+    --secondary-13: #00807A;  /* pms-3292 */
+    --secondary-14: #40B769;  /* pms-355 */
+    --secondary-15: #8CC63E;  /* pms-376 */
+    --secondary-16: #D5DF3D;  /* pms-381 */
+
+    /* Tertiary Colors */
+    --tertiary-1: #EC008C;   /* process-magenta */
+    --tertiary-2: #FFF200;   /* process-yellow */
+    --tertiary-3: #5C0F8B;   /* pms-2597 */
+    --tertiary-4: #F7932A;   /* pms-021 */
+    --tertiary-5: #B9B1D7;   /* pms-264 */
+    --tertiary-6: #958BC3;   /* pms-265 */
+    --tertiary-7: #007582;   /* pms-7474 */
+    --tertiary-8: #00AEEF;   /* process-cyan */
+    --tertiary-9: #00AFAA;   /* pms-326 */
+    --tertiary-10: #5090CD;  /* pms-279 */
+    --tertiary-11: #009B7A;  /* pms-340 */
+    --tertiary-12: #A0D294;  /* pms-359 */
+}
