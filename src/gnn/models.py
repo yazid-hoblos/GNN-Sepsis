@@ -46,7 +46,7 @@ class WeightedConv(nn.Module):
 
 
 class WeightedSAGEConv(nn.Module):
-    """SAGE convolution with edge weights (max aggregation to avoid over-smoothing)."""
+    """SAGE convolution with edge weights (mean aggregation - standard GraphSAGE)."""
 
     def __init__(self, in_channels: int, out_channels: int):
         super().__init__()
@@ -66,11 +66,17 @@ class WeightedSAGEConv(nn.Module):
         if edge_weight is not None:
             msg = msg * edge_weight.view(-1, 1)
 
-        # Max aggregation - better preserves distinguishing features
-        out = torch.full((x_dst.size(0), self.out_channels), float('-inf'), device=x_dst.device)
-        out.scatter_reduce_(0, dst_idx.unsqueeze(-1).expand_as(msg), msg, reduce='amax', include_self=False)
-        # Replace -inf with 0 for nodes with no incoming edges
-        out = torch.where(out == float('-inf'), torch.zeros_like(out), out)
+        # Mean aggregation - standard GraphSAGE
+        out = torch.zeros(x_dst.size(0), self.out_channels, device=x_dst.device)
+        out.scatter_add_(0, dst_idx.unsqueeze(-1).expand_as(msg), msg)
+
+        # Normalize by degree
+        deg = torch.zeros(x_dst.size(0), device=x_dst.device)
+        if edge_weight is not None:
+            deg.scatter_add_(0, dst_idx, edge_weight)
+        else:
+            deg.scatter_add_(0, dst_idx, torch.ones(src_idx.size(0), device=x_dst.device))
+        out = out / deg.clamp(min=1).unsqueeze(-1)
 
         return out + self.lin_self(x_dst)
 
@@ -85,7 +91,7 @@ class HeteroGAT(nn.Module):
     def __init__(self, metadata, hidden_channels: int = 100, heads: int = 4, dropout: float = 0.5):
         super().__init__()
         self.dropout = dropout
-        _, edge_types = metadata
+        node_types, edge_types = metadata
 
         # Layer 1: with edge_dim for weighted edges
         conv1 = {}
@@ -101,8 +107,13 @@ class HeteroGAT(nn.Module):
                                 dropout=dropout, add_self_loops=False)
         self.conv2 = HeteroConv(conv2, aggr='sum')
 
+        # Self-loop projection (like RGCN/SAGE)
+        self.skip_proj = nn.ModuleDict({nt: Linear(-1, hidden_channels) for nt in node_types})
+
     def forward(self, x_dict, edge_index_dict, edge_weight_dict=None):
-        # GAT uses edge_attr (shape [E, 1]) not edge_weight
+        # Save input for self-loop (skip connection)
+        x_skip = {k: self.skip_proj[k](v) for k, v in x_dict.items()}
+
         if edge_weight_dict:
             edge_attr = {k: v.unsqueeze(-1) if v.dim() == 1 else v for k, v in edge_weight_dict.items()}
             x_dict = self.conv1(x_dict, edge_index_dict, edge_attr)
@@ -110,7 +121,14 @@ class HeteroGAT(nn.Module):
             x_dict = self.conv1(x_dict, edge_index_dict)
 
         x_dict = {k: F.elu(F.dropout(v, p=self.dropout, training=self.training)) for k, v in x_dict.items()}
-        x_dict = self.conv2(x_dict, edge_index_dict)
+
+        if edge_weight_dict:
+            x_dict = self.conv2(x_dict, edge_index_dict, edge_attr)
+        else:
+            x_dict = self.conv2(x_dict, edge_index_dict)
+
+        # Add self-loop (residual connection)
+        x_dict = {k: v + x_skip[k] for k, v in x_dict.items()}
         return x_dict
 
 

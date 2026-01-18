@@ -34,7 +34,7 @@ def get_owl_path(version: str = 'v2.11') -> Path:
 
 def get_save_path(version: str = 'v2.11') -> Path:
     """Get save path for HeteroData for a specific version."""
-    return project_root / "data" / "han" / version / "hetero_graph.pt"
+    return project_root / "data" / "hetero_graph" / version / "hetero_graph.pt"
 
 
 def _get_node_type(uri):
@@ -289,7 +289,7 @@ if __name__ == "__main__":
     print("="*80)
     if args.owl_file:
         owl_path = Path(args.owl_file)
-        save_path = Path(args.save_path) if args.save_path else (project_root / "data" / "han" / "custom" / "hetero_graph.pt")
+        save_path = Path(args.save_path) if args.save_path else (project_root / "data" / "hetero_data" / "custom" / "hetero_graph.pt")
         print(f"Loading HeteroData from OWL: {owl_path}")
         print("="*80)
         data = load_heterodata(owl_path=owl_path, save_path=save_path)

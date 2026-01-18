@@ -11,9 +11,9 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 
 # Version configurations
 DATA_VERSIONS = {
-    'v2.9': PROJECT_ROOT / "data" / "han" / "v2.9" / "hetero_graph.pt",
-    'v2.10': PROJECT_ROOT / "data" / "han" / "v2.10" / "hetero_graph.pt",
-    'v2.11': PROJECT_ROOT / "data" / "han" / "v2.11" / "hetero_graph.pt",
+    'v2.9': PROJECT_ROOT / "data" / "hetero_graph" / "v2.9" / "hetero_graph.pt",
+    'v2.10': PROJECT_ROOT / "data" / "hetero_graph" / "v2.10" / "hetero_graph.pt",
+    'v2.11': PROJECT_ROOT / "data" / "hetero_graph" / "v2.11" / "hetero_graph.pt",
 }
 DATA_PATH = DATA_VERSIONS['v2.11']  # Default
 

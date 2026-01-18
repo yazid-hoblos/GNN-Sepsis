@@ -8,7 +8,7 @@ from sklearn.preprocessing import RobustScaler, StandardScaler, MinMaxScaler
 
 # Setup paths
 project_root = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(project_root))
+sys.path.insert(0, str(project_root / "src" / "utils"))
 
 from load_dataset import create_expression_data
 from load_embeddings import load_all_entities
@@ -114,7 +114,7 @@ def load_df(key: str, folder_version: str = "v2.9", normalization: str = "robust
 # Gene Expression Loading
 # ============================================================================
 
-def load_gene_expression(normalization: str = "robust") -> pd.DataFrame:
+def load_gene_expression(normalization: str = "none") -> pd.DataFrame:
     """
     Load gene expression matrix from GSE54514 with sample features and disease status."""
     # Load GEO dataset
@@ -529,7 +529,7 @@ def load_gnn_sample_embeddings(model_name: str, gnn_version: str = "v2.10") -> p
 def _load_gnn_protein_node_ids(gnn_version: str = "v2.9") -> list:
     """Load protein node IDs from hetero_graph to get gene symbols."""
     import torch
-    from src.han.load_heterodata import _load_owl_graph, _extract_nodes_and_edges, get_owl_path
+    from gnn.load_heterodata import _load_owl_graph, _extract_nodes_and_edges, get_owl_path
 
     # Load OWL to get node IDs in correct order (same version as used in hetero_graph)
     owl_path = get_owl_path(gnn_version)
@@ -542,7 +542,7 @@ def _load_gnn_protein_node_ids(gnn_version: str = "v2.9") -> list:
     return protein_node_ids
 
 
-def load_gnn_protein_embeddings(model_name: str, gnn_version: str = "v2.10", normalization: str = "robust") -> pd.DataFrame:
+def load_gnn_protein_embeddings(model_name: str, gnn_version: str = "v2.11", normalization: str = "robust") -> pd.DataFrame:
     """Load protein embeddings from GNN models, weighted by gene expression."""
     # Remove weighted_ prefix if present
     clean_model_name = model_name.replace("weighted_", "")
@@ -602,3 +602,35 @@ def load_gnn_protein_embeddings(model_name: str, gnn_version: str = "v2.10", nor
 
     # Combine features + protein embeddings + disease_status
     return _add_features_and_disease_status(df_protein_embeddings, df_features)
+
+
+# ============================================================================
+# CLI Main
+# ============================================================================
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Load and export data matrices to CSV")
+    parser.add_argument("key", type=str, help="Data key (e.g., gene_expression, GAT_sample_embeddings)")
+    parser.add_argument("--version", type=str, default="v2.11", help="Folder version (default: v2.11)")
+    parser.add_argument("--normalization", type=str, default="robust", help="Normalization method (default: robust)")
+    parser.add_argument("--output", "-o", type=str, default=None, help="Output CSV path (default: data/processed/<key>.csv)")
+
+    args = parser.parse_args()
+
+    # Load data
+    print(f"Loading {args.key} (version={args.version}, normalization={args.normalization})...")
+    df = load_df(args.key, folder_version=args.version, normalization=args.normalization)
+
+    # Output path
+    if args.output:
+        output_path = Path(args.output)
+    else:
+        output_dir = project_root / "data" / "processed"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output_path = output_dir / f"{args.key}.csv"
+
+    # Save
+    df.to_csv(output_path)
+    print(f"Saved to {output_path} ({df.shape[0]} samples, {df.shape[1]} columns)")
