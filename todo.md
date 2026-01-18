@@ -1,10 +1,10 @@
 # Plan
 
-- [ ] KG extraction to train prep
-- [ ] HAN training (+other graphsage and rgcn)
-- [ ] kg results interpretability on go and pathway + down and upregulated gex
-- [ ] ml on traditional vs embedding (results analysis + viz) - interpretability of results from ml part 
-- [ ] kg exploration/viz (optional)
+- [x] KG extraction to train prep
+- [x] HAN training (+other graphsage and rgcn)
+- [x] kg results interpretability on go and pathway + down and upregulated gex
+- [x] ml on traditional vs embedding (results analysis + viz) - interpretability of results from ml part 
+- [x] kg exploration/viz (optional)
 
 ## ml part
 
