@@ -280,18 +280,28 @@ if __name__ == "__main__":
     parser.add_argument('--version', '-v', type=str, default='v2.11',
                         choices=['v2.9', 'v2.10', 'v2.11'],
                         help='OWL version to use (default: v2.11)')
+    parser.add_argument('--owl-file', type=str, default=None,
+                        help='Path to OWL file (overrides --version)')
+    parser.add_argument('--save-path', type=str, default=None,
+                        help='Path to save hetero_graph.pt (optional, overrides default)')
     args = parser.parse_args()
 
     print("="*80)
-    print(f"Loading HeteroData from {args.version}")
-    print("="*80)
-
-    data = load_heterodata(version=args.version)
+    if args.owl_file:
+        owl_path = Path(args.owl_file)
+        save_path = Path(args.save_path) if args.save_path else (project_root / "data" / "han" / "custom" / "hetero_graph.pt")
+        print(f"Loading HeteroData from OWL: {owl_path}")
+        print("="*80)
+        data = load_heterodata(owl_path=owl_path, save_path=save_path)
+        print(f"\nSaved to: {save_path}")
+    else:
+        print(f"Loading HeteroData from {args.version}")
+        print("="*80)
+        data = load_heterodata(version=args.version, save_path=args.save_path)
+        print(f"\nSaved to: {Path(args.save_path) if args.save_path else get_save_path(args.version)}")
 
     print(f"\n✓ HeteroData loaded:")
     print(data)
     print(f"\nNode types: {data.node_types}")
     print(f"Edge types: {data.edge_types}")
-    print("\n" + "="*80)
-    print(f"Saved to: {get_save_path(args.version)}")
     print("="*80)
