@@ -1,5 +1,8 @@
 # Abstract
 
+
+
+
 # Evaluation
 
 To have a performance comparison across the different models and datasets used, the evaluation code consists of three main stages: **collecting predictions**, **computing metrics**, and **visualizing results**.
@@ -92,7 +95,7 @@ A volcano plot illustrating log2FC versus −log10(p‑value) further highlights
 <img src="results/EDA/KG_analysis/volcano_plot_v211.png" width="700"/>
 
 
-#### Biological Enrichment Analysis
+##### Biological Enrichment Analysis
 
 To explore the functional roles of the differentially regulated proteins, we performed a statistical enrichment analysis for both Gene Ontology (GO) terms and Reactome pathways. For each set of proteins (upregulated and downregulated), we used the knowledge graph to link proteins to their associated GO terms and pathways, and tested for enrichment against all proteins in the KG using Fisher’s Exact Test, followed by Benjamini-Hochberg (FDR) correction.
 
