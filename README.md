@@ -9,6 +9,7 @@
 - [Datasets](#datasets)
 - [Results](#results)
 
+
  
 ## Abstract
 
@@ -25,7 +26,9 @@ We were provided with pretrained KG embeddings (ComplEx, RGCN) and extended the 
 
 ## Approach diagram
 
-## Reproducibility instructions
+<img src="Visual_Diagram.png" alt="Approach Diagram" >
+
+## Reproducibility Instructions
 
 To reproduce training over different seeds, for any dataset, model, normalization, version, seed you can use the following command structure:
 
@@ -519,10 +522,20 @@ SVM and MLP show a sudden drop, as expected from previous scatterplot analysis, 
 discussion, interpretation, limitations on the method
 
 
-### Performance discussion (summary of findings + reflection)
+### Performance discussion 
+
+As the analysis was performed on v2.11 with Minmax normalization with most robust and best performance overall, we will discuss some findings regarding traditional vs graph augmented ML pipelines for sepsis prediction from gene expression data.
+
+Gene expression data perform greatly using SVM models. This might be due to the high dimensionality of the data (20k genes) where SVMs are known to handle high-dimensional spaces well, especially with appropriate kernel functions, it might be aslo overfitting to some extent as dataset is small. ComplEx ourperformed this high achieving model, with and svm linear kernel (from grid). Previosuly we noticed ComplEx protein embeddigns being the best dataset showing clear seperation in different DR approaches, particularly siting PCA as the only dataset with a decent variance explained in first 2 components - a linear method - which might explain why SVM with linear kernel works well here.
+Other models like random forest and xgboost also show good performance with gene expression data, indicating that tree based models can effectively capture relevant patterns in the data without the need for graph augmentation. MLP models however perform poorly, likely due to the small sample size and high dimensionality leading to overfitting (constant bad performance around 50% balanced accuracym from robustness analysis). And this is a known issue with neural networks in general when working with tabular data, especially with limited samples, thus finding ways to enhance it using graph embeddings would be particularly useful.
+
+Each model type has its own set of performing datasets, while in all of them there is a seen improvement using graph augmented data (protein embeddings), justifying the benefit of integrating knowledge graphs in the analysis AND the gene expression weighting transformation (since sample embeddings that were used without any transformation did not perform well). Overall, even though some GNNs embeddings like GAT have slight higher performance in some models, ComplEx protein embeddings based models show the most consistent high performance accross different models and metrics, making it the best performing dataset overall for sepsis prediction in this study. This conclusion is not just based on its top rankings across models, but also from robustness analysis showing lowest spread in performance across seeds and the grounbraking performance in MLP models as rank 1 with 40%+ balanced accuracy improvement over gene expression based MLP, SVM's rank 1 and direct competitor to gene expression, and strong showings in tree based models as well.
+
+An interesting aspect we noticed regarding embeddings, ComplEx is the only model that has 200 embeddings dimensions, while all the other are 100 only. Due to its architecture, ComplEx (as name suggests) is actually operating in complex number space, meaning each dimension can be seen as 2 dimensions (real and imaginary parts). Thus effectively, to have a fairer comparison, would conisdering raising the other GNNs embedding dimensions to 200 as well, or lower this one to 50 (which will be multiplied by 2) to test if this is the reason behind its good performance. However, due to time constraints we could not perform this analysis - a lot of parameters and hyperparameters are in fact worth exploring as we have a lot of variables in this study (different GNNs, different ML models, different normalizations, different versions, different seeds, different parameters).
 
 ### Limitations on pytorch 
 
+Concerning Multiple Layer Perceptron, we fixed at the end to studying them using scikit learn's implementation on 500 epochs. Our machine learning pipeline relied on `MLModel` class definition that can take different skleran model types, datasets, normalizations, versions, seeds, parameters and hyperparameters for grid search, We also implemented a cutom PytorchMLP model inheriting ClassiferMixin and BaseEstimator from sklearn to be able to use it in the same pipeline and even trained on a large set of models (not all though), however as there were more available options of optimizer, activation functions etc. from sklearn, we started exploring them more and createed a large grid search of hyperparameters, leading to long training times and instabilities (high variance of results) for only 50 epochs (also, early stopping was a hastle to implement with cross validation, ensuring caching and returning the best model across the last  - which have not been successful at the end). We diverted to sklearn's MLP implementation for a more stable and faster training. More complex architectures and hyperparameter tuning can be explored in future work to fully leverage the potential of neural networks in this context, especially with the promising results seen with Complex protein embeddings, and the failure of gene expression based MLP models. It's sensitive to work with as dataset is small, split and imbalanced.
 
 
 ## References
