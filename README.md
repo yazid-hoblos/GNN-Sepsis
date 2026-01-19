@@ -316,6 +316,39 @@ Where $E_p$ is the `samples x proteins` protein embeddings matrix, input of the 
 To make the training process more interpretable we aim to use SHAP values to link the importance of each protein embedding dimension back to the genes/proteins space, so a plan of 2 steps: find the most important embedding dimensions using SHAP, then link them back to genes/proteins by computing "loadings" (similar concept to pca loading and MOFA) that are the contributing the most to these embedding dimensions (they behave like highly weighted features in a linear model) - this idea is captured in the diagram.
 
 
+### Knowledge Graph Optimization (`OntoKGCreation/`)
+
+We started considering optimizing the knowledge graph to balance comprehensiveness with computational efficiency and biological relevance. We modified the scripts provided in `OntoKGCreation/` for KG refinement.
+
+#### Motivation for KG Optimization
+
+Our initial knowledge graph, constructed from multiple biomedical ontologies and databases, contained:
+- Thousands of entities (proteins, pathways, GO terms, reactions) - we particularly notice that > 60% of nodes are pathways/reactions with many embedded connections between them 
+- Hundreds of thousands of unfiltered relationships with varying confidence levels (proteins are very densely connected since all PPI data is used without filtering)
+- Redundant and low-information connections that add noise
+
+This scale posed challenges for:
+- **Computational Efficiency**: GNN training time and memory requirements
+- **GNN Performance**: Risk of confusing models with irrelevant or noisy information
+- **Interpretability**: Overwhelming number of potential features to analyze
+- **Biological Focus**: Dilution of signal by weakly relevant entities
+
+#### Filtering and Optimization Strategies
+
+##### Ontology-Based Refinement
+Leveraging the ontological structure:
+- **Term Specificity**: Filtering overly general GO terms (e.g., "biological process") in favor of specific terms
+- **Hierarchy Pruning**: Removing redundant parent-child chains where leaf terms suffice
+
+Through iterative refinement, we aim to achieved:
+- **Size Reduction**: significant reduction in node count/edge density while preserving (or improving if the GNNs could learn better) performance and interpretability signals
+- **Performance Improvement**: Faster training (reduced embedding dimensions) with comparable or improved accuracy
+- **Enhanced Interpretability**: Cleaner, more focused feature importance rankings
+- **Biological Coherence**: Increased functional enrichment significance for top features
+
+OntoKGCreation/converted/optimized/ -> retrain embeddings -> ML approaches -> comparison to original KG results.
+
+
 ## Results
 
 ### Exploratory Data Analysis (EDA)
@@ -353,6 +386,54 @@ Must work on gene level (not probe level) → aggregation step needed.
 
 
 #### Knowledge Graph Visualization
+
+We developed a comprehensive suite of visualization tools to enable intuitive exploration complex multi-layer knowledge graphs. The `src/visualize/` directory contains scripts for static plotting, interactive visualization, and web-based network exploration.
+
+##### Interactive Multi-Layer Network Web Application (`multilayer_network_app.py`)
+
+We developed a Flask-based web application that provides dynamic, real-time exploration of the knowledge graph:
+
+###### Core Features
+
+####### Multi-Layer Graph Management (`MultiLayerNetworkManager` class)
+- **Flexible Data Loading**: Loads nodes, edges, and entity classes from KG conversion and model execution outputs
+- **Layer Definitions**: Automatically classifies nodes into semantic layers (Patients, Proteins, Pathways, GO Terms, Diseases, etc.)
+- **Edge Type Tracking**: Catalogs all relationship types in the graph for selective filtering
+- **Patient Embedding Integration**: Links graph structure with learned model embeddings
+
+####### Real-Time Filtering and Exploration
+The web interface enables users to:
+- **Layer Selection**: Toggle individual node type layers on/off dynamically
+- **Edge Type Filtering**: Show/hide specific relationship types (physical, genetic, regulatory)
+- **Statistics Dashboard**: Display real-time graph statistics (node counts, edge counts...)
+- **Force-Directed Layout**: Physics-based layouts for intuitive spatial organization
+
+![Interactive Web Application Interface](figures/visualization_app.png)
+*Figure: Screenshot of the interactive multi-layer network visualization web application, showing real-time filtering controls, layer management, and dynamic network rendering.*
+
+This is relevant both for initial exploratory analysis and examination of specific neighborhood to help guide analysis.
+
+##### Static Graph Visualization (`visualize_multilayer_graph.py`)
+
+For batch generation of network plots and non-interactive figures, `visualize_multilayer_graph.py` provides:
+
+###### PyVis Interactive HTML Exports
+- **Standalone HTML Files**: Self-contained interactive visualizations
+- **Custom Physics**: Configurable force-directed algorithms (Barnes-Hut, repulsion strength)
+- **Legend Integration**: Automatic generation of interactive legends
+
+###### NetworkX-Based Static Plots
+- **Multiple Layout Algorithms**: Spring, Kamada-Kawai, hierarchical, circular
+- **High-Resolution Output**: PNG at 300+ DPI for publication quality
+- **Vector Graphics**: SVG/PDF formats for scalable figures
+- **Matplotlib Integration**: Full access to matplotlib styling and customization
+
+##### Gephi Export Pipeline (`gephi_exports/`)
+
+###### Graph Export Formats
+- **GEXF Files**: Native Gephi format with full metadata preservation
+- **GraphML**: Alternative format supporting complex attribute schemas
+- **CSV Edge/Node Lists**: Simple tabular format for custom processing
 
 
 #### Knowledge Graph Analysis 
@@ -519,10 +600,8 @@ SVM and MLP show a sudden drop, as expected from previous scatterplot analysis, 
 
 
 ## Discussion 
-discussion, interpretation, limitations on the method
 
-
-### Performance discussion 
+### Performance 
 
 As the analysis was performed on v2.11 with Minmax normalization with most robust and best performance overall, we will discuss some findings regarding traditional vs graph augmented ML pipelines for sepsis prediction from gene expression data.
 
@@ -533,9 +612,96 @@ Each model type has its own set of performing datasets, while in all of them the
 
 An interesting aspect we noticed regarding embeddings, ComplEx is the only model that has 200 embeddings dimensions, while all the other are 100 only. Due to its architecture, ComplEx (as name suggests) is actually operating in complex number space, meaning each dimension can be seen as 2 dimensions (real and imaginary parts). Thus effectively, to have a fairer comparison, would conisdering raising the other GNNs embedding dimensions to 200 as well, or lower this one to 50 (which will be multiplied by 2) to test if this is the reason behind its good performance. However, due to time constraints we could not perform this analysis - a lot of parameters and hyperparameters are in fact worth exploring as we have a lot of variables in this study (different GNNs, different ML models, different normalizations, different versions, different seeds, different parameters).
 
-### Limitations on pytorch 
+### Pytorch 
 
 Concerning Multiple Layer Perceptron, we fixed at the end to studying them using scikit learn's implementation on 500 epochs. Our machine learning pipeline relied on `MLModel` class definition that can take different skleran model types, datasets, normalizations, versions, seeds, parameters and hyperparameters for grid search, We also implemented a cutom PytorchMLP model inheriting ClassiferMixin and BaseEstimator from sklearn to be able to use it in the same pipeline and even trained on a large set of models (not all though), however as there were more available options of optimizer, activation functions etc. from sklearn, we started exploring them more and createed a large grid search of hyperparameters, leading to long training times and instabilities (high variance of results) for only 50 epochs (also, early stopping was a hastle to implement with cross validation, ensuring caching and returning the best model across the last  - which have not been successful at the end). We diverted to sklearn's MLP implementation for a more stable and faster training. More complex architectures and hyperparameter tuning can be explored in future work to fully leverage the potential of neural networks in this context, especially with the promising results seen with Complex protein embeddings, and the failure of gene expression based MLP models. It's sensitive to work with as dataset is small, split and imbalanced.
+
+
+### Limitations and Challenges
+
+#### Current Limitations
+1. **KG Completeness**: Despite optimization efforts, the knowledge graph may still miss important but poorly annotated entities
+2. **Interaction Confidence**: Variable quality of edge annotations requires cautious interpretation of network results
+3. **Sample Size**: Limited patient cohort size constrains statistical power for rare outcome prediction
+4. **Temporal Dynamics**: Current models do not capture time-dependent disease progression
+
+#### Technical Challenges
+- Balancing KG size with computational feasibility and interpretability
+- Handling heterogeneous data types and scales across node features
+- Ensuring gradient stability in complex heterogeneous graph architectures
+- Managing visualization complexity for large-scale networks
+
+### Future Research Directions
+
+#### 1. Enhanced Knowledge Graph Optimization
+
+**Reduce/Optimize KG**: Continued refinement of the knowledge graph through:
+- **Active Learning Approaches**: Using model uncertainty to guide selective KG expansion in informative regions
+- **Expert-in-the-Loop Curation**: Incorporating domain expert feedback to validate and refine entity/relationship selections
+- **Multi-Task Optimization**: Creating task-specific KG variants optimized for different prediction goals (severity, outcome, treatment response, trajectory)
+- **Temporal Integration**: Incorporating time-dependent relationships and dynamic processes
+- **Confidence Modeling**: Learning edge weights and uncertainty estimates rather than binary inclusion/exclusion
+
+#### 2. Interpretability-Visualization Integration
+
+**Connect Interpretability Findings to KG Visualization**: Tighter integration of model explanations with network exploration:
+- **SHAP-Driven Interactive Highlighting**: Real-time updates of node/edge importance in the web application based on SHAP scores
+- **Attention Heatmap Overlay**: Visualizing HAN attention distributions directly on the interactive graph
+- **Gradient Flow Visualization**: Animating gradient propagation through patient subgraphs to show causal pathways
+- **Perturbation Explorer**: Interactive tools to simulate node/edge removal and observe prediction changes
+- **Explanation Provenance**: Linking each biomarker back to the specific analyses and models that identified it
+
+#### 3. Advanced Visualization Enhancements
+
+**Visualization Enhancement**: Ongoing improvements to support deeper exploration:
+- **Dynamic Filtering Interface**: More intuitive controls for multi-dimensional filtering (importance, confidence, node type, functional category)
+- **Annotation Layer System**: User-added notes, hypotheses, and literature references directly on network views
+- **Comparative Visualization**: Side-by-side comparison of patient subgraphs or model predictions
+- **3D Network Rendering**: Spatial layouts leveraging additional dimensions for complex hierarchies
+- **Automated Layout Optimization**: Machine learning-based layout algorithms that optimize for biological interpretability
+- **Export and Reproducibility**: One-click export of full analysis provenance (data, filters, settings) for reproducibility
+- **Biomarker Highlighting**: Emphasize identified biomarker nodes with custom styling
+- **Search Functionality**: Find specific entities by ID or name
+
+#### 4. Model Architecture Advances
+
+- **Temporal Graph Networks**: Incorporating time-series patient data and dynamic KG relationships
+- **Explainable-by-Design Architectures**: Models with built-in interpretability mechanisms rather than post-hoc analysis
+- **Causal Graph Discovery**: Moving beyond correlation to identify causal relationships in biological networks
+- **Multi-Modal Integration**: Combining KG-based models with imaging, clinical notes, and other data modalities
+
+#### 5. Clinical Translation
+
+- **Prospective Validation**: Testing identified biomarkers in independent patient cohorts
+- **Experimental Validation**: Wet-lab experiments to validate predicted protein interactions and mechanisms
+- **Clinical Decision Support**: Adapting models and visualizations for real-time clinical use
+- **Treatment Response Prediction**: Extending models to predict which patients will respond to specific therapies
+
+#### 6. Scalability and Efficiency
+
+- **Distributed Training**: Scaling to larger KGs and datasets through distributed GNN training
+- **Incremental Learning**: Updating models with new data without full retraining
+- **Real-Time Inference**: Optimizing model deployment for low-latency predictions
+- **Federated Learning**: Training across multiple institutions while preserving data privacy
+
+### Conclusion
+
+### Methodological Contributions
+
+1. **Multi-Model Interpretability Framework**: Successfully implemented SHAP, attention, and gradient-based analyses across diverse architectures (Random Forests, SVMs, ComplEx, RGCN, HAN), providing multiple complementary perspectives on model decisions.
+
+2. **Consensus Biomarker Discovery**: Developed robust pipelines to aggregate evidence across models, increasing confidence in identified biomarkers and reducing model-specific biases.
+
+3. **Heterogeneous Graph Analysis**: Advanced HAN architecture with gradient-based patient-level interpretability, enabling personalized explanations of predictions.
+
+4. **Advanced Visualization Suite**: Created publication-ready static plots and interactive web applications for exploring complex multi-layer knowledge graphs.
+
+### Technical Infrastructure
+- Established reproducible pipelines for model training, interpretability analysis, and visualization
+- Developed modular, reusable code for knowledge graph construction, optimization, and analysis
+- Created interactive tools for collaborative exploration and hypothesis generation
+
+
 
 
 ## References
@@ -545,3 +711,4 @@ Concerning Multiple Layer Perceptron, we fixed at the end to studying them using
 - Brandes-Leibovitz, R., Riza, A., Yankovitz, G., Pirvu, A., Dorobantu, S., Dragos, A., ... & Netea, M. G. (2024). Sepsis pathogenesis and outcome are shaped by the balance between the transcriptional states of systemic inflammation and antimicrobial response. Cell Reports Medicine, 5(11).
 - Liu, W., Liu, T., Zheng, Y., & Xia, Z. (2023). Metabolic reprogramming and its regulatory mechanism in sepsis-mediated inflammation. Journal of inflammation research, 1195-1207.
 - Willmann, K., & Moita, L. F. (2024). Physiologic disruption and metabolic reprogramming in infection and sepsis. Cell metabolism, 36(5), 927-946.
+- [1] Jiang Y, Miao Q, Hu L, Zhou T, Hu Y, Tian Y. FYN and CD247: Key Genes for Septic Shock Based on Bioinformatics and Meta-Analysis. Comb Chem High Throughput Screen. 2022;25(10):1722-1730. doi: 10.2174/1386207324666210816123508. PMID: 34397323.

@@ -1,6 +1,6 @@
-# Interpretability
+### Interpretability
 
-## Overview: Model Interpretation Pipeline (`src/interpretability/`)
+#### Overview: Model Interpretation Pipeline (`src/interpretability/`)
 
 We developed a comprehensive interpretability framework to bridge our GNN-based ML predictions with biological interpretability. The `src/interpretability/` directory contains multiple scripts that systematically extract, analyze, and visualize feature importance across different model architectures. Key achievements include:
 
@@ -29,15 +29,15 @@ As highlighted in Figure 1 for ComplEx with SVM (highest performing model), we c
 
 Overall, this pipeline ensures that model predictions are not only accurate but also biologically meaningful and actionable.
 
-## RGCN-Focused Analysis (`src/interpretability/analysis/`)
+#### RGCN-Focused Analysis (`src/interpretability/analysis/`)
 
 Initially, we started with RGCN (Relational Graph Convolutional Network) analysis focusing on understanding how graph structure and learned embeddings contribute to model predictions.
 
-### Mapping Features Back to Biological Entities (`analyze_rgcn_dimensions.py`)
+##### Mapping Features Back to Biological Entities (`analyze_rgcn_dimensions.py`)
 
 We map top RGCN embedding dimensions (identified from consolidated interpretability results) back to the biological entities they represent (uses `GNNInterpreter` class). By analyzing the contribution of each dimension to entity embeddings, we can understand what biological signals each learned feature captures.  
 
-### Graph Structure Importance Analysis (`analyze_graph_structure.py`)
+##### Graph Structure Importance Analysis (`analyze_graph_structure.py`)
 
 The `GraphStructureAnalyzer` class systematically evaluates which elements of the knowledge graph contribute most to RGCN's predictive power by computing multiple centrality measures and structural properties:
 
@@ -47,7 +47,7 @@ The `GraphStructureAnalyzer` class systematically evaluates which elements of th
 ![Graph Structure and Node Centrality Analysis](figures/06_graph_structure_centrality.png)
 *Figure 6: Edge types distribution in the knowledge graph.*
 
-### Hub-Dimension Linkage (`link_hub_to_dimensions.py`)
+##### Hub-Dimension Linkage (`link_hub_to_dimensions.py`)
 
 This script links graph hub proteins (high-degree nodes in patient-connected subgraphs) to statistically significant RGCN embedding dimensions. By identifying which hubs drive which dimensions, we can:
 - Validate that biologically important entities are captured in learned representations
@@ -65,20 +65,20 @@ This linkage proved valuable for validating the RGCN learning process, identifyi
 
 More details on biological findings could be found in the following section.
 
-### Normalization Comparison (`analyze_interpretability.py`)
+##### Normalization Comparison (`analyze_interpretability.py`)
 
 We considered comparing different normalization strategies for feature importance aggregation to ensure biomarker rankings are not artifacts of preprocessing. This analysis established normalization had a big impact on the top features identified.
 
 ![Normalization Strategy Comparison](figures/07_normalization_comparison.png)
 *Figure 7: Comparison of feature importance rankings with and without normalization (none vs minmax).*
 
-## ComplEx-Focused Analysis
+#### ComplEx-Focused Analysis
 
-### SVM with ComplEx Embeddings - Top Model Analysis (`src/interpretability/model_specific/`)
+##### SVM with ComplEx Embeddings - Top Model Analysis (`src/interpretability/model_specific/`)
 
 The SVM trained on ComplEx knowledge graph embeddings achieved the best overall performance. The `src/interpretability/model_specific/` directory contains scripts dedicated to analyzing this top model in depth:
 
-#### Feature Mapping (`map_complex_svm_features.py`)
+###### Feature Mapping (`map_complex_svm_features.py`)
 Maps abstract ComplEx embedding dimensions to interpretable biological entities by:
 - Loading ComplEx entity embeddings and mappings from the pre-trained knowledge graph embedding model
 - Identifying which entities (proteins, pathways, GO terms) contribute most to each top-ranked feature dimension using nearest neighbor analysis in embedding space
@@ -88,7 +88,7 @@ The feature mapping process revealed that top-ranked SVM features correspond to 
 ![ComplEx Embedding Dimension Mapping](figures/08_complex_embedding_mapping.png)
 *Figure 8: The top identified biomarkers.*
 
-#### Biomarker Extraction (`extract_biomarker_subgraph.py` & `extract_biomarker_subgraph_proteins_only.py`)
+###### Biomarker Extraction (`extract_biomarker_subgraph.py` & `extract_biomarker_subgraph_proteins_only.py`)
 Extracts PPI and heterogeneous biomarker subgraphs, enabling:
 - Identification of direct and indirect protein interactions among biomarkers
 - Assessment of network connectivity and module structure
@@ -98,20 +98,20 @@ Extracts PPI and heterogeneous biomarker subgraphs, enabling:
 |:---:|:---:|
 | *Figure 11: Biomarkers sub-network for ComplEx+SVM top model biomarkers.* | *Figure 12: bi-partite graph of protein-to-pathways connections.* |
 
-#### GO Enrichment Analysis (`enrich_go_terms.py`)
+###### GO Enrichment Analysis (`enrich_go_terms.py`)
 Maps GO terms to their corresponding names and details using `go.obo` ontology file from `OntoKGCreation/`. 
 
-### Consensus Analysis Across All Models (`src/interpretability/consensus/`)
+##### Consensus Analysis Across All Models (`src/interpretability/consensus/`)
 
 To ensure robustness, we developed a consensus framework aggregating results from all four model architectures (Random Forest, SVM, ComplEx, RGCN):
 
-#### Consensus Protein Extraction (`extract_complex_consensus_proteins.py`)
+###### Consensus Protein Extraction (`extract_complex_consensus_proteins.py`)
 Identifies proteins that rank highly across multiple models, reducing model-specific biases and increasing confidence in biomarker selection.
 
-#### Consensus Biomarker Network Extraction (`extract_biomarker_subgraph_proteins_only.py`)
+###### Consensus Biomarker Network Extraction (`extract_biomarker_subgraph_proteins_only.py`)
 Builds PPI networks using only consensus proteins, revealing core regulatory modules that are consistently important regardless of modeling approach.
 
-#### GO Enrichment of Consensus Entities (`enrich_consensus_entities.py`)
+###### GO Enrichment of Consensus Entities (`enrich_consensus_entities.py`)
 Performs functional enrichment specifically on consensus biomarkers to identify robust functional themes supported by multiple lines of evidence (offers option to consider hub proteins as well). 
 
 | ![Consensus GO Enrichment Analysis](figures/09_consensus_go_enrichment.png) | ![Consensus Biomarker Summary Table](figures/13_consensus_biomarker_table.png) |
@@ -119,7 +119,7 @@ Performs functional enrichment specifically on consensus biomarkers to identify 
 | *Figure 9: KG-based GO term enrichment results for consensus biomarkers showing significantly over-represented biological processes.* | *Figure 10: GO and GSEA enrichment results.* |
 
 
-## Biological Insights 
+#### Biological Insights 
 
 The interpretability analyses successfully identified several key genes and proteins with strong literature support for their roles in sepsis and immune response. 
 
@@ -205,11 +205,11 @@ It appears that RGCN could have learnt both patterns and their prognostic value:
 - Dimension 63: Active immune response (separates outcomes)
 - Dimension 45: Loss of immune capacity (separates outcomes)
 
-# HAN (Heterogeneous Attention Network) Analysis (`src/han/`)
+#### HAN (Heterogeneous Attention Network) Analysis (`src/han/`)
 
 We implemented a comprehensive Heterogeneous Attention Network framework for patient-level graph analysis, enabling interpretable predictions through multiple complementary mechanisms. The `src/han/` directory contains scripts for model training, attention extraction, and gradient-based interpretability.
 
-## Model Architecture and Training (`model.py`, `run_han.py`)
+##### Model Architecture and Training (`model.py`, `run_han.py`)
 
 The `SepsisHANClassifier` implements a multi-layer heterogeneous attention network that:
 - Processes multiple node types (Patients, Proteins, Pathways, GO Terms, Reactions) simultaneously
@@ -219,9 +219,9 @@ The `SepsisHANClassifier` implements a multi-layer heterogeneous attention netwo
 
 The `run_han.py` script orchestrates the full training pipeline with proper data loading, hyperparameter tuning, and model checkpointing.
 
-## Attention Mechanism Analysis
+##### Attention Mechanism Analysis
 
-### Node-Level Attention Extraction (`extract_han_attention.py`, `attention_analysis.py`)
+###### Node-Level Attention Extraction (`extract_han_attention.py`, `attention_analysis.py`)
 
 These scripts extract and analyze attention weights learned by the HAN model:
 - **Edge Type Importance**: Quantifies which relationship types (Patient-Protein, Protein-Pathway, etc.) contribute most to predictions
@@ -230,7 +230,7 @@ These scripts extract and analyze attention weights learned by the HAN model:
 
 The attention extraction reveals which parts of the knowledge graph the model focuses on when making predictions, providing a first layer of interpretability.
 
-### Semantic-Level Attention Analysis (`han_attention_enhanced.py`, `han_attention_extraction.py`)
+###### Semantic-Level Attention Analysis (`han_attention_enhanced.py`, `han_attention_extraction.py`)
 
 Beyond individual edge attention, semantic-level attention aggregates information across entire metapaths (multi-hop paths through different node types). The enhanced attention analysis:
 - **Metapath Importance**: Identifies which semantic pathways (e.g., Patient→Protein→GO Term→Pathway) are most predictive
@@ -239,9 +239,9 @@ Beyond individual edge attention, semantic-level attention aggregates informatio
 
 ![HAN Semantic-Level Attention Analysis](figures/12_han_semantic_attention.png)
 
-## Gradient-Based Interpretability and Subgraph Analysis
+##### Gradient-Based Interpretability and Subgraph Analysis
 
-### Patient-Level Gradient Attribution (`patient_gradient_analysis.py`)
+###### Patient-Level Gradient Attribution (`patient_gradient_analysis.py`)
 
 The `GradientBasedAttentionAnalyzer` class implements sophisticated gradient-based methods to identify influential nodes:
 
@@ -251,7 +251,7 @@ The `GradientBasedAttentionAnalyzer` class implements sophisticated gradient-bas
 
 This goes beyond simple attention weights by assessing actual influence on model decisions through gradient flow.
 
-### Heterogeneous Patient Subgraph Visualization (`han_heterogeneous_analysis_initial.py`)
+###### Heterogeneous Patient Subgraph Visualization (`han_heterogeneous_analysis_initial.py`)
 
 - **Patient-Specific Neighborhoods**: Extracts all heterogeneous neighbors (Proteins, Pathways, GO Terms, Reactions) connected to each patient
 - **GO Term Annotation**: Integrates GO ontology definitions and semantic information using `parse_go_obo()`, providing rich contextual information about biological processes
@@ -260,30 +260,30 @@ This goes beyond simple attention weights by assessing actual influence on model
 ![Patient-Specific Subgraph Visualization](figures/14_patient_subgraph_visualization.png)
 *Figure 14: Heterogeneous patient subgraph showing gradient-attributed importance of proteins, pathways, and GO terms. Node size indicates gradient-based importance (larger = more causal influence on prediction), color indicates node type (green = protein, blue = GO term, orange = pathway). Edge color is proportional to edge importance. This represents a single patient's personalized mechanistic explanation of their predicted outcome.*
 
-#### Gradient-Based Protein Ranking
+####### Gradient-Based Protein Ranking
 For each patient, the script:
 - Computes gradient attributions for all connected proteins
 - Ranks proteins by their contribution to the prediction
 - Identifies key driver proteins whose perturbation would most impact the outcome
 - Exports ranked lists for downstream experimental validation
 
-#### GO & Reactome Term Integration
+####### GO & Reactome Term Integration
 The script enriches protein nodes with functional annotations by:
 - Parsing GO ontology files (`go.obo`) for term definitions
 - Using Reactome API to retrieve pathway id details
 - Mapping proteins to their associated GO terms through the knowledge graph
 - Visualizing functional themes (immune response, cell signaling) in patient subgraphs
 
-### Complex Overlap Analysis (`han_complex_overlap.py`)
+###### Complex Overlap Analysis (`han_complex_overlap.py`)
 
 This script integrates HAN attention with ComplEx embedding-based biomarkers to identify:
 - Proteins that are both highly attended by HAN and important in ComplEx embeddings
 - Consensus entities supported by both graph structure (HAN) and semantic similarity (ComplEx)
 - Robust biomarker candidates with multiple lines of computational evidence
 
-## HAN Data Loading Pipelines
+##### HAN Data Loading Pipelines
 
-### OWL-Based Data Loading (`owl_data_loader.py`, `owl_data_loader_with_features.py`)
+###### OWL-Based Data Loading (`owl_data_loader.py`, `owl_data_loader_with_features.py`)
 
 Custom data loaders for heterogeneous graphs stored in OWL ontology format:
 - **Multi-Type Node Features**: Loads feature matrices for each entity type
@@ -293,176 +293,10 @@ Custom data loaders for heterogeneous graphs stored in OWL ontology format:
 
 The `load_hetero_graph_from_owl()` function creates PyTorch Geometric `HeteroData` objects ready for HAN training.
 
-# Visualization Infrastructure (`src/visualize/`)
-
-We developed a comprehensive suite of visualization tools to enable intuitive exploration complex multi-layer knowledge graphs. The `src/visualize/` directory contains scripts for static plotting, interactive visualization, and web-based network exploration.
-
-## Interactive Multi-Layer Network Web Application (`multilayer_network_app.py`)
-
-We developed a Flask-based web application that provides dynamic, real-time exploration of the knowledge graph:
-
-### Core Features
-
-#### Multi-Layer Graph Management (`MultiLayerNetworkManager` class)
-- **Flexible Data Loading**: Loads nodes, edges, and entity classes from KG conversion and model execution outputs
-- **Layer Definitions**: Automatically classifies nodes into semantic layers (Patients, Proteins, Pathways, GO Terms, Diseases, etc.)
-- **Edge Type Tracking**: Catalogs all relationship types in the graph for selective filtering
-- **Patient Embedding Integration**: Links graph structure with learned model embeddings
-
-#### Real-Time Filtering and Exploration
-The web interface enables users to:
-- **Layer Selection**: Toggle individual node type layers on/off dynamically
-- **Edge Type Filtering**: Show/hide specific relationship types (physical, genetic, regulatory)
-- **Statistics Dashboard**: Display real-time graph statistics (node counts, edge counts...)
-- **Force-Directed Layout**: Physics-based layouts for intuitive spatial organization
-
-![Interactive Web Application Interface](figures/visualization_app.png)
-*Figure: Screenshot of the interactive multi-layer network visualization web application, showing real-time filtering controls, layer management, and dynamic network rendering.*
-
-This is relevant both for initial exploratory analysis and examination of specific neighborhood to help guide analysis.
-
-## Static Graph Visualization (`visualize_multilayer_graph.py`)
-
-For batch generation of network plots and non-interactive figures, `visualize_multilayer_graph.py` provides:
-
-### PyVis Interactive HTML Exports
-- **Standalone HTML Files**: Self-contained interactive visualizations
-- **Custom Physics**: Configurable force-directed algorithms (Barnes-Hut, repulsion strength)
-- **Legend Integration**: Automatic generation of interactive legends
-
-### NetworkX-Based Static Plots
-- **Multiple Layout Algorithms**: Spring, Kamada-Kawai, hierarchical, circular
-- **High-Resolution Output**: PNG at 300+ DPI for publication quality
-- **Vector Graphics**: SVG/PDF formats for scalable figures
-- **Matplotlib Integration**: Full access to matplotlib styling and customization
-
-## Gephi Export Pipeline (`gephi_exports/`)
-
-### Graph Export Formats
-- **GEXF Files**: Native Gephi format with full metadata preservation
-- **GraphML**: Alternative format supporting complex attribute schemas
-- **CSV Edge/Node Lists**: Simple tabular format for custom processing
 
 
-# Knowledge Graph Optimization (`OntoKGCreation/`)
-
-We started considering optimizing the knowledge graph to balance comprehensiveness with computational efficiency and biological relevance. We modified the scripts provided in `OntoKGCreation/` for KG refinement.
-
-## Motivation for KG Optimization
-
-Our initial knowledge graph, constructed from multiple biomedical ontologies and databases, contained:
-- Thousands of entities (proteins, pathways, GO terms, reactions) - we particularly notice that > 60% of nodes are pathways/reactions with many embedded connections between them 
-- Hundreds of thousands of unfiltered relationships with varying confidence levels (proteins are very densely connected since all PPI data is used without filtering)
-- Redundant and low-information connections that add noise
-
-This scale posed challenges for:
-- **Computational Efficiency**: GNN training time and memory requirements
-- **GNN Performance**: Risk of confusing models with irrelevant or noisy information
-- **Interpretability**: Overwhelming number of potential features to analyze
-- **Biological Focus**: Dilution of signal by weakly relevant entities
-
-## Filtering and Optimization Strategies
-
-### Ontology-Based Refinement
-Leveraging the ontological structure:
-- **Term Specificity**: Filtering overly general GO terms (e.g., "biological process") in favor of specific terms
-- **Hierarchy Pruning**: Removing redundant parent-child chains where leaf terms suffice
-
-Through iterative refinement, we aim to achieved:
-- **Size Reduction**: significant reduction in node count/edge density while preserving (or improving if the GNNs could learn better) performance and interpretability signals
-- **Performance Improvement**: Faster training (reduced embedding dimensions) with comparable or improved accuracy
-- **Enhanced Interpretability**: Cleaner, more focused feature importance rankings
-- **Biological Coherence**: Increased functional enrichment significance for top features
-
-OntoKGCreation/converted/optimized/ -> retrain embeddings -> ML approaches -> comparison to original KG results.
-
-# Discussion & Future Work
-
-## Limitations and Challenges
-
-### Current Limitations
-1. **KG Completeness**: Despite optimization efforts, the knowledge graph may still miss important but poorly annotated entities
-2. **Interaction Confidence**: Variable quality of edge annotations requires cautious interpretation of network results
-3. **Sample Size**: Limited patient cohort size constrains statistical power for rare outcome prediction
-4. **Temporal Dynamics**: Current models do not capture time-dependent disease progression
-
-### Technical Challenges
-- Balancing KG size with computational feasibility and interpretability
-- Handling heterogeneous data types and scales across node features
-- Ensuring gradient stability in complex heterogeneous graph architectures
-- Managing visualization complexity for large-scale networks
-
-## Future Research Directions
-
-### 1. Enhanced Knowledge Graph Optimization
-
-**Reduce/Optimize KG**: Continued refinement of the knowledge graph through:
-- **Active Learning Approaches**: Using model uncertainty to guide selective KG expansion in informative regions
-- **Expert-in-the-Loop Curation**: Incorporating domain expert feedback to validate and refine entity/relationship selections
-- **Multi-Task Optimization**: Creating task-specific KG variants optimized for different prediction goals (severity, outcome, treatment response, trajectory)
-- **Temporal Integration**: Incorporating time-dependent relationships and dynamic processes
-- **Confidence Modeling**: Learning edge weights and uncertainty estimates rather than binary inclusion/exclusion
-
-### 2. Interpretability-Visualization Integration
-
-**Connect Interpretability Findings to KG Visualization**: Tighter integration of model explanations with network exploration:
-- **SHAP-Driven Interactive Highlighting**: Real-time updates of node/edge importance in the web application based on SHAP scores
-- **Attention Heatmap Overlay**: Visualizing HAN attention distributions directly on the interactive graph
-- **Gradient Flow Visualization**: Animating gradient propagation through patient subgraphs to show causal pathways
-- **Perturbation Explorer**: Interactive tools to simulate node/edge removal and observe prediction changes
-- **Explanation Provenance**: Linking each biomarker back to the specific analyses and models that identified it
-
-### 3. Advanced Visualization Enhancements
-
-**Visualization Enhancement**: Ongoing improvements to support deeper exploration:
-- **Dynamic Filtering Interface**: More intuitive controls for multi-dimensional filtering (importance, confidence, node type, functional category)
-- **Annotation Layer System**: User-added notes, hypotheses, and literature references directly on network views
-- **Comparative Visualization**: Side-by-side comparison of patient subgraphs or model predictions
-- **3D Network Rendering**: Spatial layouts leveraging additional dimensions for complex hierarchies
-- **Automated Layout Optimization**: Machine learning-based layout algorithms that optimize for biological interpretability
-- **Export and Reproducibility**: One-click export of full analysis provenance (data, filters, settings) for reproducibility
-- **Biomarker Highlighting**: Emphasize identified biomarker nodes with custom styling
-- **Search Functionality**: Find specific entities by ID or name
-
-### 4. Model Architecture Advances
-
-- **Temporal Graph Networks**: Incorporating time-series patient data and dynamic KG relationships
-- **Explainable-by-Design Architectures**: Models with built-in interpretability mechanisms rather than post-hoc analysis
-- **Causal Graph Discovery**: Moving beyond correlation to identify causal relationships in biological networks
-- **Multi-Modal Integration**: Combining KG-based models with imaging, clinical notes, and other data modalities
-
-### 5. Clinical Translation
-
-- **Prospective Validation**: Testing identified biomarkers in independent patient cohorts
-- **Experimental Validation**: Wet-lab experiments to validate predicted protein interactions and mechanisms
-- **Clinical Decision Support**: Adapting models and visualizations for real-time clinical use
-- **Treatment Response Prediction**: Extending models to predict which patients will respond to specific therapies
-
-### 6. Scalability and Efficiency
-
-- **Distributed Training**: Scaling to larger KGs and datasets through distributed GNN training
-- **Incremental Learning**: Updating models with new data without full retraining
-- **Real-Time Inference**: Optimizing model deployment for low-latency predictions
-- **Federated Learning**: Training across multiple institutions while preserving data privacy
-
-## Conclusion
-
-## Methodological Contributions
-
-1. **Multi-Model Interpretability Framework**: Successfully implemented SHAP, attention, and gradient-based analyses across diverse architectures (Random Forests, SVMs, ComplEx, RGCN, HAN), providing multiple complementary perspectives on model decisions.
-
-2. **Consensus Biomarker Discovery**: Developed robust pipelines to aggregate evidence across models, increasing confidence in identified biomarkers and reducing model-specific biases.
-
-3. **Heterogeneous Graph Analysis**: Advanced HAN architecture with gradient-based patient-level interpretability, enabling personalized explanations of predictions.
-
-4. **Advanced Visualization Suite**: Created publication-ready static plots and interactive web applications for exploring complex multi-layer knowledge graphs.
-
-## Technical Infrastructure
-- Established reproducible pipelines for model training, interpretability analysis, and visualization
-- Developed modular, reusable code for knowledge graph construction, optimization, and analysis
-- Created interactive tools for collaborative exploration and hypothesis generation
 
 
-# References
 
-[1] Jiang Y, Miao Q, Hu L, Zhou T, Hu Y, Tian Y. FYN and CD247: Key Genes for Septic Shock Based on Bioinformatics and Meta-Analysis. Comb Chem High Throughput Screen. 2022;25(10):1722-1730. doi: 10.2174/1386207324666210816123508. PMID: 34397323.
+
+
