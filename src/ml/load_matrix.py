@@ -2,16 +2,16 @@ import pandas as pd
 import numpy as np
 import sys
 from pathlib import Path
+
+# Setup paths - add project root to sys.path for imports
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
+
 from sklearn.preprocessing import RobustScaler, StandardScaler, MinMaxScaler
 import GEOparse
-from sklearn.preprocessing import RobustScaler, StandardScaler, MinMaxScaler
 
-# Setup paths
-project_root = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(project_root / "src" / "utils"))
-
-from load_dataset import create_expression_data
-from load_embeddings import load_all_entities
+from src.utils.load_dataset import create_expression_data
+from src.utils.load_embeddings import load_all_entities
 
 # File paths
 data_dir = project_root / "data"
