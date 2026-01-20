@@ -7,8 +7,28 @@
 - [Approach diagram](#approach-diagram)
 - [Reproducibility Instructions](#reproducibility-instructions)
 - [Datasets](#datasets)
+  - [Knowledge Graph Construction](#knowledge-graph-construction)
+  - [Pretrained KG Embeddings](#pretrained-kg-embeddings)
+  - [Train our GNN Embeddings](#train-our-gnn-embeddings)
+  - [Sepsis prediction - ML Classifiers](#sepsis-prediction---ml-classifiers)
 - [Methods](#methods)
+  - [Training ML Classifiers](#training-ml-classifiers)
+  - [Evaluation Methodology](#evaluation-methodology)
+  - [SHAP Explanation](#shap-explanation)
+  - [Knowledge Graph Optimization](#knowledge-graph-optimization-ontoKGcreation)
 - [Results](#results)
+  - [Exploratory Data Analysis (EDA)](#exploratory-data-analysis-eda)
+  - [Graph Embeddings Visualization](#graph-embeddings-visualization)
+  - [Evaluation Results](#evaluation-results)
+  - [Shap-guided Interpretability](#shap-guided-interpretability)
+  - [Biological Insights](#biological-insights)
+  - [HAN (Heterogeneous Attention Network) Analysis](#han-heterogeneous-attention-network-analysis-srchan)
+- [Discussion](#discussion)
+  - [Performance](#performance)
+  - [Pytorch](#pytorch)
+  - [Limitations and Challenges](#limitations-and-challenges)
+  - [Future Research Directions](#future-research-directions)
+- [Conclusion](#conclusion)
 - [References](#references)
 
 ## Abstract
@@ -101,7 +121,7 @@ It includes 54 unique patients (18 healthy, 36 sepsis), where sepsis patients we
 
 For the Knowledge Graph, DEG filtering (adjusted p-value < 0.01, t-test with FDR correction) was applied, keeping ~1,295 proteins.
 
-#### Knowledge Graph Construction
+### Knowledge Graph Construction
 
 The KG was built by integrating the gene expression data with external biological databases (Reactome, KEGG, Gene Ontology). Each sample is connected to the proteins it expresses, and proteins are linked to their pathways and functional annotations. The KG is stored as an OWL ontology file.
 
@@ -584,7 +604,7 @@ This final plot summarizes the rankings accross models/datasets based on balance
 SVM and MLP show a sudden drop, as expected from previous scatterplot analysis, where in here the top protein embedding is ComplEx, gene expression 2nd in SVM.
 
 
-### Interpretability
+### SHAP-guided Interpretability
 
 #### Overview: Model Interpretation Pipeline (`src/interpretability/`)
 
@@ -640,7 +660,7 @@ This script links graph hub proteins (high-degree nodes in patient-connected sub
 - Prioritize dimensions for further investigation based on their association with known regulatory hubs
 - Understand the mechanistic basis of dimension-level predictions
 
-This linkage proved valuable for validating the RGCN learning process, identifying FYN as a primary driver of RGCN's sepsis prediction power, in accordance with previous literature [1].
+This linkage proved valuable for validating the RGCN learning process, identifying FYN as a primary driver of RGCN's sepsis prediction power, in accordance with previous literature (Jiang et al., 2022).
 
 **Dimensions showing significant septic vs. healthy differences (p<0.05):**
   - Dimension 45: p=0.0024 ✓ FYN (rank #14)
@@ -698,14 +718,14 @@ Identifies proteins that rank highly across multiple models, reducing model-spec
 Builds PPI networks using only consensus proteins, revealing core regulatory modules that are consistently important regardless of modeling approach.
 
 ###### GO Enrichment of Consensus Entities (`enrich_consensus_entities.py`)
-Performs functional enrichment specifically on consensus biomarkers to identify robust functional themes supported by multiple lines of evidence (offers option to consider hub proteins as well). 
+Performs functional enrichment specifically on consensus biomarkers to identify robust functional themes supported by multiple lines of evidence (offers option to consider hub proteins as well). Results in [results/interpretability/ComplEx/consensus/validation/enrichment](results/interpretability/ComplEx/consensus/validation/enrichment).
 
 | ![Consensus GO Enrichment Analysis](docs/report_figures/09_consensus_go_enrichment.png) | ![Consensus Biomarker Summary Table](docs/report_figures/13_consensus_biomarker_table.png) |
 |:---:|:---:|
 | *Figure 9: KG-based GO term enrichment results for consensus biomarkers showing significantly over-represented biological processes.* | *Figure 10: GO and GSEA enrichment results.* |
 
 
-#### Biological Insights 
+### Biological Insights 
 
 The interpretability analyses successfully identified several key genes and proteins with strong literature support for their roles in sepsis and immune response. 
 
@@ -791,7 +811,7 @@ It appears that RGCN could have learnt both patterns and their prognostic value:
 - Dimension 63: Active immune response (separates outcomes)
 - Dimension 45: Loss of immune capacity (separates outcomes)
 
-#### HAN (Heterogeneous Attention Network) Analysis (`src/han/`)
+### HAN (Heterogeneous Attention Network) Analysis (`src/han/`)
 
 We implemented a comprehensive Heterogeneous Attention Network framework for patient-level graph analysis, enabling interpretable predictions through multiple complementary mechanisms. The `src/han/` directory contains scripts for model training, attention extraction, and gradient-based interpretability.
 
@@ -903,10 +923,10 @@ Concerning Multiple Layer Perceptron, we fixed at the end to studying them using
 ### Limitations and Challenges
 
 #### Current Limitations
-1. **KG Completeness**: Despite optimization efforts, the knowledge graph may still miss important but poorly annotated entities
+1. **KG Completeness**: Despite optimization efforts, the knowledge graph is still overcomplex and unfiltered
 2. **Interaction Confidence**: Variable quality of edge annotations requires cautious interpretation of network results
-3. **Sample Size**: Limited patient cohort size constrains statistical power for rare outcome prediction
-4. **Temporal Dynamics**: Current models do not capture time-dependent disease progression
+3. **Sample Size**: Limited patient cohort size constrains statistical power
+4. **Temporal Dynamics**: Current models do not capture time-dependent disease progression inherent to the dataset
 
 #### Technical Challenges
 - Balancing KG size with computational feasibility and interpretability
@@ -920,10 +940,7 @@ Concerning Multiple Layer Perceptron, we fixed at the end to studying them using
 
 **Reduce/Optimize KG**: Continued refinement of the knowledge graph through:
 - **Active Learning Approaches**: Using model uncertainty to guide selective KG expansion in informative regions
-- **Expert-in-the-Loop Curation**: Incorporating domain expert feedback to validate and refine entity/relationship selections
-- **Multi-Task Optimization**: Creating task-specific KG variants optimized for different prediction goals (severity, outcome, treatment response, trajectory)
-- **Temporal Integration**: Incorporating time-dependent relationships and dynamic processes
-- **Confidence Modeling**: Learning edge weights and uncertainty estimates rather than binary inclusion/exclusion
+- **Expert-in-the-Loop Curation**: Incorporating domain expert feedback to validate and refine entity/relationship selection
 
 #### 2. Interpretability-Visualization Integration
 
@@ -940,9 +957,7 @@ Concerning Multiple Layer Perceptron, we fixed at the end to studying them using
 - **Dynamic Filtering Interface**: More intuitive controls for multi-dimensional filtering (importance, confidence, node type, functional category)
 - **Annotation Layer System**: User-added notes, hypotheses, and literature references directly on network views
 - **Comparative Visualization**: Side-by-side comparison of patient subgraphs or model predictions
-- **3D Network Rendering**: Spatial layouts leveraging additional dimensions for complex hierarchies
-- **Automated Layout Optimization**: Machine learning-based layout algorithms that optimize for biological interpretability
-- **Export and Reproducibility**: One-click export of full analysis provenance (data, filters, settings) for reproducibility
+- **3D Network Rendering**: Spatial layouts leveraging additional dimensions 
 - **Biomarker Highlighting**: Emphasize identified biomarker nodes with custom styling
 - **Search Functionality**: Find specific entities by ID or name
 
@@ -953,23 +968,9 @@ Concerning Multiple Layer Perceptron, we fixed at the end to studying them using
 - **Causal Graph Discovery**: Moving beyond correlation to identify causal relationships in biological networks
 - **Multi-Modal Integration**: Combining KG-based models with imaging, clinical notes, and other data modalities
 
-#### 5. Clinical Translation
+## Conclusion
 
-- **Prospective Validation**: Testing identified biomarkers in independent patient cohorts
-- **Experimental Validation**: Wet-lab experiments to validate predicted protein interactions and mechanisms
-- **Clinical Decision Support**: Adapting models and visualizations for real-time clinical use
-- **Treatment Response Prediction**: Extending models to predict which patients will respond to specific therapies
-
-#### 6. Scalability and Efficiency
-
-- **Distributed Training**: Scaling to larger KGs and datasets through distributed GNN training
-- **Incremental Learning**: Updating models with new data without full retraining
-- **Real-Time Inference**: Optimizing model deployment for low-latency predictions
-- **Federated Learning**: Training across multiple institutions while preserving data privacy
-
-### Conclusion
-
-### Methodological Contributions
+Beyond training and systematically comparing ML models on raw gene expression and GNN-enhanced data, our methodological contributions include:
 
 1. **Multi-Model Interpretability Framework**: Successfully implemented SHAP, attention, and gradient-based analyses across diverse architectures (Random Forests, SVMs, ComplEx, RGCN, HAN), providing multiple complementary perspectives on model decisions.
 
@@ -977,14 +978,7 @@ Concerning Multiple Layer Perceptron, we fixed at the end to studying them using
 
 3. **Heterogeneous Graph Analysis**: Advanced HAN architecture with gradient-based patient-level interpretability, enabling personalized explanations of predictions.
 
-4. **Advanced Visualization Suite**: Created publication-ready static plots and interactive web applications for exploring complex multi-layer knowledge graphs.
-
-### Technical Infrastructure
-- Established reproducible pipelines for model training, interpretability analysis, and visualization
-- Developed modular, reusable code for knowledge graph construction, optimization, and analysis
-- Created interactive tools for collaborative exploration and hypothesis generation
-
-
+4. **Advanced Visualization Suite**: Created interactive web application for exploring complex multi-layer knowledge graphs.
 
 
 ## References
@@ -994,4 +988,4 @@ Concerning Multiple Layer Perceptron, we fixed at the end to studying them using
 - Brandes-Leibovitz, R., Riza, A., Yankovitz, G., Pirvu, A., Dorobantu, S., Dragos, A., ... & Netea, M. G. (2024). Sepsis pathogenesis and outcome are shaped by the balance between the transcriptional states of systemic inflammation and antimicrobial response. Cell Reports Medicine, 5(11).
 - Liu, W., Liu, T., Zheng, Y., & Xia, Z. (2023). Metabolic reprogramming and its regulatory mechanism in sepsis-mediated inflammation. Journal of inflammation research, 1195-1207.
 - Willmann, K., & Moita, L. F. (2024). Physiologic disruption and metabolic reprogramming in infection and sepsis. Cell metabolism, 36(5), 927-946.
-- [1] Jiang Y, Miao Q, Hu L, Zhou T, Hu Y, Tian Y. FYN and CD247: Key Genes for Septic Shock Based on Bioinformatics and Meta-Analysis. Comb Chem High Throughput Screen. 2022;25(10):1722-1730. doi: 10.2174/1386207324666210816123508. PMID: 34397323.
+- Jiang Y, Miao Q, Hu L, Zhou T, Hu Y, Tian Y. FYN and CD247: Key Genes for Septic Shock Based on Bioinformatics and Meta-Analysis. Comb Chem High Throughput Screen. 2022;25(10):1722-1730. doi: 10.2174/1386207324666210816123508. PMID: 34397323.
