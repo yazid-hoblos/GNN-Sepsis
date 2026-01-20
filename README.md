@@ -409,7 +409,7 @@ The web interface enables users to:
 - **Statistics Dashboard**: Display real-time graph statistics (node counts, edge counts...)
 - **Force-Directed Layout**: Physics-based layouts for intuitive spatial organization
 
-![Interactive Web Application Interface](figures/visualization_app.png)
+![Interactive Web Application Interface](report/figures/visualization_app.png)
 *Figure: Screenshot of the interactive multi-layer network visualization web application, showing real-time filtering controls, layer management, and dynamic network rendering.*
 
 This is relevant both for initial exploratory analysis and examination of specific neighborhood to help guide analysis.
@@ -487,16 +487,16 @@ Downregulated proteins are connected to processes like organelle organization, c
 
 #### Graph Embeddings Visualization
 
-To visualize the learned graph **protein** embeddings, we employed dimensionality reduction techniques such as Principal Component Analysis (PCA) and Uniform Manifold Approximation and Projection (UMAP) and t-SNE. These methods help in projecting high-dimensional embeddings into a 2D space, allowing us to observe potential clustering patterns among septic and non-septic patients. These were tested for all GNN models, on different versions (v2.10, v2.11) and normalizations (none, min-max, standard, robust, log1p). As our analysis will be later based on v2.11 min-max, these visualizations correspond to this version and norm. (see [`results/figures/projections/`](./results/figures/projections/) for other versions and normalizations).
+To visualize the learned graph **protein** embeddings, we employed dimensionality reduction techniques such as Principal Component Analysis (PCA) and Uniform Manifold Approximation and Projection (UMAP) and t-SNE. These methods help in projecting high-dimensional embeddings into a 2D space, allowing us to observe potential clustering patterns among septic and non-septic patients. These were tested for all GNN models, on different versions (v2.10, v2.11) and normalizations (none, min-max, standard, robust, log1p). As our analysis will be later based on v2.11 min-max, these visualizations correspond to this version and norm. (see [`results/ml/projections/`](./results/ml/projections/) for other versions and normalizations).
 
 | Dataset| PCA | UMAP | t-SNE |
 |-----|------|-------|-------|
-| ComplEX|  ![pca](./results/figures/projections/pca_v2.11_minmax/complex_protein_embeddings.png) | ![umap](./results/figures/projections/umap_v2.11_minmax/complex_protein_embeddings.png) | ![tsne](./results/figures/projections/tsne_v2.11_minmax/complex_protein_embeddings.png) |
-| RGCN | ![pca](./results/figures/projections/pca_v2.11_minmax/rgcn_protein_embeddings.png) | ![umap](./results/figures/projections/umap_v2.11_minmax/rgcn_protein_embeddings.png) | ![tsne](./results/figures/projections/tsne_v2.11_minmax/rgcn_protein_embeddings.png) |
-| weighted RGCN | ![pca](./results/figures/projections/pca_v2.11_minmax/weighted_rgcn_protein_embeddings.png) | ![umap](./results/figures/projections/umap_v2.11_minmax/weighted_rgcn_protein_embeddings.png) | ![tsne](./results/figures/projections/tsne_v2.11_minmax/weighted_rgcn_protein_embeddings.png) |
-| GraphSAGE | ![pca](./results/figures/projections/pca_v2.11_minmax/graphsage_protein_embeddings.png) | ![umap](./results/figures/projections/umap_v2.11_minmax/graphsage_protein_embeddings.png) | ![tsne](./results/figures/projections/tsne_v2.11_minmax/graphsage_protein_embeddings.png) |
-| GAT | ![pca](./results/figures/projections/pca_v2.11_minmax/gat_protein_embeddings.png) | ![umap](./results/figures/projections/umap_v2.11_minmax/gat_protein_embeddings.png) | ![tsne](./results/figures/projections/tsne_v2.11_minmax/gat_protein_embeddings.png) |
-| Gene Expression (reference) | ![pca](./results/figures/projections/pca_v2.10_none/gene_expression.png) | ![umap](./results/figures/projections/umap_v2.10_none/gene_expression.png) | ![tsne](./results/figures/projections/tsne_v2.10_none/gene_expression.png) |
+| ComplEX|  ![pca](./results/ml/projections/pca_v2.11_minmax/complex_protein_embeddings.png) | ![umap](./results/ml/projections/umap_v2.11_minmax/complex_protein_embeddings.png) | ![tsne](./results/ml/projections/tsne_v2.11_minmax/complex_protein_embeddings.png) |
+| RGCN | ![pca](./results/ml/projections/pca_v2.11_minmax/rgcn_protein_embeddings.png) | ![umap](./results/ml/projections/umap_v2.11_minmax/rgcn_protein_embeddings.png) | ![tsne](./results/ml/projections/tsne_v2.11_minmax/rgcn_protein_embeddings.png) |
+| weighted RGCN | ![pca](./results/ml/projections/pca_v2.11_minmax/weighted_rgcn_protein_embeddings.png) | ![umap](./results/ml/projections/umap_v2.11_minmax/weighted_rgcn_protein_embeddings.png) | ![tsne](./results/ml/projections/tsne_v2.11_minmax/weighted_rgcn_protein_embeddings.png) |
+| GraphSAGE | ![pca](./results/ml/projections/pca_v2.11_minmax/graphsage_protein_embeddings.png) | ![umap](./results/ml/projections/umap_v2.11_minmax/graphsage_protein_embeddings.png) | ![tsne](./results/ml/projections/tsne_v2.11_minmax/graphsage_protein_embeddings.png) |
+| GAT | ![pca](./results/ml/projections/pca_v2.11_minmax/gat_protein_embeddings.png) | ![umap](./results/ml/projections/umap_v2.11_minmax/gat_protein_embeddings.png) | ![tsne](./results/ml/projections/tsne_v2.11_minmax/gat_protein_embeddings.png) |
+| Gene Expression (reference) | ![pca](./results/ml/projections/pca_v2.10_none/gene_expression.png) | ![umap](./results/ml/projections/umap_v2.10_none/gene_expression.png) | ![tsne](./results/ml/projections/tsne_v2.10_none/gene_expression.png) |
 
 As can be seen that gene expression data have no structure or seperation between septic and non-septic patients in all projections, some GNN protein embeddings have show a clear seperation, particualrly if we look at ComplEx and GAT, hence already showing potential in the classification task.  
 PCA is a linear dimensionality reduction technique, which may not capture complex relationships in the data, while UMAP and t-SNE are non-linear techniques - that's why we can have a better view on class distribution in these two methods. Weighted RGCN for instance doesn't have a high variance explained in PCA, yet in UMAP and t-SNE we can see colors aggregate, which might reflect in this dataset's performance in some models compared to others.
@@ -508,7 +508,7 @@ PCA is a linear dimensionality reduction technique, which may not capture comple
 
 | different normalizations  | different versions |
 |--------------------------|--------------------|
-| ![normalizations](./results/figures/comparative_normalization_version/avg_seeds_normalizations/boxplot_comparative_normalization_version_balanced_accuracy.png) | ![versions](./results/figures/comparative_normalization_version/avg_seeds_versions/boxplot_comparative_normalization_version_balanced_accuracy.png) |
+| ![normalizations](./results/ml/comparative_normalization_version/avg_seeds_normalizations/boxplot_comparative_normalization_version_balanced_accuracy.png) | ![versions](./results/ml/comparative_normalization_version/avg_seeds_versions/boxplot_comparative_normalization_version_balanced_accuracy.png) |
 
 Between different normalizations, MinMax show the best performance overall, where median balanced accuracy of v2.10 is highest, and spread is the lowest in v2.11. As for versions, v2.11 tends to have better performance than v2.10, while still pretty much model/dataset dependent. Thus for the rest of the analysis, we will be focusing on MinMax normalization and version v2.11.
 
@@ -523,52 +523,52 @@ For a better representation of the results due to high number of models and data
 These embeddings are obtained directly from the GNN models trained on the knowledge graph, representing each patient/sample as a vector in the embedding space. We compared the performance of models trained on these sample embeddings against those trained on raw gene expression data:
 
 
-![_heatmap of sample embeddings vs gene expression (all models and datasets)_](./results/figures/metrics/sample_heatmap.png)
+![_heatmap of sample embeddings vs gene expression (all models and datasets)_](./results/ml/metrics/sample_heatmap.png)
 
 We can notice while accuracies are generally low, we have a precision constantly higher than 70% and at times a recall of 100%. This in fact is due to the models being very conservative, predicting most samples as non-septic, which is also reflected in the low balanced accuracies. Because of the samll sample size (163 with imbalance => splitted to train and test would get 30% only for testing, startified splitting with ratio ~3:7), leading to variance in results, where a small number of samples being misclassified can significantly impact metrics like recall and precision.  The highest accuracy models actually belong to gene expression dataset, reaching up to 93% accuracy with SVM, meaning that sample embeddings were not able to enhance the performance in this case.
 
-![_grouped barplots of sample embeddings vs gene expression for different models (rf, xgb, svm, mlp) and metrics (balanced accuracy, precision, recall, f1...)_](./results/figures/metrics/sample_grouped_barplots_horizontal.png)
+![_grouped barplots of sample embeddings vs gene expression for different models (rf, xgb, svm, mlp) and metrics (balanced accuracy, precision, recall, f1...)_](./results/ml/metrics/sample_grouped_barplots_horizontal.png)
 
 Overall, sample embeddings did not produce an good performance, accross the different models. In fact, it's worth noting that the only dataset with a slightly good performance (accuracy of 0.675, 0.64, 0.692 for random forest, xgboost and svm respectively) is the one obtained from **RGCN** model, which is by far worse than the gene expression based model ranging between 70.2% for random forest up to 93% for SVM. This suggests that sample embeddings alone may not capture sufficient information for accurate sepsis prediction, as embeddings retrieved from training the gene expression dataset on the knowledge graph (possibly due to the complexity of the underlying biological processes that are not fully represented in the embeddings).
 
 | XGB vs RF | SVM vs MLP |
 |-----------|-------------|
-| ![_scatterplot of rf vs xgboost_](./results/figures/metrics/sample_rf_vs_xgb.png) | ![_heatmap of sample embeddings vs gene expression (all models and datasets)_](./results/figures/metrics/sample_svm_vs_mlp.png) |
+| ![_scatterplot of rf vs xgboost_](./results/ml/metrics/sample_rf_vs_xgb.png) | ![_heatmap of sample embeddings vs gene expression (all models and datasets)_](./results/ml/metrics/sample_svm_vs_mlp.png) |
 
 The only case where GNN performs better than gene expression is with MLP model on GraphSAGE sample embeddings with 0.59 balanced accuracy, still not a good performance overall.
 
-![_mlp radar plort of sample embeddings vs gene expression_](./results/figures/metrics/sample_radar_mlp.png)
+![_mlp radar plort of sample embeddings vs gene expression_](./results/ml/metrics/sample_radar_mlp.png)
 
 
 ##### Protein Embeddings vs Gene Expression
 
 The protein section yielded more promising results. As this approach is derived from a matrix multiplication weighting on gene expression values, it effectively integrates both the graph structure and the gene expression data beyound just the GNN training, potentially capturing more relevant features for sepsis prediction.
 
-![_grouped barplots of protein embeddings vs gene expression for different models (rf, xgb, svm, mlp) and metrics (balanced accuracy, precision, recall, f1...)_](./results/figures/metrics/protein_grouped_barplots_horizontal.png)
+![_grouped barplots of protein embeddings vs gene expression for different models (rf, xgb, svm, mlp) and metrics (balanced accuracy, precision, recall, f1...)_](./results/ml/metrics/protein_grouped_barplots_horizontal.png)
 
-![_heatmap of protein embeddings vs gene expression (all models and datasets)_](./results/figures/metrics/protein_heatmap.png)
+![_heatmap of protein embeddings vs gene expression (all models and datasets)_](./results/ml/metrics/protein_heatmap.png)
 
 At a first glance, we can see that protein embeddings outperform gene expression in most models and metrics, with significant improvements in balanced accuracy, precision, recall, and F1-score. The most notable performance is observed with the MLP model where gene expression based MLP achieves only 50% average balanced accuracy (over 10 seeds), while protein embeddings based MLP reaches up to 91.35% balanced accuracy (a huge improvement of more than 40 percentage points). We remark higher performance with tree based models (random forest and xgboost), while SVM for gene expression was already performing very well (93% balanced accuracy), thus not much room for improvement there, yet protein embeddings were able to reach it and a 95.3% balanced accuracy with SVM (ComplEx).
 
 
 
-![_robustness analysis plots (maybe put in appendix)_](./results/figures/metrics/protein_robustness_boxplot.png)
+![_robustness analysis plots (maybe put in appendix)_](./results/ml/metrics/protein_robustness_boxplot.png)
 
 Some models portray a high variance in performance across different seeds, especially the MLP models, which can be attributed to their sensitivity to weight initialization and hyperparameter settings. This variance seem to be autonomous of the dataset used, whether it's gene expression or protein embeddings, indicating that the model architecture itself may be a significant factor in performance stability. Another interesting observation is the low variance of ComplEx protein embeddings based models, which could be linked to the nature of the embeddings produced by ComplEx, potentially being more robust or informative for the sepsis prediction task, which always shows high performance accross different models and metrics (lowest variance in SVM with >90% balanced accuracy across all seeds).  
 The most unstable behaviior is seen in weighted RGCN protein embeddings MLP models, ranging between 50-90% balanced accuracy (not conclusive), while others seem to have a better well defined range (at max is range of 30% for GraphSAGE in random forest).  
 Side note, `concatenated pretein embeddings` is a concatenation of ComplEx and RGCN (choice was defined on what was available at earlier stages of the project, results kept to explore), which shows a good performance, but not better than ComplEx, which is expected since RGCN is one of the lowest performing datasets. So based on this, we will not be considering this dataset further in the analysis.
 
 
-| ![_radar plot for random_forest_](./results/figures/metrics/protein_radar_random_forest.png) | ![_radar plot for xgboost_](./results/figures/metrics/protein_radar_xgboost.png) |
+| ![_radar plot for random_forest_](./results/ml/metrics/protein_radar_random_forest.png) | ![_radar plot for xgboost_](./results/ml/metrics/protein_radar_xgboost.png) |
 |-----------------------------------------------|-------------------------------------|
-| ![_radar plot for svm_](./results/figures/metrics/protein_radar_svm.png) | ![_radar plot for mlp_](./results/figures/metrics/protein_radar_sklearn_mlp.png) |
+| ![_radar plot for svm_](./results/ml/metrics/protein_radar_svm.png) | ![_radar plot for mlp_](./results/ml/metrics/protein_radar_sklearn_mlp.png) |
 
 The radar plot shows gene expression in the outermost layer for XGBoost and SVM (overlapped with some other protein embeddings), indicating its already strong capability in sepsis prediction for these models. In Random forests, while still of good performance, it seem to be outperforemd by almost all GNN based protein embeddings. The most significant improvement is super highlighted in MLP models, where gene expression lags far behind all protein embeddings (except for RGCN in purple), showing the potential of graph augmented data in enhancing the performance of neural networks for this task. Weighted RGCN protein embeddings performance in SVM is particulalry flashy, with a balanced accuracy of 50% in average - way less than the unweighted RGCN approach's embeddings - and also a bit lower than the other performing GNNs in  MLP (however, as concluded before not conclusive), while it has a high standing in tree based models.
 
 
 | RF vs XGB | SVM vs MLP |
 |-----------|-------------|
-|![_scatter plot for tree based model and svm/mlp (maybe put in table)_](./results/figures/metrics/protein_rf_vs_xgb.png) | ![_scatter plot for svm vs mlp_](./results/figures/metrics/protein_svm_vs_mlp.png) |
+|![_scatter plot for tree based model and svm/mlp (maybe put in table)_](./results/ml/metrics/protein_rf_vs_xgb.png) | ![_scatter plot for svm vs mlp_](./results/ml/metrics/protein_svm_vs_mlp.png) |
 
 These plots were grouped XGBoost/Random forest and SVM/MLP to better visualize the performance differences between similar model types (in terms of learning approach and previous performance evaluation).
 It's worth noting the lowest performance is actually not for gene expression based models but rather for RGCN protein embeddings based models - particularly those with no edge weight used during training and weighted for SVM/MLP.  
@@ -578,7 +578,7 @@ Starting with tree based models, all datasets have highesr accuracies with XGBoo
 In SVM vs MLP, we can see a more mixed behavior, with some 3 main clusters: those performing very well in MLP and poorly in SCM (top left quadrat: GAT, GraphSAGE, weighted RGCN), those performing very well in SVM and poorly in MLP (bottom right quadrant: gene expression, RGCN) and those performing well in both models (top right quadrant: cluster of one - ComplEx). ComplEx protein embeddings based models show the best performance overall in this category.
 
 
-![_rank distribution plot_](./results/figures/metrics/protein_rank_distribution.png)
+![_rank distribution plot_](./results/ml/metrics/protein_rank_distribution.png)
 
 This final plot summarizes the rankings accross models/datasets based on balanced accuracy, where each dataset is ranked by order. XGBoost show good performance curve for all datasets, toppest being weighted RGCN/GAT, gene expression being 3rd. Similarly for random forest where GAT/Complex/weighted RGCN are on top.  
 SVM and MLP show a sudden drop, as expected from previous scatterplot analysis, where in here the top protein embedding is ComplEx, gene expression 2nd in SVM.
@@ -594,19 +594,19 @@ We developed a comprehensive interpretability framework to bridge our GNN-based 
 
 As highlighted in Figure 1 for ComplEx with SVM (highest performing model), we computed the aggregate SHAP values distributions, identifying the most consistently predictive embedding dimensions. Figure 2 highlights class-specific distributions. Figure 3 demonstrates individual patient-level explanations, where we can see how combinations of features contribute to specific predictions (relevant for clinical interpretability).
 
-![SHAP Feature Importance Analysis](figures/01_shap_feature_importance.png) | ![SHAP Model Comparison](figures/02_shap_model_comparison.png)
+![SHAP Feature Importance Analysis](report/figures/01_shap_feature_importance.png) | ![SHAP Model Comparison](report/figures/02_shap_model_comparison.png)
 :---:|:---:
 *Figure 1: Aggregate SHAP value distribution for ComplEx with SVM (best model), highlighting the most consistently predictive biomarkers across all samples.* | *Figure 2: SHAP value distributions stratified by class, illustrating how feature importance patterns differ between outcome groups.*
 
-![SHAP Individual Prediction Explanations](figures/03_shap_individual_predictions.png)
+![SHAP Individual Prediction Explanations](report/figures/03_shap_individual_predictions.png)
 *Figure 3: Individual patient-level SHAP explanations showing feature contributions to specific predictions. Red bars indicate increased prediction of poor outcome, blue bars decreased prediction.*
 
 2. **Feature Consolidation**: The `consolidate_interpretability.py` script aggregates feature importance rankings from all model-dataset combinations, applying normalization strategies (minmax, z-score) to identify consensus biomarkers that are robust across architectures. This aims to identify high-confidence biomarkers that consistently emerge across diverse models and normalization schemes.
 
-![Feature Consolidation and Consensus Ranking](figures/04_feature_consolidation.png)
+![Feature Consolidation and Consensus Ranking](report/figures/04_feature_consolidation.png)
 *Figure 4: Aggregated feature importance rankings across all 4 ML models with ComplEx and RGCN, identifying robust consensus biomarkers.*
 
-![GNN Embedding Dimension Importance](figures/05_gnn_interpretability.png)
+![GNN Embedding Dimension Importance](report/figures/05_gnn_interpretability.png)
 *Figure 5: Heatmap of the correlation between the top embedding dimensions.*
 
 3. **Automated Feature Mapping**: `auto_feature_mapping.py` and `map_features_per_dataset.py` automatically trace abstract feature indices back to their biological entities (proteins, pathways, GO terms), enabling interpretable biomarker identification. Primary focus was given to protein mapping considering the fact that they were exclusively used in all models training. Nonetheless, we could still examine the neighborhoods of our identified proteins of interest in the knowledge graph to retrieve associated pathways and GO terms.
@@ -630,7 +630,7 @@ The `GraphStructureAnalyzer` class systematically evaluates which elements of th
 - **Node Importance**: Identifies central entities using degree, betweenness, and closeness centrality metrics. Degree centrality reveals the most connected proteins (hub proteins), while betweenness identifies nodes that serve as bridges between different network regions.
 - **Edge Type Importance**: Quantifies which relationship types (physical, genetic, regulatory) are most predictive by analyzing their frequency and their correlation with model performance.
 
-![Graph Structure and Node Centrality Analysis](figures/06_graph_structure_centrality.png)
+![Graph Structure and Node Centrality Analysis](report/figures/06_graph_structure_centrality.png)
 *Figure 6: Edge types distribution in the knowledge graph.*
 
 ##### Hub-Dimension Linkage (`link_hub_to_dimensions.py`)
@@ -655,7 +655,7 @@ More details on biological findings could be found in the following section.
 
 We considered comparing different normalization strategies for feature importance aggregation to ensure biomarker rankings are not artifacts of preprocessing. This analysis established normalization had a big impact on the top features identified.
 
-![Normalization Strategy Comparison](figures/07_normalization_comparison.png)
+![Normalization Strategy Comparison](report/figures/07_normalization_comparison.png)
 *Figure 7: Comparison of feature importance rankings with and without normalization (none vs minmax).*
 
 #### ComplEx-Focused Analysis
@@ -671,7 +671,7 @@ Maps abstract ComplEx embedding dimensions to interpretable biological entities 
 
 The feature mapping process revealed that top-ranked SVM features correspond to highly semantically coherent clusters in the ComplEx embedding space. 
 
-![ComplEx Embedding Dimension Mapping](figures/08_complex_embedding_mapping.png)
+![ComplEx Embedding Dimension Mapping](report/figures/08_complex_embedding_mapping.png)
 *Figure 8: The top identified biomarkers.*
 
 ###### Biomarker Extraction (`extract_biomarker_subgraph.py` & `extract_biomarker_subgraph_proteins_only.py`)
@@ -680,7 +680,7 @@ Extracts PPI and heterogeneous biomarker subgraphs, enabling:
 - Assessment of network connectivity and module structure
 - Connectivity of biomarkers of all types 
 
-| ![SVM Network Module Structure](figures/11_svm_network_visualization.png)! | ![ComplEx SVM Top Model Network Visualization](figures/10_complex_network_visualization.png) |
+| ![SVM Network Module Structure](report/figures/11_svm_network_visualization.png)! | ![ComplEx SVM Top Model Network Visualization](report/figures/10_complex_network_visualization.png) |
 |:---:|:---:|
 | *Figure 11: Biomarkers sub-network for ComplEx+SVM top model biomarkers.* | *Figure 12: bi-partite graph of protein-to-pathways connections.* |
 
@@ -700,7 +700,7 @@ Builds PPI networks using only consensus proteins, revealing core regulatory mod
 ###### GO Enrichment of Consensus Entities (`enrich_consensus_entities.py`)
 Performs functional enrichment specifically on consensus biomarkers to identify robust functional themes supported by multiple lines of evidence (offers option to consider hub proteins as well). 
 
-| ![Consensus GO Enrichment Analysis](figures/09_consensus_go_enrichment.png) | ![Consensus Biomarker Summary Table](figures/13_consensus_biomarker_table.png) |
+| ![Consensus GO Enrichment Analysis](report/figures/09_consensus_go_enrichment.png) | ![Consensus Biomarker Summary Table](report/figures/13_consensus_biomarker_table.png) |
 |:---:|:---:|
 | *Figure 9: KG-based GO term enrichment results for consensus biomarkers showing significantly over-represented biological processes.* | *Figure 10: GO and GSEA enrichment results.* |
 
@@ -823,7 +823,7 @@ Beyond individual edge attention, semantic-level attention aggregates informatio
 - **Cross-Type Information Flow**: Tracks how information propagates through heterogeneous graph structure
 - **Attention Heatmaps**: Generates visualizations showing attention patterns across semantic spaces
 
-![HAN Semantic-Level Attention Analysis](figures/12_han_semantic_attention.png)
+![HAN Semantic-Level Attention Analysis](report/figures/12_han_semantic_attention.png)
 
 ##### Gradient-Based Interpretability and Subgraph Analysis
 
@@ -843,7 +843,7 @@ This goes beyond simple attention weights by assessing actual influence on model
 - **GO Term Annotation**: Integrates GO ontology definitions and semantic information using `parse_go_obo()`, providing rich contextual information about biological processes
 - **Gradient-Based Node Importance**: Ranks neighborhood nodes by their gradient-attributed importance to patient predictions, measuring which neighbors would most impact the prediction if perturbed
 
-![Patient-Specific Subgraph Visualization](figures/14_patient_subgraph_visualization.png)
+![Patient-Specific Subgraph Visualization](report/figures/14_patient_subgraph_visualization.png)
 *Figure 14: Heterogeneous patient subgraph showing gradient-attributed importance of proteins, pathways, and GO terms. Node size indicates gradient-based importance (larger = more causal influence on prediction), color indicates node type (green = protein, blue = GO term, orange = pathway). Edge color is proportional to edge importance. This represents a single patient's personalized mechanistic explanation of their predicted outcome.*
 
 ####### Gradient-Based Protein Ranking
