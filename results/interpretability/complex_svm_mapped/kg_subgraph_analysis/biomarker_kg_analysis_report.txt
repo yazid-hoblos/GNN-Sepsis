@@ -1,0 +1,96 @@
+================================================================================
+BIOMARKER KNOWLEDGE GRAPH ANALYSIS
+================================================================================
+
+================================================================================
+BIOMARKER TYPE INTERACTIONS
+================================================================================
+
+Found 0 connections between different biomarker types:
+
+  No inter-type biomarker interactions found.
+
+================================================================================
+COMMON NEIGHBORS (HUB CONNECTORS)
+================================================================================
+
+Entities connected to multiple biomarkers:
+
+  0110165_instance                          (12 biomarkers)
+    Connected to: RIOX2, CUBN, RASSF5
+  0009987_instance                          (12 biomarkers)
+    Connected to: RIOX2, CUBN, RASSF5
+  0043231_instance                          (11 biomarkers)
+    Connected to: RIOX2, CUBN, RASSF5
+  0005622_instance                          (11 biomarkers)
+    Connected to: RIOX2, CUBN, RASSF5
+  0043227_instance                          (11 biomarkers)
+    Connected to: RIOX2, CUBN, RASSF5
+  0043229_instance                          (11 biomarkers)
+    Connected to: RIOX2, CUBN, RASSF5
+  0043226_instance                          (11 biomarkers)
+    Connected to: RIOX2, CUBN, RASSF5
+  0005488_instance                          (11 biomarkers)
+    Connected to: RIOX2, CUBN, RASSF5
+  0008152_instance                          (11 biomarkers)
+    Connected to: RIOX2, CUBN, RASSF5
+  0005737_instance                          (10 biomarkers)
+    Connected to: RIOX2, CUBN, RASSF5
+  0005515_instance                          (10 biomarkers)
+    Connected to: RIOX2, CUBN, RASSF5
+  0044238_instance                          (10 biomarkers)
+    Connected to: RIOX2, CUBN, RASSF5
+  0051179_instance                          (10 biomarkers)
+    Connected to: CUBN, RASSF5, LEPR
+  0065007_instance                          (9 biomarkers)
+    Connected to: RIOX2, RASSF5, RANBP9
+  0050794_instance                          (9 biomarkers)
+    Connected to: RIOX2, RASSF5, RANBP9
+
+================================================================================
+PROTEIN-PATHWAY CONNECTIONS
+================================================================================
+
+  No protein-pathway connections found.
+
+================================================================================
+PROTEIN-GO CONNECTIONS
+================================================================================
+
+  No protein-GO connections found.
+
+================================================================================
+CENTRALITY ANALYSIS
+================================================================================
+
+Top biomarkers by network centrality (hub nodes):
+
+Top by Degree Centrality (most connections):
+  NRG1                                      0.0265
+  ERBIN                                     0.0212
+  RANBP9                                    0.0128
+  TRAK1                                     0.0116
+  CUBN                                      0.0112
+  NMD3                                      0.0110
+  FEZ1                                      0.0102
+  RASSF5                                    0.0095
+  LEPR                                      0.0095
+  PDIA4                                     0.0087
+
+Top by Betweenness Centrality (bridge biomarkers):
+  CUBN                                      0.0057
+  ERBIN                                     0.0038
+  LEPR                                      0.0024
+  NRG1                                      0.0021
+  RANBP9                                    0.0007
+  RIOX2                                     0.0002
+  TRAK1                                     0.0001
+  P:R-HSA-5654738                           0.0001
+  FEZ1                                      0.0000
+  P:R-HSA-400206                            0.0000
+
+================================================================================
+COMMUNITY STRUCTURE
+================================================================================
+
+Detected 36 functional modules/communities

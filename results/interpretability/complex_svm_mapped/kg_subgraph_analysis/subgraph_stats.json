@@ -1,0 +1,27 @@
+{
+  "num_nodes": 7916,
+  "num_edges": 243809,
+  "biomarker_entities": [
+    "Protein_RIOX2",
+    "Protein_CUBN",
+    "Protein_RASSF5",
+    "Pathway_R-HSA-5654738",
+    "Protein_RANBP9",
+    "Protein_LEPR",
+    "Protein_PDIA4",
+    "Protein_CCDC91",
+    "Pathway_R-HSA-9013507",
+    "Protein_NMD3",
+    "Pathway_R-HSA-400206",
+    "Pathway_R-HSA-9675136",
+    "Protein_FEZ1",
+    "Pathway_R-HSA-877300",
+    "Reaction_R-HSA-8868651",
+    "Protein_TRAK1",
+    "Pathway_R-HSA-909733",
+    "Pathway_R-HSA-216083",
+    "Protein_NRG1",
+    "Protein_ERBIN"
+  ],
+  "k_hops": 2
+}

@@ -1,0 +1,12 @@
+entity,entity_type,status,literature_support
+Protein_ADAMTSL4,Protein,Novel candidate,To be validated
+Protein_AEBP2,Protein,Novel candidate,To be validated
+Protein_BRI3BP,Protein,Novel candidate,To be validated
+Protein_CCDC91,Protein,Novel candidate,To be validated
+Protein_CDCA5,Protein,Novel candidate,To be validated
+Protein_CTR9,Protein,Novel candidate,To be validated
+Protein_CUBN,Protein,Novel candidate,To be validated
+Protein_ERBIN,Protein,Novel candidate,To be validated
+Protein_GNMT,Protein,Novel candidate,To be validated
+Protein_LEPR,Protein,Novel candidate,To be validated
+Pathway_R-HSA-9006934,Pathway,Known: Signaling by Receptor Tyrosine Kinases,Yes

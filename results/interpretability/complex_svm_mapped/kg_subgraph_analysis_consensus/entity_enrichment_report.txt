@@ -1,0 +1,257 @@
+====================================================================================================
+BIOMARKER CONSENSUS: GO TERMS AND REACTIONS ENRICHMENT
+====================================================================================================
+
+----------------------------------------------------------------------------------------------------
+TOP 20 GO TERMS CONNECTED TO BIOMARKER PROTEINS
+----------------------------------------------------------------------------------------------------
+
+ 1. cellular anatomical structure
+    ID: 110165
+    Biomarkers: 28/28
+    Definition: A part of a cellular organism consisting of a material entity with granularity above the level of a protein complex but below that of an anatomical system. Note that cellular organisms exclude viruses.
+    Proteins: ADAMTSL4,AEBP2,BRI3BP,CCDC91,CDCA5,CTR9,CUBN,ERBIN,GNMT,LEPR,LMNB2,MAP7,MBD2,NAA16,NUS1,PDE7A,PDIA4,...
+
+ 2. binding
+    ID: 5488
+    Biomarkers: 27/28
+    Definition: The selective, non-covalent, often stoichiometric, interaction of a molecule with one or more specific sites on another molecule.
+    Proteins: ADAMTSL4,AEBP2,BRI3BP,CDCA5,CTR9,CUBN,ERBIN,GNMT,LEPR,LMNB2,MAP7,MBD2,NAA16,NUS1,PDE7A,PDIA4,PLAA,PR...
+
+ 3. intracellular anatomical structure
+    ID: 5622
+    Biomarkers: 26/28
+    Definition: A component of a cell contained within (but not including) the plasma membrane. In eukaryotes it includes the nucleus and cytoplasm.
+    Proteins: ADAMTSL4,AEBP2,BRI3BP,CCDC91,CDCA5,CTR9,CUBN,ERBIN,GNMT,LMNB2,MAP7,MBD2,NAA16,NUS1,PDE7A,PDIA4,PLAA,...
+
+ 4. protein binding
+    ID: 5515
+    Biomarkers: 26/28
+    Definition: Binding to a protein.
+    Proteins: ADAMTSL4,AEBP2,BRI3BP,CDCA5,CTR9,CUBN,ERBIN,GNMT,LEPR,LMNB2,MAP7,MBD2,NAA16,NUS1,PDIA4,PLAA,PRR13,RA...
+
+ 5. cellular process
+    ID: 9987
+    Biomarkers: 25/28
+    Definition: Any process that is carried out at the cellular level, but not necessarily restricted to a single cell. For example, cell communication occurs among more than one cell, but occurs at the cellular level.
+    Proteins: ADAMTSL4,AEBP2,CCDC91,CDCA5,CTR9,CUBN,ERBIN,GNMT,LEPR,LMNB2,MAP7,MBD2,NAA16,NUS1,PDE7A,PDIA4,PLAA,RA...
+
+ 6. intracellular organelle
+    ID: 43229
+    Biomarkers: 25/28
+    Definition: Organized structure of distinctive morphology and function, occurring within the cell. Includes the nucleus, mitochondria, plastids, vacuoles, vesicles, ribosomes and the cytoskeleton. Excludes the plasma membrane.
+    Proteins: ADAMTSL4,AEBP2,BRI3BP,CCDC91,CDCA5,CTR9,CUBN,ERBIN,LMNB2,MAP7,MBD2,NAA16,NUS1,PDE7A,PDIA4,PLAA,PRR13...
+
+ 7. organelle
+    ID: 43226
+    Biomarkers: 25/28
+    Definition: Organized structure of distinctive morphology and function. Includes the nucleus, mitochondria, plastids, vacuoles, vesicles, ribosomes and the cytoskeleton, and prokaryotic structures such as anammoxosomes and pirellulosomes. Excludes the plasma membrane.
+    Proteins: ADAMTSL4,AEBP2,BRI3BP,CCDC91,CDCA5,CTR9,CUBN,ERBIN,LMNB2,MAP7,MBD2,NAA16,NUS1,PDE7A,PDIA4,PLAA,PRR13...
+
+ 8. membrane-bounded organelle
+    ID: 43227
+    Biomarkers: 23/28
+    Definition: Organized structure of distinctive morphology and function, bounded by a single or double lipid bilayer membrane. Includes the nucleus, mitochondria, plastids, vacuoles, and vesicles. Excludes the plasma membrane.
+    Proteins: ADAMTSL4,AEBP2,BRI3BP,CCDC91,CDCA5,CTR9,CUBN,ERBIN,LMNB2,MBD2,NAA16,NUS1,PDE7A,PDIA4,PLAA,PRR13,RANB...
+
+ 9. intracellular membrane-bounded organelle
+    ID: 43231
+    Biomarkers: 23/28
+    Definition: Organized structure of distinctive morphology and function, bounded by a single or double lipid bilayer membrane and occurring within the cell. Includes the nucleus, mitochondria, plastids, vacuoles, and vesicles. Excludes the plasma membrane.
+    Proteins: ADAMTSL4,AEBP2,BRI3BP,CCDC91,CDCA5,CTR9,CUBN,ERBIN,LMNB2,MBD2,NAA16,NUS1,PDE7A,PDIA4,PLAA,PRR13,RANB...
+
+10. regulation of biological process
+    ID: 50789
+    Biomarkers: 21/28
+    Definition: Any process that modulates the frequency, rate or extent of a biological process. Biological processes are regulated by many means; examples include the control of gene expression, protein modification or interaction with a protein or substrate molecule.
+    Proteins: ADAMTSL4,AEBP2,CDCA5,CTR9,ERBIN,GNMT,LEPR,LMNB2,MBD2,NAA16,NUS1,PDE7A,PLAA,RANBP9,RANGRF,RASSF5,RIOX...
+
+11. biological regulation
+    ID: 65007
+    Biomarkers: 21/28
+    Definition: Any process that modulates a measurable attribute of any biological process, quality or function.
+    Proteins: ADAMTSL4,AEBP2,CDCA5,CTR9,ERBIN,GNMT,LEPR,LMNB2,MBD2,NAA16,NUS1,PDE7A,PLAA,RANBP9,RANGRF,RASSF5,RIOX...
+
+12. cytoplasm
+    ID: 5737
+    Biomarkers: 21/28
+    Definition: The contents of a cell excluding the plasma membrane and nucleus, but including other subcellular structures.
+    Proteins: ADAMTSL4,BRI3BP,CCDC91,CDCA5,CUBN,ERBIN,GNMT,MAP7,MBD2,NAA16,NUS1,PDE7A,PDIA4,PLAA,PRR13,RANBP9,RANG...
+
+13. regulation of cellular process
+    ID: 50794
+    Biomarkers: 21/28
+    Definition: Any process that modulates the frequency, rate or extent of a cellular process, any of those that are carried out at the cellular level, but are not necessarily restricted to a single cell. For example, cell communication occurs among more than one cell, but occurs at the cellular level.
+    Proteins: ADAMTSL4,AEBP2,CDCA5,CTR9,ERBIN,GNMT,LEPR,LMNB2,MBD2,NAA16,NUS1,PDE7A,PLAA,RANBP9,RANGRF,RASSF5,RIOX...
+
+14. metabolic process
+    ID: 8152
+    Biomarkers: 20/28
+    Definition: A cellular process consisting of the biochemical pathways by which a living organism transforms chemical substances. This includes including anabolism (biosynthetic process) and catabolism (catabolic process). Metabolic processes includes the transformation of small molecules, as well  macromolecular processes such as DNA repair and replication, protein synthesis and degradation.
+    Proteins: AEBP2,CDCA5,CTR9,CUBN,ERBIN,GNMT,LEPR,LMNB2,MBD2,NAA16,NUS1,PDE7A,PDIA4,PLAA,RANBP9,RASSF5,RIOX2,TGF...
+
+15. primary metabolic process
+    ID: 44238
+    Biomarkers: 19/28
+    Definition: The chemical reactions and pathways involving those compounds which are formed as a part of the normal anabolic and catabolic processes. These processes take place in most, if not all, cells of the organism.
+    Proteins: AEBP2,CDCA5,CTR9,CUBN,ERBIN,GNMT,LEPR,MBD2,NAA16,NUS1,PDE7A,PDIA4,PLAA,RANBP9,RASSF5,RIOX2,TGFB3,TRA...
+
+16. nucleus
+    ID: 5634
+    Biomarkers: 17/28
+    Definition: A membrane-bounded organelle of eukaryotic cells in which chromosomes are housed and replicated. In most cells, the nucleus contains all of the cell's chromosomes except the organellar chromosomes, and is the site of RNA synthesis and processing. In some species, or in specialized cell types, RNA metabolism or DNA replication may be absent.
+    Proteins: AEBP2,CCDC91,CDCA5,CTR9,ERBIN,LMNB2,MBD2,NAA16,PDE7A,PLAA,PRR13,RANBP9,RANGRF,RASSF5,RIOX2,TRAK1,ZBT...
+
+17. cellular component organization or biogenesis
+    ID: 71840
+    Biomarkers: 16/28
+    Definition: A process that results in the biosynthesis of constituent macromolecules, assembly, arrangement of constituent parts, or disassembly of a cellular component.
+    Proteins: ADAMTSL4,AEBP2,CDCA5,CTR9,ERBIN,GNMT,LMNB2,MAP7,MBD2,PLAA,RANBP9,RANGRF,RIOX2,SPATC1L,TGFB3,TRAK1...
+
+18. cellular component organization
+    ID: 16043
+    Biomarkers: 16/28
+    Definition: A process that results in the assembly, arrangement of constituent parts, or disassembly of a cellular component.
+    Proteins: ADAMTSL4,AEBP2,CDCA5,CTR9,ERBIN,GNMT,LMNB2,MAP7,MBD2,PLAA,RANBP9,RANGRF,RIOX2,SPATC1L,TGFB3,TRAK1...
+
+19. membrane-enclosed lumen
+    ID: 31974
+    Biomarkers: 16/28
+    Definition: The enclosed volume within a sealed membrane or between two sealed membranes. Encompasses the volume enclosed by the membranes of a particular organelle, e.g. endoplasmic reticulum lumen, or the space between the two lipid bilayers of a double membrane surrounding an organelle, e.g. nuclear envelope lumen.
+    Proteins: ADAMTSL4,AEBP2,CCDC91,CDCA5,CTR9,CUBN,ERBIN,LMNB2,MBD2,PDIA4,PRR13,RANBP9,RANGRF,RIOX2,TGFB3,ZBTB2...
+
+20. intracellular organelle lumen
+    ID: 70013
+    Biomarkers: 16/28
+    Definition: An organelle lumen that is part of an intracellular organelle.
+    Proteins: ADAMTSL4,AEBP2,CCDC91,CDCA5,CTR9,CUBN,ERBIN,LMNB2,MBD2,PDIA4,PRR13,RANBP9,RANGRF,RIOX2,TGFB3,ZBTB2...
+
+----------------------------------------------------------------------------------------------------
+TOP 20 REACTOME REACTIONS CONNECTED TO BIOMARKER PROTEINS
+----------------------------------------------------------------------------------------------------
+
+Reactions by biomarker connectivity:
+  1 biomarker: 120 reactions
+
+
+Top reactions (by biomarker count):
+ 1. R-HSA-9820464
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-9820464
+    Proteins: GNMT
+
+ 2. R-HSA-6798317
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-6798317
+    Proteins: GNMT
+
+ 3. R-HSA-2408544
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-2408544
+    Proteins: GNMT
+
+ 4. R-HSA-2484822
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-2484822
+    Proteins: CDCA5
+
+ 5. R-HSA-1638821
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-1638821
+    Proteins: CDCA5
+
+ 6. R-HSA-2473151
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-2473151
+    Proteins: CDCA5
+
+ 7. R-HSA-2467811
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-2467811
+    Proteins: CDCA5
+
+ 8. R-HSA-2468041
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-2468041
+    Proteins: CDCA5
+
+ 9. R-HSA-2468287
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-2468287
+    Proteins: CDCA5
+
+10. R-HSA-2467794
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-2467794
+    Proteins: CDCA5
+
+11. R-HSA-2468293
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-2468293
+    Proteins: CDCA5
+
+12. R-HSA-2466068
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-2466068
+    Proteins: CDCA5
+
+13. R-HSA-2467809
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-2467809
+    Proteins: CDCA5
+
+14. R-HSA-1638803
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-1638803
+    Proteins: CDCA5
+
+15. R-HSA-112392
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-112392
+    Proteins: CTR9
+
+16. R-HSA-418553
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-418553
+    Proteins: PDE7A
+
+17. R-HSA-4724279
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-4724279
+    Proteins: RIOX2
+
+18. R-HSA-9630967
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-9630967
+    Proteins: RIOX2
+
+19. R-HSA-5576895
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-5576895
+    Proteins: RANGRF
+
+20. R-HSA-212263
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-212263
+    Proteins: AEBP2
+
+
+====================================================================================================
+KEY FINDINGS
+====================================================================================================
+
+Total unique GO terms: 295
+Total unique reactions: 120
+
+Top biological processes represented:
+  - cellular anatomical structure (28 biomarkers)
+  - binding (27 biomarkers)
+  - intracellular anatomical structure (26 biomarkers)
+  - protein binding (26 biomarkers)
+  - cellular process (25 biomarkers)
+
+Interpretation:
+The consensus biomarker proteins are predominantly involved in:
+  * Protein binding and molecular interactions
+  * Cellular processes and organization
+  * Metabolic processes

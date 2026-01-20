@@ -1,0 +1,58 @@
+reaction_id,reaction_name,num_biomarkers,biomarkers,reactome_url
+R-HSA-5638332,PRC2 (EZH2) Core:AEBP2 methylates lysine-28 of histone H3 (H3K27),1,AEBP2,https://reactome.org/content/detail/R-HSA-5638332
+R-HSA-212263,PRC2 trimethylates histone H3 at lysine-27,1,AEBP2,https://reactome.org/content/detail/R-HSA-212263
+R-HSA-212252,Polycomb Repressive Complex 2 (PRC2) Is recruited to chromatin,1,AEBP2,https://reactome.org/content/detail/R-HSA-212252
+R-HSA-9861640,CTLH E3 ligase ubiquitinates PKM-1,1,RANBP9,https://reactome.org/content/detail/R-HSA-9861640
+R-HSA-8851877,RAS guanyl nucleotide exchange by SOS1 associated with RANBP9 and MET,1,RANBP9,https://reactome.org/content/detail/R-HSA-8851877
+R-HSA-5672965,RAS GEFs promote RAS nucleotide exchange,1,RANBP9,https://reactome.org/content/detail/R-HSA-5672965
+R-HSA-2671855,Phosphorylated LEPR Binds STAT5,1,LEPR,https://reactome.org/content/detail/R-HSA-2671855
+R-HSA-2671829,JAK2 Phosphorylates STAT5 in Response to Leptin,1,LEPR,https://reactome.org/content/detail/R-HSA-2671829
+R-HSA-2671876,Phosphorylated STAT5 Dissociates from Leptin Receptor,1,LEPR,https://reactome.org/content/detail/R-HSA-2671876
+R-HSA-481007,Exocytosis of platelet alpha granule contents,1,TGFB3,https://reactome.org/content/detail/R-HSA-481007
+R-HSA-2396029,Latent TGF-beta-3 binds integrins,1,TGFB3,https://reactome.org/content/detail/R-HSA-2396029
+R-HSA-2467811,Separation of sister chromatids,1,CDCA5,https://reactome.org/content/detail/R-HSA-2467811
+R-HSA-1638803,Phosphorylation of cohesin by PLK1 at centromeres,1,CDCA5,https://reactome.org/content/detail/R-HSA-1638803
+R-HSA-2467794,Resolution of sister chromatids,1,CDCA5,https://reactome.org/content/detail/R-HSA-2467794
+R-HSA-2468287,CDK1 phosphorylates CDCA5 (Sororin) at centromeres,1,CDCA5,https://reactome.org/content/detail/R-HSA-2468287
+R-HSA-2484822,Kinetochore assembly,1,CDCA5,https://reactome.org/content/detail/R-HSA-2484822
+R-HSA-2468041,CDCA5 (Sororin) enables cohesion of sister chromosomal arms,1,CDCA5,https://reactome.org/content/detail/R-HSA-2468041
+R-HSA-2473151,CDCA5 (Sororin) enables cohesion of sister centromeres,1,CDCA5,https://reactome.org/content/detail/R-HSA-2473151
+R-HSA-2468293,CDK1 phosphorylates CDCA5 (Sororin) at chromosomal arms,1,CDCA5,https://reactome.org/content/detail/R-HSA-2468293
+R-HSA-2466068,Phosphorylation of cohesin by PLK1 at chromosomal arms,1,CDCA5,https://reactome.org/content/detail/R-HSA-2466068
+R-HSA-2467809,ESPL1 (Separase) cleaves centromeric cohesin,1,CDCA5,https://reactome.org/content/detail/R-HSA-2467809
+R-HSA-1638821,PP2A-B56 dephosphorylates centromeric cohesin,1,CDCA5,https://reactome.org/content/detail/R-HSA-1638821
+R-HSA-6802927,BRAF and RAF fusion mutant dimers are phosphorylated,1,TRAK1,https://reactome.org/content/detail/R-HSA-6802927
+R-HSA-9018824,RHOT2 binds effectors at the mitochondrial outer membrane,1,TRAK1,https://reactome.org/content/detail/R-HSA-9018824
+R-HSA-6802933,p-BRAF and RAF fusion dimers phosphorylate MAP2Ks,1,TRAK1,https://reactome.org/content/detail/R-HSA-6802933
+R-HSA-6802935,MAPKs are phosphorylated downstream of BRAF and RAF fusion dimers,1,TRAK1,https://reactome.org/content/detail/R-HSA-6802935
+R-HSA-6802934,p-BRAF and RAF fusion dimers bind MAP2Ks and MAPKs,1,TRAK1,https://reactome.org/content/detail/R-HSA-6802934
+R-HSA-9018815,RHOT1 binds effectors at the mitochondrial outer membrane,1,TRAK1,https://reactome.org/content/detail/R-HSA-9018815
+R-HSA-6802932,Dissociation of BRAF/RAF fusion complex,1,TRAK1,https://reactome.org/content/detail/R-HSA-6802932
+R-HSA-427337,MBD2 binds methylcytosine in chromatin,1,MBD2,https://reactome.org/content/detail/R-HSA-427337
+R-HSA-73718,UBF-1 Binds rDNA Promoter,1,MBD2,https://reactome.org/content/detail/R-HSA-73718
+R-HSA-418553,cAMP degradation by Phosphodiesterases,1,PDE7A,https://reactome.org/content/detail/R-HSA-418553
+R-HSA-5576895,SCNAs:SNCBs transport Na+ from extracellular region to cytosol,1,RANGRF,https://reactome.org/content/detail/R-HSA-5576895
+R-HSA-8942099,"RNF20:RNF40 binds PAF complex, Ubiquitin:UBE2A,B (Ubiquitin:RAD6), WAC and Histone H2B",1,CTR9,https://reactome.org/content/detail/R-HSA-8942099
+R-HSA-112392,Resumption of elongation after recovery from pausing,1,CTR9,https://reactome.org/content/detail/R-HSA-112392
+R-HSA-112379,Recruitment of elongation factors to form elongation complex,1,CTR9,https://reactome.org/content/detail/R-HSA-112379
+R-HSA-113411,2-4 nt.backtracking of Pol II complex on the template leading to elongation pausing,1,CTR9,https://reactome.org/content/detail/R-HSA-113411
+R-HSA-113413,TFIIS-mediated recovery of elongation from arrest,1,CTR9,https://reactome.org/content/detail/R-HSA-113413
+R-HSA-113414,7-14 nt. Backtracking of Pol II complex on the template leading to elongation arrest,1,CTR9,https://reactome.org/content/detail/R-HSA-113414
+R-HSA-112396,Separation of elongating transcript from template,1,CTR9,https://reactome.org/content/detail/R-HSA-112396
+R-HSA-8942101,RNF20:RNF40 monoubiquitinates Histone H2B,1,CTR9,https://reactome.org/content/detail/R-HSA-8942101
+R-HSA-113429,Elongating transcript encounters a lesion in the template,1,CTR9,https://reactome.org/content/detail/R-HSA-113429
+R-HSA-112395,Abortive termination of elongation after arrest,1,CTR9,https://reactome.org/content/detail/R-HSA-112395
+R-HSA-112385,Addition of nucleotides leads to transcript elongation,1,CTR9,https://reactome.org/content/detail/R-HSA-112385
+R-HSA-113412,Pol II elongation complex moves on the template as transcript elongates,1,CTR9,https://reactome.org/content/detail/R-HSA-113412
+R-HSA-9014449,RHOG binds effectors at the plasma membrane,1,ERBIN,https://reactome.org/content/detail/R-HSA-9014449
+R-HSA-9013110,RHOC binds effectors at the plasma membrane,1,ERBIN,https://reactome.org/content/detail/R-HSA-9013110
+R-HSA-9665697,ERBB2 TMD/JMD mutants hetrodimerize,1,ERBIN,https://reactome.org/content/detail/R-HSA-9665697
+R-HSA-1963582,Trans-autophosphorylation of ERBB2 heterodimers,1,ERBIN,https://reactome.org/content/detail/R-HSA-1963582
+R-HSA-9018808,RAC3 binds effectors at the plasma membrane,1,ERBIN,https://reactome.org/content/detail/R-HSA-9018808
+R-HSA-9013024,RHOB binds effectors at the plasma membrane,1,ERBIN,https://reactome.org/content/detail/R-HSA-9013024
+R-HSA-1963589,"ERBB2 forms heterodimers with ligand-activated ERBB receptors: EGFR, ERBB3 and ERBB4",1,ERBIN,https://reactome.org/content/detail/R-HSA-1963589
+R-HSA-9014294,RAC2 binds effectors at the plasma membrane,1,ERBIN,https://reactome.org/content/detail/R-HSA-9014294
+R-HSA-9664588,ERBB2 KD mutants trans-autophosphorylate,1,ERBIN,https://reactome.org/content/detail/R-HSA-9664588
+R-HSA-9013145,RAC1 binds effectors at the plasma membrane,1,ERBIN,https://reactome.org/content/detail/R-HSA-9013145
+R-HSA-9664567,ERBB2 KD mutants heterodimerize,1,ERBIN,https://reactome.org/content/detail/R-HSA-9664567
+R-HSA-9013009,RHOA binds effectors at the plasma membrane,1,ERBIN,https://reactome.org/content/detail/R-HSA-9013009

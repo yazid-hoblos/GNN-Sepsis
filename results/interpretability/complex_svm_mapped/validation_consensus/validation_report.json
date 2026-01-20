@@ -1,0 +1,299 @@
+{
+  "gene_validation": {
+    "total_genes": 28,
+    "known_sepsis_genes": 56,
+    "overlap": 0,
+    "overlap_pct": 0.0,
+    "overlapping_genes": [],
+    "novel_genes": [
+      "ADAMTSL4",
+      "AEBP2",
+      "BRI3BP",
+      "CCDC91",
+      "CDCA5",
+      "CTR9",
+      "CUBN",
+      "ERBIN",
+      "GNMT",
+      "LEPR",
+      "LMNB2",
+      "MAP7",
+      "MBD2",
+      "NAA16",
+      "NUS1",
+      "PDE7A",
+      "PDIA4",
+      "PLAA",
+      "PRR13",
+      "RANBP9",
+      "RANGRF",
+      "RASSF5",
+      "RIOX2",
+      "SPATC1L",
+      "TGFB3",
+      "TMEM128",
+      "TRAK1",
+      "ZBTB2"
+    ]
+  },
+  "pathway_validation": {
+    "total_pathways": 114,
+    "known_sepsis_pathways": 16,
+    "overlap": 1,
+    "overlap_pct": 0.8771929824561403,
+    "overlapping_pathways": {
+      "R-HSA-9006934": "Signaling by Receptor Tyrosine Kinases"
+    },
+    "novel_pathways": [
+      "0000000",
+      "R-HSA-109582",
+      "R-HSA-112382",
+      "R-HSA-114608",
+      "R-HSA-1227986",
+      "R-HSA-1227990",
+      "R-HSA-1266738",
+      "R-HSA-1428517",
+      "R-HSA-1430728",
+      "R-HSA-162582",
+      "R-HSA-1640170",
+      "R-HSA-1643685",
+      "R-HSA-170834",
+      "R-HSA-194315",
+      "R-HSA-196791",
+      "R-HSA-196849",
+      "R-HSA-196854",
+      "R-HSA-212165",
+      "R-HSA-212300",
+      "R-HSA-2129379",
+      "R-HSA-2173789",
+      "R-HSA-2408508",
+      "R-HSA-2408522",
+      "R-HSA-2467813",
+      "R-HSA-2468052",
+      "R-HSA-2500257",
+      "R-HSA-2555396",
+      "R-HSA-2586552",
+      "R-HSA-3000178",
+      "R-HSA-3214841",
+      "R-HSA-3214842",
+      "R-HSA-3247509",
+      "R-HSA-3296469",
+      "R-HSA-3359462",
+      "R-HSA-3359463",
+      "R-HSA-372790",
+      "R-HSA-373760",
+      "R-HSA-382551",
+      "R-HSA-388396",
+      "R-HSA-389661",
+      "R-HSA-392499",
+      "R-HSA-418555",
+      "R-HSA-422475",
+      "R-HSA-427413",
+      "R-HSA-446199",
+      "R-HSA-446203",
+      "R-HSA-4755609",
+      "R-HSA-4839726",
+      "R-HSA-5083635",
+      "R-HSA-5173214",
+      "R-HSA-5250941",
+      "R-HSA-556833",
+      "R-HSA-5576892",
+      "R-HSA-5663202",
+      "R-HSA-5668914",
+      "R-HSA-5673001",
+      "R-HSA-5683057",
+      "R-HSA-5684996",
+      "R-HSA-597592",
+      "R-HSA-674695",
+      "R-HSA-6802952",
+      "R-HSA-6802957",
+      "R-HSA-68877",
+      "R-HSA-68882",
+      "R-HSA-68886",
+      "R-HSA-69242",
+      "R-HSA-69278",
+      "R-HSA-71291",
+      "R-HSA-73728",
+      "R-HSA-73854",
+      "R-HSA-73857",
+      "R-HSA-73864",
+      "R-HSA-74160",
+      "R-HSA-75955",
+      "R-HSA-76002",
+      "R-HSA-76005",
+      "R-HSA-8851805",
+      "R-HSA-8852135",
+      "R-HSA-8863795",
+      "R-HSA-8866654",
+      "R-HSA-8964011",
+      "R-HSA-8980692",
+      "R-HSA-9006936",
+      "R-HSA-9012999",
+      "R-HSA-9013026",
+      "R-HSA-9013106",
+      "R-HSA-9013149",
+      "R-HSA-9013404",
+      "R-HSA-9013408",
+      "R-HSA-9013419",
+      "R-HSA-9013423",
+      "R-HSA-9013425",
+      "R-HSA-9629569",
+      "R-HSA-9634285",
+      "R-HSA-9652282",
+      "R-HSA-9664565",
+      "R-HSA-9665233",
+      "R-HSA-9665244",
+      "R-HSA-9665245",
+      "R-HSA-9665246",
+      "R-HSA-9665247",
+      "R-HSA-9665249",
+      "R-HSA-9665250",
+      "R-HSA-9665251",
+      "R-HSA-9665348",
+      "R-HSA-9665686",
+      "R-HSA-9665737",
+      "R-HSA-9675108",
+      "R-HSA-9715370",
+      "R-HSA-9716542",
+      "R-HSA-9758881",
+      "R-HSA-9861718",
+      "R-HSA-9925561"
+    ]
+  },
+  "entity_distribution": {
+    "entity_counts": {
+      "GO": 295,
+      "Reaction": 120,
+      "Pathway": 114,
+      "Protein": 28
+    },
+    "top_entities": [
+      {
+        "entity": "Protein_CUBN",
+        "entity_score": 0.0,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Protein_TMEM128",
+        "entity_score": 0.0,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Protein_PRR13",
+        "entity_score": 0.0,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Protein_RIOX2",
+        "entity_score": 0.0,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Protein_LEPR",
+        "entity_score": 0.0,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Protein_PDIA4",
+        "entity_score": 0.0,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Protein_CCDC91",
+        "entity_score": 0.0,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Protein_TRAK1",
+        "entity_score": 0.0,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Protein_ERBIN",
+        "entity_score": 0.0,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Protein_CTR9",
+        "entity_score": 0.0,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Protein_RASSF5",
+        "entity_score": 0.0,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Protein_SPATC1L",
+        "entity_score": 0.0,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Protein_NAA16",
+        "entity_score": 0.0,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Protein_RANBP9",
+        "entity_score": 0.0,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Protein_GNMT",
+        "entity_score": 0.0,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Protein_NUS1",
+        "entity_score": 0.0,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Protein_MAP7",
+        "entity_score": 0.0,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Protein_BRI3BP",
+        "entity_score": 0.0,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Protein_PLAA",
+        "entity_score": 0.0,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Protein_PDE7A",
+        "entity_score": 0.0,
+        "entity_type": "Protein"
+      }
+    ],
+    "score_stats": {
+      "GO": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "Pathway": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "Protein": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "Reaction": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    }
+  }
+}

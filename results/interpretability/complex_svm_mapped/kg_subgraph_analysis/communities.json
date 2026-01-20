@@ -1,0 +1,605 @@
+[
+  {
+    "community_id": 0,
+    "size": 4682,
+    "members": [
+      "Reaction_R-HSA-9836664",
+      "Reaction_R-HSA-5668932",
+      "Reaction_R-HSA-1169405",
+      "Reaction_R-HSA-507937",
+      "Reaction_R-HSA-9796342",
+      "Pathway_R-HSA-2979096",
+      "Reaction_R-HSA-70420",
+      "Reaction_R-HSA-400092",
+      "Reaction_R-HSA-1678841",
+      "Reaction_R-HSA-75095",
+      "Pathway_R-HSA-194138",
+      "Reaction_R-HSA-1839107",
+      "Pathway_R-HSA-9700645",
+      "Reaction_R-HSA-5686071",
+      "Reaction_R-HSA-9854146",
+      "Pathway_R-HSA-1236977",
+      "Reaction_R-HSA-4551451",
+      "Reaction_R-HSA-9009065",
+      "Reaction_R-HSA-5218823",
+      "Reaction_R-HSA-3928623"
+    ]
+  },
+  {
+    "community_id": 1,
+    "size": 1646,
+    "members": [
+      "Reaction_R-HSA-9909374",
+      "Reaction_R-HSA-429581",
+      "Pathway_R-HSA-3000484",
+      "Protein_USP14",
+      "GO_0000228_instance",
+      "Reaction_R-HSA-8855131",
+      "Reaction_R-HSA-5683735",
+      "Protein_DGKA",
+      "Protein_HMGB1",
+      "GO_0050896_instance",
+      "Protein_IKBKE",
+      "Protein_SLC43A3",
+      "Protein_LYPLA1",
+      "Pathway_R-HSA-380259",
+      "GO_0016070_instance",
+      "Protein_ATF1",
+      "GO_0043230_instance",
+      "Reaction_R-HSA-5250947",
+      "Protein_INO80E",
+      "GO_0060255_instance"
+    ]
+  },
+  {
+    "community_id": 2,
+    "size": 947,
+    "members": [
+      "Reaction_R-HSA-1676133",
+      "Protein_SAP30L",
+      "Protein_GNA13",
+      "Sample_GSM1317923",
+      "Protein_BTBD10",
+      "Protein_STRAP",
+      "Protein_DAPP1",
+      "Protein_ARRDC2",
+      "Protein_KCTD20",
+      "Protein_WDSUB1",
+      "Protein_PTGER4",
+      "Pathway_R-HSA-1660516",
+      "Protein_SLC35B1",
+      "Protein_PNRC2",
+      "Protein_ROMO1",
+      "Reaction_R-HSA-1482887",
+      "Sample_GSM1317915",
+      "Protein_ARHGEF1",
+      "Reaction_R-HSA-1676114",
+      "Pathway_R-HSA-556833"
+    ]
+  },
+  {
+    "community_id": 3,
+    "size": 105,
+    "members": [
+      "Reaction_R-HSA-352354",
+      "Reaction_R-HSA-196964",
+      "Reaction_R-HSA-350901",
+      "Reaction_R-HSA-70859",
+      "Reaction_R-HSA-209840",
+      "Reaction_R-HSA-196753",
+      "Reaction_R-HSA-8953430",
+      "Pathway_R-HSA-209968",
+      "Reaction_R-HSA-70785",
+      "Reaction_R-HSA-3149518",
+      "Pathway_R-HSA-156581",
+      "Reaction_R-HSA-376200",
+      "Reaction_R-HSA-70899",
+      "Reaction_R-HSA-8876789",
+      "Reaction_R-HSA-379426",
+      "Reaction_R-HSA-9759209",
+      "Reaction_R-HSA-9759206",
+      "Pathway_R-HSA-196849",
+      "Pathway_R-HSA-9859138",
+      "Pathway_R-HSA-196843"
+    ]
+  },
+  {
+    "community_id": 4,
+    "size": 76,
+    "members": [
+      "Reaction_R-HSA-5205861",
+      "Reaction_R-HSA-3318486",
+      "Reaction_R-HSA-9934021",
+      "Reaction_R-HSA-3697008",
+      "Reaction_R-HSA-9932843",
+      "Reaction_R-HSA-5212679",
+      "Reaction_R-HSA-5651657",
+      "Reaction_R-HSA-8865237",
+      "Reaction_R-HSA-4754181",
+      "Reaction_R-HSA-9934023",
+      "Reaction_R-HSA-3215448",
+      "Reaction_R-HSA-3662318",
+      "Pathway_R-HSA-9933937",
+      "Reaction_R-HSA-3697920",
+      "Reaction_R-HSA-3301345",
+      "Reaction_R-HSA-9934028",
+      "Reaction_R-HSA-3769447",
+      "Pathway_R-HSA-4839726",
+      "Pathway_R-HSA-3214842",
+      "Reaction_R-HSA-5218952"
+    ]
+  },
+  {
+    "community_id": 5,
+    "size": 61,
+    "members": [
+      "Pathway_R-HSA-379716",
+      "Reaction_R-HSA-157849",
+      "Pathway_R-HSA-156842",
+      "Reaction_R-HSA-72619",
+      "Reaction_R-HSA-379865",
+      "Reaction_R-HSA-72635",
+      "Pathway_R-HSA-72695",
+      "Reaction_R-HSA-156910",
+      "Reaction_R-HSA-72631",
+      "Reaction_R-HSA-5691512",
+      "Reaction_R-HSA-156923",
+      "Reaction_R-HSA-379982",
+      "Pathway_R-HSA-156902",
+      "Reaction_R-HSA-9948301",
+      "Reaction_R-HSA-156826",
+      "Reaction_R-HSA-72691",
+      "Reaction_R-HSA-9954919",
+      "Pathway_R-HSA-72662",
+      "Reaction_R-HSA-141671",
+      "Reaction_R-HSA-379867"
+    ]
+  },
+  {
+    "community_id": 6,
+    "size": 57,
+    "members": [
+      "Reaction_R-HSA-9866104",
+      "Reaction_R-HSA-6799196",
+      "Pathway_R-HSA-70268",
+      "Reaction_R-HSA-6799199",
+      "Pathway_R-HSA-9853506",
+      "Reaction_R-HSA-450984",
+      "Reaction_R-HSA-372342",
+      "Reaction_R-HSA-9854463",
+      "Pathway_R-HSA-611105",
+      "Reaction_R-HSA-9865449",
+      "Reaction_R-HSA-9861734",
+      "Reaction_R-HSA-204169",
+      "Reaction_R-HSA-71401",
+      "Reaction_R-HSA-9861616",
+      "Reaction_R-HSA-9865630",
+      "Reaction_R-HSA-9861563",
+      "Pathway_R-HSA-9864848",
+      "Pathway_R-HSA-163210",
+      "Reaction_R-HSA-6800870",
+      "Reaction_R-HSA-9866061"
+    ]
+  },
+  {
+    "community_id": 7,
+    "size": 54,
+    "members": [
+      "Reaction_R-HSA-373734",
+      "Reaction_R-HSA-373724",
+      "Reaction_R-HSA-430347",
+      "Reaction_R-HSA-9768616",
+      "Reaction_R-HSA-391153",
+      "Reaction_R-HSA-391151",
+      "Pathway_R-HSA-421270",
+      "Pathway_R-HSA-9764562",
+      "Reaction_R-HSA-419981",
+      "Pathway_R-HSA-9766229",
+      "Reaction_R-HSA-9765974",
+      "Reaction_R-HSA-9760402",
+      "Pathway_R-HSA-446353",
+      "Reaction_R-HSA-8981534",
+      "Reaction_R-HSA-9765960",
+      "Reaction_R-HSA-9934751",
+      "Reaction_R-HSA-391156",
+      "Reaction_R-HSA-373727",
+      "Pathway_R-HSA-420029",
+      "Reaction_R-HSA-9934410"
+    ]
+  },
+  {
+    "community_id": 8,
+    "size": 46,
+    "members": [
+      "Pathway_R-HSA-2162123",
+      "Reaction_R-HSA-2066787",
+      "Reaction_R-HSA-265295",
+      "Reaction_R-HSA-9716838",
+      "Reaction_R-HSA-548800",
+      "Reaction_R-HSA-2046094",
+      "Reaction_R-HSA-390256",
+      "Pathway_R-HSA-2046105",
+      "Pathway_R-HSA-2142670",
+      "Reaction_R-HSA-2314686",
+      "Reaction_R-HSA-77299",
+      "Pathway_R-HSA-77305",
+      "Reaction_R-HSA-2046085",
+      "Reaction_R-HSA-2046083",
+      "Reaction_R-HSA-201035",
+      "Pathway_R-HSA-389599",
+      "Reaction_R-HSA-5690565",
+      "Reaction_R-HSA-2161961",
+      "Pathway_R-HSA-77288",
+      "Reaction_R-HSA-9915994"
+    ]
+  },
+  {
+    "community_id": 9,
+    "size": 34,
+    "members": [
+      "Reaction_R-HSA-1655825",
+      "Reaction_R-HSA-5663127",
+      "Reaction_R-HSA-5663165",
+      "Pathway_R-HSA-2426168",
+      "Reaction_R-HSA-5663170",
+      "Pathway_R-HSA-400206",
+      "Reaction_R-HSA-1655826",
+      "Pathway_R-HSA-1989781",
+      "Reaction_R-HSA-879798",
+      "Reaction_R-HSA-879782",
+      "Reaction_R-HSA-8878679",
+      "Reaction_R-HSA-879724",
+      "Reaction_R-HSA-1655849",
+      "Reaction_R-HSA-1989778",
+      "Reaction_R-HSA-5663124",
+      "Reaction_R-HSA-5663138",
+      "Reaction_R-HSA-549424",
+      "Reaction_R-HSA-879770",
+      "Reaction_R-HSA-1368889",
+      "Reaction_R-HSA-5663156"
+    ]
+  },
+  {
+    "community_id": 10,
+    "size": 29,
+    "members": [
+      "Pathway_R-HSA-216083",
+      "Reaction_R-HSA-216040",
+      "Reaction_R-HSA-2426259",
+      "Reaction_R-HSA-4086216",
+      "Reaction_R-HSA-4088220",
+      "Reaction_R-HSA-4539779",
+      "Reaction_R-HSA-2484965",
+      "Reaction_R-HSA-4088264",
+      "Reaction_R-HSA-216068",
+      "Reaction_R-HSA-216050",
+      "Reaction_R-HSA-265429",
+      "Reaction_R-HSA-265428",
+      "Reaction_R-HSA-2752118",
+      "Reaction_R-HSA-265424",
+      "Reaction_R-HSA-2473511",
+      "Reaction_R-HSA-4084912",
+      "Reaction_R-HSA-4086223",
+      "Reaction_R-HSA-4085133",
+      "Reaction_R-HSA-216045",
+      "Reaction_R-HSA-216064"
+    ]
+  },
+  {
+    "community_id": 11,
+    "size": 26,
+    "members": [
+      "Pathway_R-HSA-15869",
+      "Pathway_R-HSA-74217",
+      "Reaction_R-HSA-8866405",
+      "Reaction_R-HSA-73813",
+      "Reaction_R-HSA-482621",
+      "Reaction_R-HSA-73548",
+      "Reaction_R-HSA-75125",
+      "Reaction_R-HSA-74220",
+      "Reaction_R-HSA-73805",
+      "Reaction_R-HSA-482619",
+      "Reaction_R-HSA-110145",
+      "Reaction_R-HSA-73806",
+      "Reaction_R-HSA-109671",
+      "Reaction_R-HSA-111804",
+      "Pathway_R-HSA-73817",
+      "Reaction_R-HSA-73598",
+      "Pathway_R-HSA-499943",
+      "Reaction_R-HSA-73814",
+      "Reaction_R-HSA-110141",
+      "Reaction_R-HSA-8953339"
+    ]
+  },
+  {
+    "community_id": 12,
+    "size": 25,
+    "members": [
+      "Reaction_R-HSA-442317",
+      "Reaction_R-HSA-264997",
+      "Pathway_R-HSA-425410",
+      "Pathway_R-HSA-917977",
+      "Reaction_R-HSA-437085",
+      "Reaction_R-HSA-442368",
+      "Reaction_R-HSA-265177",
+      "Reaction_R-HSA-9820566",
+      "Pathway_R-HSA-917937",
+      "Pathway_R-HSA-381771",
+      "Reaction_R-HSA-381799",
+      "Pathway_R-HSA-435368",
+      "Reaction_R-HSA-917841",
+      "Reaction_R-HSA-917933",
+      "Pathway_R-HSA-442380",
+      "Reaction_R-HSA-1562626",
+      "Reaction_R-HSA-2022381",
+      "Pathway_R-HSA-264876",
+      "Reaction_R-HSA-2022403",
+      "Reaction_R-HSA-917891"
+    ]
+  },
+  {
+    "community_id": 13,
+    "size": 21,
+    "members": [
+      "Reaction_R-HSA-2089971",
+      "Reaction_R-HSA-1981128",
+      "Reaction_R-HSA-1980233",
+      "Reaction_R-HSA-8948224",
+      "Reaction_R-HSA-2022073",
+      "Reaction_R-HSA-8944255",
+      "Reaction_R-HSA-1981157",
+      "Reaction_R-HSA-8948230",
+      "Reaction_R-HSA-1981104",
+      "Reaction_R-HSA-1981120",
+      "Reaction_R-HSA-2002460",
+      "Reaction_R-HSA-8948228",
+      "Reaction_R-HSA-8948226",
+      "Reaction_R-HSA-8948234",
+      "Pathway_R-HSA-1650814",
+      "Pathway_R-HSA-8948216",
+      "Reaction_R-HSA-8948222",
+      "Reaction_R-HSA-8948232",
+      "Reaction_R-HSA-1650808",
+      "Reaction_R-HSA-8948231"
+    ]
+  },
+  {
+    "community_id": 14,
+    "size": 16,
+    "members": [
+      "Pathway_R-HSA-936837",
+      "Pathway_R-HSA-3295583",
+      "Pathway_R-HSA-983712",
+      "Reaction_R-HSA-9701211",
+      "Reaction_R-HSA-418309",
+      "Reaction_R-HSA-418365",
+      "Reaction_R-HSA-2744242",
+      "Reaction_R-HSA-9701141",
+      "Reaction_R-HSA-9701055",
+      "Reaction_R-HSA-936897",
+      "Pathway_R-HSA-2672351",
+      "Reaction_R-HSA-939763",
+      "Reaction_R-HSA-947591",
+      "Reaction_R-HSA-427910",
+      "Reaction_R-HSA-2684901",
+      "Reaction_R-HSA-3295579"
+    ]
+  },
+  {
+    "community_id": 15,
+    "size": 10,
+    "members": [
+      "Reaction_R-HSA-6791218",
+      "Pathway_R-HSA-6790901",
+      "Reaction_R-HSA-6790906",
+      "Pathway_R-HSA-72312",
+      "Pathway_R-HSA-8868773",
+      "Pathway_R-HSA-6791226",
+      "Reaction_R-HSA-6791222",
+      "Reaction_R-HSA-6791228",
+      "Reaction_R-HSA-6791221",
+      "Reaction_R-HSA-6791227"
+    ]
+  },
+  {
+    "community_id": 16,
+    "size": 8,
+    "members": [
+      "Pathway_R-HSA-9609507",
+      "Reaction_R-HSA-1299475",
+      "Pathway_R-HSA-1268020",
+      "Reaction_R-HSA-1299487",
+      "Reaction_R-HSA-1299478",
+      "Reaction_R-HSA-1299476",
+      "Reaction_R-HSA-1299482",
+      "Reaction_R-HSA-1299480"
+    ]
+  },
+  {
+    "community_id": 17,
+    "size": 8,
+    "members": [
+      "Reaction_R-HSA-8937191",
+      "Pathway_R-HSA-71384",
+      "Reaction_R-HSA-449911",
+      "Pathway_R-HSA-8937144",
+      "Pathway_R-HSA-211945",
+      "Reaction_R-HSA-5696131",
+      "Reaction_R-HSA-8936849",
+      "Reaction_R-HSA-8937169"
+    ]
+  },
+  {
+    "community_id": 18,
+    "size": 7,
+    "members": [
+      "Reaction_R-HSA-1454757",
+      "Pathway_R-HSA-1442490",
+      "Pathway_R-HSA-1474228",
+      "Reaction_R-HSA-2168960",
+      "Reaction_R-HSA-2537499",
+      "Reaction_R-HSA-4224014",
+      "Reaction_R-HSA-1564120"
+    ]
+  },
+  {
+    "community_id": 19,
+    "size": 7,
+    "members": [
+      "Reaction_R-HSA-2214324",
+      "Reaction_R-HSA-2214330",
+      "Reaction_R-HSA-2396234",
+      "Reaction_R-HSA-2213192",
+      "Pathway_R-HSA-2022090",
+      "Reaction_R-HSA-2213195",
+      "Pathway_R-HSA-2214320"
+    ]
+  },
+  {
+    "community_id": 20,
+    "size": 5,
+    "members": [
+      "Reaction_R-HSA-8848663",
+      "Reaction_R-HSA-164151",
+      "Pathway_R-HSA-163680",
+      "Reaction_R-HSA-163691",
+      "Reaction_R-HSA-163664"
+    ]
+  },
+  {
+    "community_id": 21,
+    "size": 5,
+    "members": [
+      "Reaction_R-HSA-350186",
+      "Reaction_R-HSA-350168",
+      "Reaction_R-HSA-350158",
+      "Pathway_R-HSA-196791",
+      "Reaction_R-HSA-209760"
+    ]
+  },
+  {
+    "community_id": 22,
+    "size": 5,
+    "members": [
+      "Reaction_R-HSA-9027627",
+      "Pathway_R-HSA-9027604",
+      "Reaction_R-HSA-9028255",
+      "Reaction_R-HSA-9027532",
+      "Reaction_R-HSA-9027607"
+    ]
+  },
+  {
+    "community_id": 23,
+    "size": 4,
+    "members": [
+      "Reaction_R-HSA-203662",
+      "Reaction_R-HSA-203565",
+      "Pathway_R-HSA-203641",
+      "Reaction_R-HSA-203625"
+    ]
+  },
+  {
+    "community_id": 24,
+    "size": 4,
+    "members": [
+      "Reaction_R-HSA-8953461",
+      "Pathway_R-HSA-8949215",
+      "Pathway_R-HSA-8949664",
+      "Reaction_R-HSA-8949178"
+    ]
+  },
+  {
+    "community_id": 25,
+    "size": 4,
+    "members": [
+      "Pathway_R-HSA-9018682",
+      "Reaction_R-HSA-9024993",
+      "Reaction_R-HSA-9020261",
+      "Pathway_R-HSA-9018677"
+    ]
+  },
+  {
+    "community_id": 26,
+    "size": 4,
+    "members": [
+      "Pathway_R-HSA-163767",
+      "Reaction_R-HSA-164056",
+      "Reaction_R-HSA-163689",
+      "Reaction_R-HSA-163688"
+    ]
+  },
+  {
+    "community_id": 27,
+    "size": 3,
+    "members": [
+      "Reaction_R-HSA-6785181",
+      "Reaction_R-HSA-6785178",
+      "Pathway_R-HSA-8963889"
+    ]
+  },
+  {
+    "community_id": 28,
+    "size": 3,
+    "members": [
+      "Reaction_R-HSA-174786",
+      "Reaction_R-HSA-174741",
+      "Pathway_R-HSA-8963888"
+    ]
+  },
+  {
+    "community_id": 29,
+    "size": 2,
+    "members": [
+      "Pathway_R-HSA-5223345",
+      "Reaction_R-HSA-5226999"
+    ]
+  },
+  {
+    "community_id": 30,
+    "size": 2,
+    "members": [
+      "Reaction_R-HSA-2564828",
+      "Pathway_R-HSA-2564830"
+    ]
+  },
+  {
+    "community_id": 31,
+    "size": 2,
+    "members": [
+      "Reaction_R-HSA-9844955",
+      "Pathway_R-HSA-9845576"
+    ]
+  },
+  {
+    "community_id": 32,
+    "size": 2,
+    "members": [
+      "Reaction_R-HSA-203613",
+      "Pathway_R-HSA-203615"
+    ]
+  },
+  {
+    "community_id": 33,
+    "size": 2,
+    "members": [
+      "Pathway_R-HSA-8866423",
+      "Reaction_R-HSA-8866329"
+    ]
+  },
+  {
+    "community_id": 34,
+    "size": 2,
+    "members": [
+      "Pathway_R-HSA-8964041",
+      "Reaction_R-HSA-9737780"
+    ]
+  },
+  {
+    "community_id": 35,
+    "size": 2,
+    "members": [
+      "Pathway_R-HSA-9913635",
+      "Reaction_R-HSA-9914922"
+    ]
+  }
+]

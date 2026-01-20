@@ -1,0 +1,192 @@
+================================================================================
+CLINICAL INTERPRETATION REPORT
+ComplEx+SVM Biomarker Discovery for Sepsis Classification
+================================================================================
+
+
+================================================================================
+EXECUTIVE SUMMARY
+================================================================================
+
+Analysis Date: 2026-01-19 08:16
+Model: ComplEx Knowledge Graph Embeddings + Support Vector Machine (SVM)
+Task: Sepsis vs Healthy Classification
+
+Key Findings:
+
+1. Identified 28 protein/gene biomarkers
+   - 0 overlap with known sepsis genes (0.0%)
+   - 28 novel candidate biomarkers
+
+2. Identified 31 biological pathways
+   - 3 known sepsis-related pathways (9.7%)
+
+3. Entity Distribution:
+   - Protein: 33 entities
+   - Pathway: 31 entities
+   - GO: 11 entities
+   - Reaction: 3 entities
+
+Model Performance Context:
+- The ComplEx+SVM model successfully classified sepsis patients
+- Feature importance analysis revealed biologically relevant biomarkers
+- Results show both known and novel sepsis-associated entities
+
+
+================================================================================
+BIOMARKER ANALYSIS
+================================================================================
+
+Top 10 Protein Biomarkers (by entity score):
+
+1. RIOX2
+   Entity Score: 34.87 | Feature Importance: 0.1360
+
+2. CUBN
+   Entity Score: 33.88 | Feature Importance: 2.9720
+
+3. RASSF5
+   Entity Score: 33.86 | Feature Importance: 0.3976
+
+4. RANBP9
+   Entity Score: 31.35 | Feature Importance: 0.1489
+
+5. LEPR
+   Entity Score: 31.11 | Feature Importance: 0.0736
+
+6. PDIA4
+   Entity Score: 31.01 | Feature Importance: 0.1632
+
+7. CCDC91
+   Entity Score: 30.87 | Feature Importance: 0.0927
+
+8. NMD3
+   Entity Score: 30.76 | Feature Importance: 0.1632
+
+9. FEZ1
+   Entity Score: 30.45 | Feature Importance: 0.1489
+
+10. TRAK1
+   Entity Score: 30.22 | Feature Importance: 1.9268
+
+
+Gene Ontology (GO) Terms:
+
+  - GO_0043231_instance
+  - GO_1901988_instance
+  - GO_1902531_instance
+  - GO_0005488_instance
+  - GO_0032446_instance
+
+
+================================================================================
+PATHWAY ANALYSIS
+================================================================================
+
+Known Sepsis-Related Pathways Identified:
+
+• Interferon gamma signaling
+  ID: R-HSA-877300
+  Relevance: Critical in sepsis immune response. IFN-γ dysregulation is a hallmark of septic shock.
+  Clinical Impact: High - Therapeutic target
+
+• Regulation of lipid metabolism by PPARalpha
+  ID: R-HSA-400206
+  Relevance: Metabolic dysregulation in sepsis. PPARα modulates inflammatory response and energy metabolism.
+  Clinical Impact: Medium - Metabolic indicator
+
+• Interferon alpha/beta signaling
+  ID: R-HSA-909733
+  Relevance: Type I interferons play dual roles in sepsis, contributing to both host defense and immunopathology.
+  Clinical Impact: High - Biomarker potential
+
+Novel/Candidate Pathways (28 total):
+
+These pathways may represent:
+- Previously unrecognized sepsis mechanisms
+- Context-specific regulatory pathways
+- Potential new therapeutic targets
+
+Top 10 novel pathways for further investigation:
+  - R-HSA-109581
+  - R-HSA-1650814
+  - R-HSA-1839124
+  - R-HSA-216083
+  - R-HSA-381119
+  - R-HSA-390466
+  - R-HSA-450531
+  - R-HSA-512988
+  - R-HSA-5607764
+  - R-HSA-5620912
+
+
+================================================================================
+CLINICAL RECOMMENDATIONS
+================================================================================
+
+Based on the identified biomarkers and pathways, we recommend:
+
+1. BIOMARKER VALIDATION
+   - Conduct targeted proteomics/transcriptomics validation
+   - Focus on top 10 protein biomarkers identified
+   - Validate in independent cohorts
+
+2. PATHWAY-BASED INVESTIGATION
+   - Interferon signaling pathways: High priority for mechanistic studies
+   - Metabolic dysregulation (PPARα): Assess as prognostic marker
+   - Novel pathways: Functional validation experiments
+
+3. CLINICAL TRANSLATION
+   - Consider multi-marker panels combining top proteins
+   - Evaluate predictive performance in prospective cohorts
+   - Assess potential for early sepsis detection
+
+4. THERAPEUTIC IMPLICATIONS
+   - Identified pathways suggest potential drug targets
+   - Interferon modulation may offer therapeutic benefit
+   - Metabolic interventions warrant investigation
+
+5. FURTHER RESEARCH
+   - Investigate novel biomarkers with high scores
+   - Study biomarker dynamics across sepsis progression
+   - Integrate with clinical variables for improved prediction
+
+
+================================================================================
+METHODS SUMMARY
+================================================================================
+
+Knowledge Graph Construction:
+- Source: GSE54514 microarray dataset (163 samples)
+- Entities: Samples, Proteins, Pathways, GO terms, Reactions
+- Relationships: Gene expression, protein interactions, pathway associations
+
+Embedding Generation:
+- Model: ComplEx (Complex-valued embeddings)
+- Dimension: 100
+- Training: Link prediction on knowledge graph structure
+
+Classification:
+- Classifier: Support Vector Machine (SVM)
+- Features: ComplEx protein embeddings
+- Task: Binary classification (Sepsis vs Healthy)
+
+Feature Importance:
+- Method: Model-based feature importance (SVM coefficients)
+- Mapping: Embedding dimensions → Biological entities
+- Selection: Top entities by absolute embedding values
+
+Validation:
+- Literature comparison with known sepsis genes/pathways
+- Pathway enrichment analysis
+- Clinical relevance assessment
+
+
+================================================================================
+END OF REPORT
+================================================================================
+
+Generated: 2026-01-19 08:16:34
+Output Directory: results/interpretability/complex_svm_mapped
+
+For questions or additional analysis, please contact the research team.

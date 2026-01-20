@@ -1,0 +1,31 @@
+INFO:__main__:Starting biomarker validation...
+INFO:__main__:Loaded 78 biomarker entries
+INFO:__main__:Unique entities: 73
+INFO:__main__:Extracted 28 protein/gene entities
+INFO:__main__:
+Gene Validation:
+INFO:__main__:  Total genes identified: 28
+INFO:__main__:  Known sepsis genes: 56
+INFO:__main__:  Overlap: 0 (0.0%)
+INFO:__main__:  Overlapping genes: []
+INFO:__main__:
+Pathway Validation:
+INFO:__main__:  Total pathways identified: 31
+INFO:__main__:  Known sepsis pathways: 16
+INFO:__main__:  Overlap: 3 (9.7%)
+INFO:__main__:  Overlapping pathways:
+INFO:__main__:    - R-HSA-877300: Interferon gamma signaling
+INFO:__main__:    - R-HSA-400206: Regulation of lipid metabolism by PPARalpha
+INFO:__main__:    - R-HSA-909733: Interferon alpha/beta signaling
+INFO:__main__:
+Entity Distribution:
+INFO:__main__:  Protein: 33
+INFO:__main__:  Pathway: 31
+INFO:__main__:  GO: 11
+INFO:__main__:  Reaction: 3
+INFO:__main__:
+Saved validation report: results/interpretability/complex_svm_mapped/validation/validation_report.json
+INFO:__main__:Saved validation summary: results/interpretability/complex_svm_mapped/validation/biomarker_validation_summary.csv
+INFO:__main__:Saved detailed report: results/interpretability/complex_svm_mapped/validation/validation_report.txt
+INFO:__main__:
+Validation complete!

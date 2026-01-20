@@ -1,0 +1,216 @@
+{
+  "gene_validation": {
+    "total_genes": 28,
+    "known_sepsis_genes": 56,
+    "overlap": 0,
+    "overlap_pct": 0.0,
+    "overlapping_genes": [],
+    "novel_genes": [
+      "ADAMTSL4",
+      "ATF1",
+      "CCDC91",
+      "CTR9",
+      "CUBN",
+      "DEFB123",
+      "ERBIN",
+      "FEZ1",
+      "LENG8",
+      "LEPR",
+      "LMNB2",
+      "MAP7",
+      "MASTL",
+      "NAA16",
+      "NMD3",
+      "NRG1",
+      "NUS1",
+      "PDIA4",
+      "PLEKHF2",
+      "RABIF",
+      "RANBP9",
+      "RASSF5",
+      "RIOX2",
+      "SPATC1L",
+      "SUCO",
+      "TERF1",
+      "TRAK1",
+      "TROAP"
+    ]
+  },
+  "pathway_validation": {
+    "total_pathways": 31,
+    "known_sepsis_pathways": 16,
+    "overlap": 3,
+    "overlap_pct": 9.67741935483871,
+    "overlapping_pathways": {
+      "R-HSA-877300": "Interferon gamma signaling",
+      "R-HSA-400206": "Regulation of lipid metabolism by PPARalpha",
+      "R-HSA-909733": "Interferon alpha/beta signaling"
+    },
+    "novel_pathways": [
+      "R-HSA-109581",
+      "R-HSA-1650814",
+      "R-HSA-1839124",
+      "R-HSA-216083",
+      "R-HSA-381119",
+      "R-HSA-390466",
+      "R-HSA-450531",
+      "R-HSA-512988",
+      "R-HSA-5607764",
+      "R-HSA-5620912",
+      "R-HSA-5654738",
+      "R-HSA-5668914",
+      "R-HSA-6811442",
+      "R-HSA-71387",
+      "R-HSA-8851708",
+      "R-HSA-8852276",
+      "R-HSA-8986944",
+      "R-HSA-9013507",
+      "R-HSA-933541",
+      "R-HSA-936440",
+      "R-HSA-9664565",
+      "R-HSA-9675136",
+      "R-HSA-9703465",
+      "R-HSA-9704331",
+      "R-HSA-983168",
+      "R-HSA-9837999",
+      "R-HSA-9856649",
+      "R-HSA-9931510"
+    ]
+  },
+  "entity_distribution": {
+    "entity_counts": {
+      "Protein": 33,
+      "Pathway": 31,
+      "GO": 11,
+      "Reaction": 3
+    },
+    "top_entities": [
+      {
+        "entity": "Protein_RIOX2",
+        "entity_score": 34.86905288696289,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Protein_CUBN",
+        "entity_score": 33.87763977050781,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Protein_RASSF5",
+        "entity_score": 33.85612487792969,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Pathway_R-HSA-5654738",
+        "entity_score": 31.87300491333008,
+        "entity_type": "Pathway"
+      },
+      {
+        "entity": "Protein_RANBP9",
+        "entity_score": 31.348878860473636,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Protein_LEPR",
+        "entity_score": 31.10723114013672,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Protein_PDIA4",
+        "entity_score": 31.00529670715332,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Protein_CCDC91",
+        "entity_score": 30.86517333984375,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Pathway_R-HSA-9013507",
+        "entity_score": 30.76472282409668,
+        "entity_type": "Pathway"
+      },
+      {
+        "entity": "Protein_NMD3",
+        "entity_score": 30.76124763488769,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Pathway_R-HSA-400206",
+        "entity_score": 30.658376693725582,
+        "entity_type": "Pathway"
+      },
+      {
+        "entity": "Pathway_R-HSA-9675136",
+        "entity_score": 30.494060516357425,
+        "entity_type": "Pathway"
+      },
+      {
+        "entity": "Protein_FEZ1",
+        "entity_score": 30.448633193969727,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Pathway_R-HSA-877300",
+        "entity_score": 30.43508720397949,
+        "entity_type": "Pathway"
+      },
+      {
+        "entity": "Reaction_R-HSA-8868651",
+        "entity_score": 30.425329208374023,
+        "entity_type": "Reaction"
+      },
+      {
+        "entity": "Protein_TRAK1",
+        "entity_score": 30.216997146606445,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Pathway_R-HSA-909733",
+        "entity_score": 30.092758178710938,
+        "entity_type": "Pathway"
+      },
+      {
+        "entity": "Pathway_R-HSA-216083",
+        "entity_score": 30.08221435546875,
+        "entity_type": "Pathway"
+      },
+      {
+        "entity": "Protein_NRG1",
+        "entity_score": 29.978635787963867,
+        "entity_type": "Protein"
+      },
+      {
+        "entity": "Protein_ERBIN",
+        "entity_score": 29.825578689575195,
+        "entity_type": "Protein"
+      }
+    ],
+    "score_stats": {
+      "GO": {
+        "mean": 25.68224421414462,
+        "std": 1.8239965997114236,
+        "min": 21.80141830444336,
+        "max": 28.32217025756836
+      },
+      "Pathway": {
+        "mean": 28.2554508947557,
+        "std": 2.3628438933650866,
+        "min": 22.274150848388672,
+        "max": 31.87300491333008
+      },
+      "Protein": {
+        "mean": 28.175006461865973,
+        "std": 3.3108911134769183,
+        "min": 21.783546447753903,
+        "max": 34.86905288696289
+      },
+      "Reaction": {
+        "mean": 26.365793863932293,
+        "std": 4.14933892050067,
+        "min": 22.13213348388672,
+        "max": 30.425329208374023
+      }
+    }
+  }
+}

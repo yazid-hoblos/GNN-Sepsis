@@ -1,0 +1,275 @@
+====================================================================================================
+BIOMARKER CONSENSUS: GO TERMS AND REACTIONS ENRICHMENT
+====================================================================================================
+
+----------------------------------------------------------------------------------------------------
+TOP 20 GO TERMS CONNECTED TO BIOMARKER PROTEINS
+----------------------------------------------------------------------------------------------------
+
+ 1. protein localization to plasma membrane
+    ID: 72659
+    Biomarkers: 2/28
+    Definition: A process in which a protein is transported to, or maintained in, a specific location in the plasma membrane.
+    Proteins: MAP7,RANGRF...
+
+ 2. Golgi vesicle transport
+    ID: 48193
+    Biomarkers: 2/28
+    Definition: The directed movement of substances into, out of or within the Golgi apparatus, mediated by vesicles.
+    Proteins: CCDC91,RANGRF...
+
+ 3. energy derivation by oxidation of organic compounds
+    ID: 15980
+    Biomarkers: 2/28
+    Definition: The chemical reactions and pathways by which a cell derives energy from organic compounds; results in the oxidation of the compounds from which energy is released.
+    Proteins: GNMT,LEPR...
+
+ 4. regulation of actin filament-based process
+    ID: 32970
+    Biomarkers: 2/28
+    Definition: Any process that modulates the frequency, rate or extent of any cellular process that depends upon or alters the actin cytoskeleton.
+    Proteins: RANGRF,TGFB3...
+
+ 5. microtubule
+    ID: 5874
+    Biomarkers: 2/28
+    Definition: Any of the long, generally straight, hollow tubes of internal diameter 12-15 nm and external diameter 24 nm found in a wide variety of eukaryotic cells; each consists (usually) of 13 protofilaments of polymeric tubulin, staggered in such a manner that the tubulin monomers are arranged in a helical pattern on the microtubular surface, and with the alpha/beta axes of the tubulin subunits parallel to the long axis of the tubule; exist in equilibrium with pool of tubulin monomers and can be rapidly assembled or disassembled in response to physiological stimuli; concerned with force generation, e.g. in the spindle.
+    Proteins: MAP7,RASSF5...
+
+ 6. double-strand break repair
+    ID: 6302
+    Biomarkers: 1/28
+    Definition: The repair of double-strand breaks in DNA via homologous and nonhomologous mechanisms to reform a continuous DNA helix.
+    Proteins: CDCA5...
+
+ 7. protein polymerization
+    ID: 51258
+    Biomarkers: 1/28
+    Definition: The process of creating protein polymers, compounds composed of a large number of component monomers; polymeric proteins may be made up of different or identical monomers. Polymerization occurs by the addition of extra monomers to an existing poly- or oligomeric protein.
+    Proteins: RANBP9...
+
+ 8. negative regulation of catabolic process
+    ID: 9895
+    Biomarkers: 1/28
+    Definition: Any process that stops, prevents, or reduces the frequency, rate or extent of the chemical reactions and pathways resulting in the breakdown of substances.
+    Proteins: LEPR...
+
+ 9. regulation of supramolecular fiber organization
+    ID: 1902903
+    Biomarkers: 1/28
+    Definition: Any process that modulates the frequency, rate or extent of supramolecular fiber organization.
+    Proteins: TGFB3...
+
+10. regulation of actin filament organization
+    ID: 110053
+    Biomarkers: 1/28
+    Definition: Any process that modulates the frequency, rate or extent of actin filament organization.
+    Proteins: TGFB3...
+
+11. regulation of actin cytoskeleton organization
+    ID: 32956
+    Biomarkers: 1/28
+    Definition: Any process that modulates the frequency, rate or extent of the formation, arrangement of constituent parts, or disassembly of cytoskeletal structures comprising actin filaments and their associated proteins.
+    Proteins: TGFB3...
+
+12. chromosome, centromeric region
+    ID: 775
+    Biomarkers: 1/28
+    Definition: The region of a chromosome that includes the centromeric DNA and associated proteins. In monocentric chromosomes, this region corresponds to a single area of the chromosome, whereas in holocentric chromosomes, it is evenly distributed along the chromosome.
+    Proteins: CDCA5...
+
+13. ubiquitin ligase complex
+    ID: 151
+    Biomarkers: 1/28
+    Definition: A protein complex that includes a ubiquitin-protein ligase and enables ubiquitin protein ligase activity. The complex also contains other proteins that may confer substrate specificity on the complex.
+    Proteins: RANBP9...
+
+14. regulation of mitotic cell cycle phase transition
+    ID: 1901990
+    Biomarkers: 1/28
+    Definition: Any process that modulates the frequency, rate or extent of mitotic cell cycle phase transition.
+    Proteins: CDCA5...
+
+15. regulation of cell cycle phase transition
+    ID: 1901987
+    Biomarkers: 1/28
+    Definition: Any process that modulates the frequency, rate or extent of cell cycle phase transition.
+    Proteins: CDCA5...
+
+16. response to endoplasmic reticulum stress
+    ID: 34976
+    Biomarkers: 1/28
+    Definition: Any process that results in a change in state or activity of a cell (in terms of movement, secretion, enzyme production, gene expression, etc.) as a result of a stress acting at the endoplasmic reticulum. ER stress usually results from the accumulation of unfolded or misfolded proteins in the ER lumen.
+    Proteins: PDIA4...
+
+17. establishment of vesicle localization
+    ID: 51650
+    Biomarkers: 1/28
+    Definition: The directed movement of a vesicle to a specific location.
+    Proteins: TRAK1...
+
+18. cell cortex
+    ID: 5938
+    Biomarkers: 1/28
+    Definition: The region of a cell that lies just beneath the plasma membrane and often, but not always, contains a network of actin filaments and associated proteins.
+    Proteins: TRAK1...
+
+19. early endosome
+    ID: 5769
+    Biomarkers: 1/28
+    Definition: A membrane-bounded organelle that receives incoming material from primary endocytic vesicles that have been generated by clathrin-dependent and clathrin-independent endocytosis; vesicles fuse with the early endosome to deliver cargo for sorting into recycling or degradation pathways.
+    Proteins: TRAK1...
+
+20. microtubule polymerization
+    ID: 46785
+    Biomarkers: 1/28
+    Definition: The addition of tubulin heterodimers to one or both ends of a microtubule.
+    Proteins: RANBP9...
+
+----------------------------------------------------------------------------------------------------
+TOP 20 REACTOME REACTIONS CONNECTED TO BIOMARKER PROTEINS
+----------------------------------------------------------------------------------------------------
+
+Reactions by biomarker connectivity:
+  1 biomarker: 57 reactions
+
+
+Top reactions (by biomarker count):
+ 1. PRC2 (EZH2) Core:AEBP2 methylates lysine-28 of histone H3 (H3K27)
+    ID: R-HSA-5638332
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-5638332
+    Proteins: AEBP2
+
+ 2. PRC2 trimethylates histone H3 at lysine-27
+    ID: R-HSA-212263
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-212263
+    Proteins: AEBP2
+
+ 3. Polycomb Repressive Complex 2 (PRC2) Is recruited to chromatin
+    ID: R-HSA-212252
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-212252
+    Proteins: AEBP2
+
+ 4. CTLH E3 ligase ubiquitinates PKM-1
+    ID: R-HSA-9861640
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-9861640
+    Proteins: RANBP9
+
+ 5. RAS guanyl nucleotide exchange by SOS1 associated with RANBP9 and MET
+    ID: R-HSA-8851877
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-8851877
+    Proteins: RANBP9
+
+ 6. RAS GEFs promote RAS nucleotide exchange
+    ID: R-HSA-5672965
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-5672965
+    Proteins: RANBP9
+
+ 7. Phosphorylated LEPR Binds STAT5
+    ID: R-HSA-2671855
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-2671855
+    Proteins: LEPR
+
+ 8. JAK2 Phosphorylates STAT5 in Response to Leptin
+    ID: R-HSA-2671829
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-2671829
+    Proteins: LEPR
+
+ 9. Phosphorylated STAT5 Dissociates from Leptin Receptor
+    ID: R-HSA-2671876
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-2671876
+    Proteins: LEPR
+
+10. Exocytosis of platelet alpha granule contents
+    ID: R-HSA-481007
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-481007
+    Proteins: TGFB3
+
+11. Latent TGF-beta-3 binds integrins
+    ID: R-HSA-2396029
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-2396029
+    Proteins: TGFB3
+
+12. Separation of sister chromatids
+    ID: R-HSA-2467811
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-2467811
+    Proteins: CDCA5
+
+13. Phosphorylation of cohesin by PLK1 at centromeres
+    ID: R-HSA-1638803
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-1638803
+    Proteins: CDCA5
+
+14. Resolution of sister chromatids
+    ID: R-HSA-2467794
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-2467794
+    Proteins: CDCA5
+
+15. CDK1 phosphorylates CDCA5 (Sororin) at centromeres
+    ID: R-HSA-2468287
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-2468287
+    Proteins: CDCA5
+
+16. Kinetochore assembly
+    ID: R-HSA-2484822
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-2484822
+    Proteins: CDCA5
+
+17. CDCA5 (Sororin) enables cohesion of sister chromosomal arms
+    ID: R-HSA-2468041
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-2468041
+    Proteins: CDCA5
+
+18. CDCA5 (Sororin) enables cohesion of sister centromeres
+    ID: R-HSA-2473151
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-2473151
+    Proteins: CDCA5
+
+19. CDK1 phosphorylates CDCA5 (Sororin) at chromosomal arms
+    ID: R-HSA-2468293
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-2468293
+    Proteins: CDCA5
+
+20. Phosphorylation of cohesin by PLK1 at chromosomal arms
+    ID: R-HSA-2466068
+    Biomarkers: 1
+    URL: https://reactome.org/content/detail/R-HSA-2466068
+    Proteins: CDCA5
+
+
+====================================================================================================
+KEY FINDINGS
+====================================================================================================
+
+Total unique GO terms: 37
+Total unique reactions: 57
+
+Top biological processes represented:
+  - protein localization to plasma membrane (2 biomarkers)
+  - Golgi vesicle transport (2 biomarkers)
+  - energy derivation by oxidation of organic compounds (2 biomarkers)
+  - regulation of actin filament-based process (2 biomarkers)
+  - microtubule (2 biomarkers)
+
+Interpretation:
+The consensus biomarker proteins are predominantly involved in:
+  * Cellular processes and organization
