@@ -13,10 +13,92 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.patches import Patch
 import networkx as nx
+import requests
 
 from src.han.model import SepsisHANClassifier
 from src.han.owl_data_loader_with_features import load_hetero_graph_from_owl
+from src.han.patient_gradient_analysis import GradientBasedAttentionAnalyzer
 import xml.etree.ElementTree as ET
+import logging
+
+logger = logging.getLogger(__name__)
+
+def parse_go_obo(go_file_path):
+    """Parse go.obo file and extract GO term definitions (multiple id formats)."""
+    go_defs = {}
+    try:
+        current_id = None
+        current_name = None
+        current_def = None
+        in_term = False
+        with open(go_file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            for line in f:
+                line = line.strip()
+                if line == '[Term]':
+                    if current_id and (current_name or current_def):
+                        go_defs[current_id] = {
+                            'name': current_name or 'Unknown',
+                            'definition': current_def or 'No definition'
+                        }
+                        go_num = current_id.replace('GO:', '')
+                        go_defs[f'GO_{go_num}'] = go_defs[current_id]
+                        go_defs[f'GO_{go_num}_instance'] = go_defs[current_id]
+                    current_id = None
+                    current_name = None
+                    current_def = None
+                    in_term = True
+                    continue
+                if not in_term or not line:
+                    continue
+                if line.startswith('id: GO:'):
+                    go_num = line.split('GO:')[1].strip()
+                    current_id = f'GO:{go_num}'
+                elif line.startswith('name: '):
+                    current_name = line.replace('name: ', '')
+                elif line.startswith('def: "'):
+                    def_text = line.split('def: "')[1].split('" [')[0]
+                    current_def = def_text
+        # Last term
+        if current_id and (current_name or current_def):
+            go_defs[current_id] = {
+                'name': current_name or 'Unknown',
+                'definition': current_def or 'No definition'
+            }
+            go_num = current_id.replace('GO:', '')
+            go_defs[f'GO_{go_num}'] = go_defs[current_id]
+            go_defs[f'GO_{go_num}_instance'] = go_defs[current_id]
+        return go_defs
+    except Exception as e:
+        logger.warning(f"Error parsing go.obo: {e}")
+        return {}
+
+def find_go_file():
+    """Search for go.obo file in common locations."""
+    search_paths = [
+        Path('OntoKGCreation/go.obo'),
+        Path('F:/yaz/OntoKGCreation/go.obo'),
+        Path('/usr/share/ontologies/go.obo'),
+        Path('data/go.obo'),
+    ]
+    for p in search_paths:
+        if p.exists():
+            return p
+    return None
+
+def get_reactome_info(reaction_id: str) -> dict:
+    """Get Reactome reaction display name if possible."""
+    base = f'https://reactome.org/ContentService/data/query/{reaction_id}'
+    url = f'https://reactome.org/content/detail/{reaction_id}'
+    try:
+        resp = requests.get(base, timeout=5)
+        if resp.ok:
+            data = resp.json()
+            name = data.get('displayName', reaction_id)
+        else:
+            name = reaction_id
+    except Exception:
+        name = reaction_id
+    return {'name': name, 'type': 'Reactome Reaction', 'url': url}
 
 
 def extract_node_names_from_owl(owl_path):
@@ -28,8 +110,13 @@ def extract_node_names_from_owl(owl_path):
     node_names = defaultdict(dict)
     
     try:
+        # Load GO term definitions once
+        go_file = find_go_file()
+        go_defs = parse_go_obo(go_file) if go_file else {}
+        if not go_defs:
+            logger.info("GO definitions not found; GO labels will fall back to IDs")
         # Load from kg_exports (already converted)
-        nodes_csv = Path('kg_exports/nodes.csv')
+        nodes_csv = Path('OntoKGCreation/converted/nodes.csv')
         if nodes_csv.exists():
             df_nodes = pd.read_csv(nodes_csv)
             
@@ -56,16 +143,36 @@ def extract_node_names_from_owl(owl_path):
                     node_names['Pathway'][len(node_names['Pathway'])] = str(name)[:40]
                 
                 elif 'GO' in node_category or node_id.startswith('GO_'):
-                    name = str(row.get('hasName', node_id))
-                    if pd.isna(name) or name == 'nan':
-                        name = node_id.replace('GO_Term_', '').replace('GO_', '').strip()
+                    # Example node_id: GO_0000974_instance
+                    go_term = node_id
+                    name = None
+                    if go_defs:
+                        # Try direct
+                        info = go_defs.get(go_term)
+                        # print(info)
+                        if not info:
+                            # Try without _instance
+                            base_id = go_term.replace('_instance', '')
+                            info = go_defs.get(base_id)
+                        if not info:
+                            # Try GO:XXXX format
+                            go_num = go_term.replace('GO_', '').replace('_instance', '')
+                            info = go_defs.get(f'GO:{go_num}')
+                        if info:
+                            name = info.get('name')
+                    if not name:
+                        # Fallback to trimmed ID
+                        name = go_term.replace('GO_Term_', '').replace('GO_', '').strip()
                     node_names['GO_Term'][len(node_names['GO_Term'])] = str(name)[:40]
                 
                 elif 'Reaction' in node_category or node_id.startswith('Reaction_'):
-                    name = str(row.get('hasName', node_id))
-                    if pd.isna(name) or name == 'nan':
-                        name = node_id.replace('Reaction_', '').strip()
-                    node_names['Reaction'][len(node_names['Reaction'])] = str(name)[:40]
+                    # Extract raw reaction id (e.g., R-HSA-XXXX or numeric)
+                    raw_id = node_id.replace('Reaction_', '').strip()
+                    # If it's numeric, prefix with R-HSA-
+                    reaction_id = raw_id if raw_id.startswith('R-') else (f'R-HSA-{raw_id}' if raw_id.isdigit() else raw_id)
+                    info = get_reactome_info(reaction_id)
+                    name = info.get('name', raw_id)
+                    node_names['Reaction'][len(node_names['Reaction'])] = str(name)[:60]
         
         else:
             print("  ⚠️  kg_exports/nodes.csv not found, using defaults")
@@ -79,8 +186,29 @@ def extract_node_names_from_owl(owl_path):
         if names_dict:
             samples = list(names_dict.items())[:2]
             print(f"    {ntype}: {len(names_dict)} nodes (e.g., {samples})")
-    
     return node_names
+
+
+def compute_protein_importance_scores(model, data, patient_idx, device='cpu'):
+    """
+    Compute importance scores for proteins based on gradient attribution.
+    """
+    try:
+        analyzer = GradientBasedAttentionAnalyzer(model, data, device)
+        gradients = analyzer.compute_input_gradients(patient_idx)
+        
+        protein_scores = {}
+        if 'Protein' in gradients:
+            grad_tensor = gradients['Protein']
+            # Use L2 norm of gradient per protein as importance
+            importance = (grad_tensor ** 2).sum(dim=1).sqrt().cpu().numpy()
+            for idx, score in enumerate(importance):
+                protein_scores[idx] = float(score)
+        
+        return protein_scores
+    except Exception as e:
+        logger.warning(f"Could not compute gradient importance: {e}")
+        return {}
 
 
 def extract_heterogeneous_neighborhood(data, patient_idx):
@@ -133,10 +261,12 @@ def extract_heterogeneous_neighborhood(data, patient_idx):
 
 
 def visualize_heterogeneous_subgraph(patient_idx, neighbors_by_type, relation_summary, 
-                                     predictions_df, output_dir, node_names=None):
+                                     predictions_df, output_dir, node_names=None,
+                                     model=None, data=None, device='cpu'):
     """
     Visualize patient's heterogeneous neighborhood with all node types.
     Includes actual node names (not just IDs).
+    Proteins can be ranked by gradient importance if model is provided.
     """
     
     if node_names is None:
@@ -171,29 +301,48 @@ def visualize_heterogeneous_subgraph(patient_idx, neighbors_by_type, relation_su
     # Track edges for visualization
     edge_type_counts = defaultdict(int)
     
-    # Layer 1: Proteins (direct from sample)
+    # Layer 1: Proteins (direct from sample) - rank by gradient importance or frequency
     protein_nodes = set()
     protein_relations = defaultdict(int)
+    protein_freq = defaultdict(int)
     
+    # Count protein frequencies
     for edge_type_str, node_indices in neighbors_by_type.get('Protein', {}).items():
-        unique_neighbors = list(set(node_indices))[:6]  # Top 6 proteins
-        for node_idx in unique_neighbors:
-            node_id = f"Protein_{node_idx}"
-            protein_nodes.add(node_id)
-            
-            if node_id not in G:
-                G.add_node(node_id, node_type='Protein')
-                node_colors_list.append(color_map['Protein'])
-                node_sizes_list.append(1500)
-            
-            G.add_edge(patient_node, node_id, relation='hasGeneExpressionOA')
-            protein_relations['hasGeneExpressionOA'] += 1
+        for node_idx in node_indices:
+            protein_freq[node_idx] += 1
+    
+    # Compute gradient-based importance if model/data provided
+    protein_scores = {}
+    if model is not None and data is not None:
+        logger.info(f"Computing gradient importance for patient {patient_idx}...")
+        protein_scores = compute_protein_importance_scores(model, data, patient_idx, device)
+    
+    # Rank proteins: by gradient score if available, else by frequency
+    if protein_scores:
+        top_proteins = [idx for idx, _ in sorted(protein_scores.items(), key=lambda x: -x[1])[:10]]
+        logger.info(f"Ranked proteins by gradient importance: {top_proteins}")
+    else:
+        top_proteins = [idx for idx, _ in sorted(protein_freq.items(), key=lambda x: -x[1])[:6]]
+        logger.info(f"Ranked proteins by frequency: {top_proteins}")
+    
+    # Add top proteins to graph
+    for node_idx in top_proteins:
+        node_id = f"Protein_{node_idx}"
+        protein_nodes.add(node_id)
+        
+        if node_id not in G:
+            G.add_node(node_id, node_type='Protein')
+            node_colors_list.append(color_map['Protein'])
+            node_sizes_list.append(1500)
+        
+        G.add_edge(patient_node, node_id, relation='hasGeneExpressionOA')
+        protein_relations['hasGeneExpressionOA'] += 1
     
     # Layer 2: Other node types (from proteins)
     for node_type in ['Pathway', 'GO_Term', 'Reaction']:
         if node_type in neighbors_by_type:
             for edge_type_str, node_indices in neighbors_by_type[node_type].items():
-                unique_neighbors = list(set(node_indices))[:4]  # Top 4 of each type
+                unique_neighbors = list(set(node_indices))[:6]  # Top 6 of each type
                 for node_idx in unique_neighbors:
                     node_id = f"{node_type}_{node_idx}"
                     
@@ -273,32 +422,29 @@ def visualize_heterogeneous_subgraph(patient_idx, neighbors_by_type, relation_su
             node_id_str = parts[1] if len(parts) > 1 else '0'
             
             # Get actual name if available
+            print(node_names.keys())
+            print(node_type, node_id_str)
             try:
-                node_idx = int(node_id_str)
                 if node_type in node_names and node_idx in node_names[node_type]:
+                    node_idx = int(node_id_str)
                     name = node_names[node_type][node_idx]
+                elif node_type == 'GO':
+                    name = node_names['GO_Term'][int(node_id_str.split('_')[-1])]
+                    print(name)
                 else:
                     name = node_id_str
             except:
+                print('Error parsing node id:', node_id_str)
                 name = node_id_str
             
-            # Shorten display
-            display_name = name if len(name) <= 15 else name[:12] + '...'
-            labels[node] = f"{node_type}\n{display_name}"
+            labels[node] = name
     
-    nx.draw_networkx_labels(G, pos, labels, font_size=7, font_weight='bold', ax=ax)
+    # Set global font for legend
+    plt.rcParams.update({'font.family': 'DejaVu Sans', 'font.size': 13})
+    # Draw node labels with smaller font
+    nx.draw_networkx_labels(G, pos, labels, font_size=10, font_weight='bold', font_family='DejaVu Sans', ax=ax)
     
-    # Title with emphasis on heterogeneous structure
-    pred_class = "🔴 SEPTIC" if pred_row['predicted_label'] == 1 else "🟢 HEALTHY"
-    prob_septic = pred_row['prob_septic']
-    prob_healthy = 1.0 - prob_septic
-    
-    title = f"Patient {patient_idx} - Heterogeneous Knowledge Graph (2-hop Neighborhood)\n"
-    title += f"Prediction: {pred_class} | P(Septic)={prob_septic:.3f}, P(Healthy)={prob_healthy:.3f}\n"
-    title += f"Layer 1: Gene Expression (Proteins) → Layer 2: Biological Context (Pathways/GO/Reactions)"
-    ax.set_title(title, fontsize=12, fontweight='bold', pad=15)
-    
-    # Legend for node types
+    # Create combined legend for node types and edge types
     node_legend = [
         Patch(facecolor='#2ecc71', edgecolor='black', linewidth=1.5, label='Sample'),
         Patch(facecolor='#e74c3c', edgecolor='black', linewidth=1.5, label='Protein'),
@@ -306,31 +452,42 @@ def visualize_heterogeneous_subgraph(patient_idx, neighbors_by_type, relation_su
         Patch(facecolor='#9b59b6', edgecolor='black', linewidth=1.5, label='GO_Term'),
         Patch(facecolor='#f39c12', edgecolor='black', linewidth=1.5, label='Reaction'),
     ]
-    ax.legend(handles=node_legend, loc='upper left', fontsize=10, title='Node Types', framealpha=0.95)
     
-    # Summary statistics box
-    total_neighbors = sum(len(nodes) for nt_dict in neighbors_by_type.values() for nodes in nt_dict.values())
-    node_type_counts = {}
-    for node_type, relations_dict in neighbors_by_type.items():
-        node_type_counts[node_type] = len(set(n for nodes in relations_dict.values() for n in nodes))
+    edge_legend = [
+        mpatches.Patch(color='#e74c3c', label='Gene Expression'),
+        mpatches.Patch(color='#9b59b6', label='GO Association'),
+        mpatches.Patch(color='#3498db', label='Pathway Link'),
+    ]
     
-    info_text = f"Total Neighbors: {total_neighbors}\n"
-    info_text += f"Unique Node Types Connected: {len(node_type_counts)}\n\n"
-    for ntype in ['Protein', 'Pathway', 'GO_Term', 'Reaction']:
-        if ntype in node_type_counts:
-            info_text += f"{ntype}: {node_type_counts[ntype]}\n"
+    # Combine legends
+    all_legend = node_legend + edge_legend
+    all_labels = [
+        'Sample', 'Protein', 'Pathway', 'GO_Term', 'Reaction',
+        'Gene Expression', 'GO Association', 'Pathway Link', 'Other'
+    ]
     
-    ax.text(0.98, 0.98, info_text, transform=ax.transAxes, fontsize=9,
-            verticalalignment='top', horizontalalignment='right',
-            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+    # Create two separate legends
+    legend1 = ax.legend(handles=node_legend, loc='upper left', fontsize=13, 
+                        title='Node Types', framealpha=0.98, title_fontsize=13,
+                        edgecolor='black', fancybox=True, prop={'family': 'DejaVu Sans', 'size': 13})
+
+    ax.add_artist(legend1)
+    legend2 = ax.legend(handles=edge_legend, loc='lower left', fontsize=13, 
+                        title='Edge Types', framealpha=0.98, title_fontsize=13,
+                        edgecolor='black', fancybox=True, prop={'family': 'DejaVu Sans', 'size': 13})
     
     ax.axis('off')
     plt.tight_layout()
     
     subgraph_path = f'{output_dir}/patient_{patient_idx:03d}_heterogeneous_subgraph.png'
-    plt.savefig(subgraph_path, dpi=150, bbox_inches='tight')
+    plt.savefig(subgraph_path, dpi=1000, bbox_inches='tight', facecolor='white')
     print(f"✓ {subgraph_path}")
     plt.close()
+    
+    # Compute node type counts for return
+    node_type_counts = {}
+    for node_type, relations_dict in neighbors_by_type.items():
+        node_type_counts[node_type] = len(set(n for nodes in relations_dict.values() for n in nodes))
     
     return node_type_counts
 
@@ -412,8 +569,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--owl_path', default='output/new_outputs/GSE54514_enriched_ontology_degfilter_v2.11.owl')
     parser.add_argument('--predictions_path', default='results/han_model_with_expression/sample_predictions.csv')
+    parser.add_argument('--model_path', default='results/han_model_with_expression/han_model.pt', help='Path to trained HAN model')
     parser.add_argument('--output_dir', default='results/han_attention_analysis')
+    parser.add_argument('--use_gradient', action='store_true', help='Use gradient-based protein ranking (requires model)')
     args = parser.parse_args()
+    
+    logging.basicConfig(level=logging.INFO)
     
     print("="*90)
     print("HETEROGENEOUS NEIGHBORHOOD ANALYSIS FOR HAN")
@@ -430,6 +591,26 @@ if __name__ == '__main__':
     print(f"✓ Graph: {data}")
     print(f"  Node types: {list(data.node_types)}")
     print(f"  Edge types: {len(data.edge_types)}")
+    
+    # Load model if using gradient-based ranking
+    model = None
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    if args.use_gradient and Path(args.model_path).exists():
+        print(f"\nLoading HAN model from {args.model_path}...")
+        model = SepsisHANClassifier(
+            in_channels_dict={ntype: data[ntype].x.size(1) for ntype in data.node_types},
+            hidden_channels=64,
+            out_channels=32,
+            num_layers=2,
+            num_heads=8,
+            dropout=0.3,
+            metadata=data.metadata()
+        ).to(device)
+        model.load_state_dict(torch.load(args.model_path, map_location=device))
+        model.eval()
+        print(f"✓ Model loaded on device: {device}")
+    elif args.use_gradient:
+        print(f"⚠️  --use_gradient specified but model not found at {args.model_path}; using frequency-based ranking")
     
     preds_df = pd.read_csv(args.predictions_path)
     
@@ -450,9 +631,10 @@ if __name__ == '__main__':
         # Extract heterogeneous neighborhood
         neighbors_by_type, relation_summary = extract_heterogeneous_neighborhood(data, patient_idx)
         
-        # Visualize (with node names)
+        # Visualize (with optional gradient-based ranking)
         visualize_heterogeneous_subgraph(
-            patient_idx, neighbors_by_type, relation_summary, preds_df, args.output_dir, node_names
+            patient_idx, neighbors_by_type, relation_summary, preds_df, args.output_dir, node_names,
+            model=model, data=data, device=device
         )
         
         # Report
