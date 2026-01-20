@@ -7,7 +7,7 @@ by default, trains all available models on all available datasets for versions v
 
 AVAILABLE OPTIONS:  
     model-types: svm, random_forest, xgboost, pytorch_mlp, sklearn_mlp
-    datasets: gene_expression, RGCN_sample_embeddings, Complex_sample_embeddings, concatenated_sample_embeddings, RGCN_protein_embeddings, Complex_protein_embeddings, concatenated_protein_embeddings
+    datasets: gene_expression, RGCN_sample_embeddings, Complex_sample_embeddings, concatenated_sample_embeddings, RGCN_protein_embeddings, Complex_protein_embeddings, concatenated_protein_embeddings, GAT_sample_embeddings, GAT_protein_embeddings, GraphSAGE_sample_embeddings, GraphSAGE_protein_embeddings, weighted_RGCN_sample_embeddings, weighted_RGCN_protein_embeddings
     versions: v2.10, v2.11, v2.9
     normalization: robust, standard, minmax, log1p, none
 
