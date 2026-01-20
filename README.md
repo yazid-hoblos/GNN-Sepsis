@@ -5,23 +5,21 @@
 ## Table of Contents
 - [Abstract](#abstract)
 - [Approach diagram](#approach-diagram)
-- [Reproducibility instructions](#reproducibility-instructions)
+- [Reproducibility Instructions](#reproducibility-instructions)
 - [Datasets](#datasets)
+- [Methods](#methods)
 - [Results](#results)
+- [References](#references)
 
-
- 
 ## Abstract
 
-description of the problem addressed, the proposed approach, and the main results
+Background: Sepsis is a life-threatening condition caused by a dysregulated host response to infection, remaining a leading cause of global mortality. Traditional transcriptomic prediction models often treat genes as independent features, failing to capture the complex biological interactions and structural contexts,such as protein-protein interactions and metabolic pathways,that drive disease progression.
 
-## Proposed Subject??
+Methods: We developed and compared traditional machine learning pipelines with graph-augmented approaches using the GSE54514 dataset, comprising 163 longitudinal blood samples, by integrating gene expression data with a comprehensive knowledge graph curated from eight sources, including GO, BioGRID, STRING, and Reactome. The methodology evaluated two primary graph-based feature extraction strategies: the use of pretrained graph embeddings (ComplEx and RGCN) to encode relational biological context, and the training of end-to-end GNN models (GraphSAGE, weighted RGCN, and GAT) on a heterogeneous graph representing samples, proteins, and pathways. These features were aggregated with gene expression data to train and benchmark four classifiers, Random Forest, MLP, XGBoost, and SVM, comparing performance across various architectures and inputs. To ensure interpretability, we applied SHAP-based analysis to identify influential features and implemented a Heterogeneous Attention Network (HAN) to extract node-level and semantic-level attention scores, enabling patient-specific explanations mapped back to the underlying knowledge graph.
 
-This project compares traditional and graph-enhanced pipelines for sepsis prediction using omics data. The goal is to evaluate whether graph embeddings encoding biological relationships (genes, proteins, pathways) improve classification performance compared to raw gene expression.
+Results: Our findings demonstrate that graph-augmented embeddings generally outperform raw gene expression across multiple metrics. Specifically, ComplEx embeddings emerged as the most robust, with the ComplEx-SVM configuration achieving superior stability. While the SVM gene expression baseline reached 93% accuracy, ComplEx reached 95.3%. HAN-based attention mechanisms successfully identified patient-specific subgraphs, while SHAP analysis on ComplEx embeddings highlighted a consensus network of hub proteins as key sepsis drivers. However, results also indicated that weighted RGCN models showed lower reliability across different seeds, likely due to data scarcity (n=53 patients) and class imbalance.
 
-We were provided with pretrained KG embeddings (ComplEx, RGCN) and extended the work by training our own GNN models (GraphSAGE, RGCN, GAT) on the heterogeneous graph. We also explored HAN (Heterogeneous Attention Network) for node prediction and interpretability through attention weights.
-
-
+Conclusion: Integrating structural biological knowledge via GNNs provides a more accurate and interpretable framework for sepsis prediction than traditional methods. Future work will focus on adaptive KG refinement to reduce structural bias and the incorporation of temporal modeling to better capture the dynamic nature of the host response.
 
 
 ## Approach diagram
@@ -386,7 +384,7 @@ Must work on gene level (not probe level) → aggregation step needed.
 
 <img src="results/EDA/timeline/timeline_plots/disease_progression_timeline.png"/>
 
-Here we see the distribution of samples over 5 time points. 
+Here we see the distribution of samples over 5 time points.
 
 #### Knowledge Graph Visualization
 
