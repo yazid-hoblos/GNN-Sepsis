@@ -9,7 +9,7 @@ import networkx as nx
 from pyvis.network import Network
 import argparse
 from pathlib import Path
-from load_embeddings import load_patient_data, load_all_entities
+from src.utils.load_embeddings import load_patient_data, load_all_entities
 
 
 def load_graph_data(base_path='models/executions', prefix='GSE54514_enriched_ontology_degfilterv2.9'):

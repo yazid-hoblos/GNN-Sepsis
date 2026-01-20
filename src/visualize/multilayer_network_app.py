@@ -18,7 +18,7 @@ import argparse
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from load_embeddings import load_patient_data, load_all_entities
+# from load_embeddings import load_patient_data, load_all_entities
 
 app = Flask(__name__)
 
