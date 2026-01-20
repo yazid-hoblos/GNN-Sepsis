@@ -475,7 +475,7 @@ There is a clear boundary at a log2FC magnitude of approximately 0.75. Even thou
 
 A volcano plot illustrating log2FC versus −log10(p‑value) further highlights the separation between upregulated, downregulated, and non‑regulated proteins, with the names of regulated proteins explicitly labeled:
 
-<img src="results/EDA/KG_analysis/volcano_plot_v211.png" width="700"/>
+<img src="results/kg/KG_analysis/volcano_plot_v211.png" width="700"/>
 
 
 ##### Biological Enrichment Analysis
@@ -487,11 +487,11 @@ For visualization, we selected the top 10 terms from each set. If a term was top
 <div style="display: flex; justify-content: space-around; align-items: flex-start;">
 
   <div style="flex: 1; text-align: center;">
-    <img src="results/EDA/KG_analysis/go_enrichment_plot.png" style="height:380px;"/>
+    <img src="results/kg/KG_analysis/go_enrichment_plot.png" style="height:380px;"/>
   </div>
 
   <div style="flex: 1; text-align: center;">
-    <img src="results/EDA/KG_analysis/pathway_enrichment_plot.png" style="height:380px;"/>
+    <img src="results/kg/KG_analysis/pathway_enrichment_plot.png" style="height:380px;"/>
   </div>
 
 </div>
