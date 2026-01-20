@@ -409,7 +409,7 @@ The web interface enables users to:
 - **Statistics Dashboard**: Display real-time graph statistics (node counts, edge counts...)
 - **Force-Directed Layout**: Physics-based layouts for intuitive spatial organization
 
-![Interactive Web Application Interface](report/figures/visualization_app.png)
+![Interactive Web Application Interface](docs/report_figures/visualization_app.png)
 *Figure: Screenshot of the interactive multi-layer network visualization web application, showing real-time filtering controls, layer management, and dynamic network rendering.*
 
 This is relevant both for initial exploratory analysis and examination of specific neighborhood to help guide analysis.
@@ -594,19 +594,19 @@ We developed a comprehensive interpretability framework to bridge our GNN-based 
 
 As highlighted in Figure 1 for ComplEx with SVM (highest performing model), we computed the aggregate SHAP values distributions, identifying the most consistently predictive embedding dimensions. Figure 2 highlights class-specific distributions. Figure 3 demonstrates individual patient-level explanations, where we can see how combinations of features contribute to specific predictions (relevant for clinical interpretability).
 
-![SHAP Feature Importance Analysis](report/figures/01_shap_feature_importance.png) | ![SHAP Model Comparison](report/figures/02_shap_model_comparison.png)
+![SHAP Feature Importance Analysis](docs/report_figures/01_shap_feature_importance.png) | ![SHAP Model Comparison](docs/report_figures/02_shap_model_comparison.png)
 :---:|:---:
 *Figure 1: Aggregate SHAP value distribution for ComplEx with SVM (best model), highlighting the most consistently predictive biomarkers across all samples.* | *Figure 2: SHAP value distributions stratified by class, illustrating how feature importance patterns differ between outcome groups.*
 
-![SHAP Individual Prediction Explanations](report/figures/03_shap_individual_predictions.png)
+![SHAP Individual Prediction Explanations](docs/report_figures/03_shap_individual_predictions.png)
 *Figure 3: Individual patient-level SHAP explanations showing feature contributions to specific predictions. Red bars indicate increased prediction of poor outcome, blue bars decreased prediction.*
 
 2. **Feature Consolidation**: The `consolidate_interpretability.py` script aggregates feature importance rankings from all model-dataset combinations, applying normalization strategies (minmax, z-score) to identify consensus biomarkers that are robust across architectures. This aims to identify high-confidence biomarkers that consistently emerge across diverse models and normalization schemes.
 
-![Feature Consolidation and Consensus Ranking](report/figures/04_feature_consolidation.png)
+![Feature Consolidation and Consensus Ranking](docs/report_figures/04_feature_consolidation.png)
 *Figure 4: Aggregated feature importance rankings across all 4 ML models with ComplEx and RGCN, identifying robust consensus biomarkers.*
 
-![GNN Embedding Dimension Importance](report/figures/05_gnn_interpretability.png)
+![GNN Embedding Dimension Importance](docs/report_figures/05_gnn_interpretability.png)
 *Figure 5: Heatmap of the correlation between the top embedding dimensions.*
 
 3. **Automated Feature Mapping**: `auto_feature_mapping.py` and `map_features_per_dataset.py` automatically trace abstract feature indices back to their biological entities (proteins, pathways, GO terms), enabling interpretable biomarker identification. Primary focus was given to protein mapping considering the fact that they were exclusively used in all models training. Nonetheless, we could still examine the neighborhoods of our identified proteins of interest in the knowledge graph to retrieve associated pathways and GO terms.
@@ -630,7 +630,7 @@ The `GraphStructureAnalyzer` class systematically evaluates which elements of th
 - **Node Importance**: Identifies central entities using degree, betweenness, and closeness centrality metrics. Degree centrality reveals the most connected proteins (hub proteins), while betweenness identifies nodes that serve as bridges between different network regions.
 - **Edge Type Importance**: Quantifies which relationship types (physical, genetic, regulatory) are most predictive by analyzing their frequency and their correlation with model performance.
 
-![Graph Structure and Node Centrality Analysis](report/figures/06_graph_structure_centrality.png)
+![Graph Structure and Node Centrality Analysis](docs/report_figures/06_graph_structure_centrality.png)
 *Figure 6: Edge types distribution in the knowledge graph.*
 
 ##### Hub-Dimension Linkage (`link_hub_to_dimensions.py`)
@@ -655,7 +655,7 @@ More details on biological findings could be found in the following section.
 
 We considered comparing different normalization strategies for feature importance aggregation to ensure biomarker rankings are not artifacts of preprocessing. This analysis established normalization had a big impact on the top features identified.
 
-![Normalization Strategy Comparison](report/figures/07_normalization_comparison.png)
+![Normalization Strategy Comparison](docs/report_figures/07_normalization_comparison.png)
 *Figure 7: Comparison of feature importance rankings with and without normalization (none vs minmax).*
 
 #### ComplEx-Focused Analysis
@@ -671,7 +671,7 @@ Maps abstract ComplEx embedding dimensions to interpretable biological entities 
 
 The feature mapping process revealed that top-ranked SVM features correspond to highly semantically coherent clusters in the ComplEx embedding space. 
 
-![ComplEx Embedding Dimension Mapping](report/figures/08_complex_embedding_mapping.png)
+![ComplEx Embedding Dimension Mapping](docs/report_figures/08_complex_embedding_mapping.png)
 *Figure 8: The top identified biomarkers.*
 
 ###### Biomarker Extraction (`extract_biomarker_subgraph.py` & `extract_biomarker_subgraph_proteins_only.py`)
@@ -680,7 +680,7 @@ Extracts PPI and heterogeneous biomarker subgraphs, enabling:
 - Assessment of network connectivity and module structure
 - Connectivity of biomarkers of all types 
 
-| ![SVM Network Module Structure](report/figures/11_svm_network_visualization.png)! | ![ComplEx SVM Top Model Network Visualization](report/figures/10_complex_network_visualization.png) |
+| ![SVM Network Module Structure](docs/report_figures/11_svm_network_visualization.png)! | ![ComplEx SVM Top Model Network Visualization](docs/report_figures/10_complex_network_visualization.png) |
 |:---:|:---:|
 | *Figure 11: Biomarkers sub-network for ComplEx+SVM top model biomarkers.* | *Figure 12: bi-partite graph of protein-to-pathways connections.* |
 
@@ -700,7 +700,7 @@ Builds PPI networks using only consensus proteins, revealing core regulatory mod
 ###### GO Enrichment of Consensus Entities (`enrich_consensus_entities.py`)
 Performs functional enrichment specifically on consensus biomarkers to identify robust functional themes supported by multiple lines of evidence (offers option to consider hub proteins as well). 
 
-| ![Consensus GO Enrichment Analysis](report/figures/09_consensus_go_enrichment.png) | ![Consensus Biomarker Summary Table](report/figures/13_consensus_biomarker_table.png) |
+| ![Consensus GO Enrichment Analysis](docs/report_figures/09_consensus_go_enrichment.png) | ![Consensus Biomarker Summary Table](docs/report_figures/13_consensus_biomarker_table.png) |
 |:---:|:---:|
 | *Figure 9: KG-based GO term enrichment results for consensus biomarkers showing significantly over-represented biological processes.* | *Figure 10: GO and GSEA enrichment results.* |
 
@@ -823,7 +823,7 @@ Beyond individual edge attention, semantic-level attention aggregates informatio
 - **Cross-Type Information Flow**: Tracks how information propagates through heterogeneous graph structure
 - **Attention Heatmaps**: Generates visualizations showing attention patterns across semantic spaces
 
-![HAN Semantic-Level Attention Analysis](report/figures/12_han_semantic_attention.png)
+![HAN Semantic-Level Attention Analysis](docs/report_figures/12_han_semantic_attention.png)
 
 ##### Gradient-Based Interpretability and Subgraph Analysis
 
@@ -843,7 +843,7 @@ This goes beyond simple attention weights by assessing actual influence on model
 - **GO Term Annotation**: Integrates GO ontology definitions and semantic information using `parse_go_obo()`, providing rich contextual information about biological processes
 - **Gradient-Based Node Importance**: Ranks neighborhood nodes by their gradient-attributed importance to patient predictions, measuring which neighbors would most impact the prediction if perturbed
 
-![Patient-Specific Subgraph Visualization](report/figures/14_patient_subgraph_visualization.png)
+![Patient-Specific Subgraph Visualization](docs/report_figures/14_patient_subgraph_visualization.png)
 *Figure 14: Heterogeneous patient subgraph showing gradient-attributed importance of proteins, pathways, and GO terms. Node size indicates gradient-based importance (larger = more causal influence on prediction), color indicates node type (green = protein, blue = GO term, orange = pathway). Edge color is proportional to edge importance. This represents a single patient's personalized mechanistic explanation of their predicted outcome.*
 
 ####### Gradient-Based Protein Ranking
