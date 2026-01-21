@@ -1,0 +1,4 @@
+Patients analyzed: [11, 6, 159, 63, 22, 137]
+HAN proteins: 1230
+Consensus proteins: 28
+Overlap proteins: 25

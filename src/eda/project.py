@@ -37,7 +37,7 @@ parser.add_argument('--dataset_name', type=str, nargs='*', default=[
     'concatenated_protein_embeddings',
     'concatenated_sample_embeddings'
 ])
-parser.add_argument('--output_dir', type=str, default='results/figures/projections')
+parser.add_argument('--output_dir', type=str, default='results/ml/projections')
 args = parser.parse_args()
 
 method_map = {

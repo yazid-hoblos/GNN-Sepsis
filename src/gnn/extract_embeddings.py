@@ -67,9 +67,9 @@ def main():
     parser.add_argument("--model", choices=list(MODELS.keys()) + ["all"], default="all")
     parser.add_argument("--version", "-v", choices=list(DATA_VERSIONS.keys()), default="v2.11",
                         help="Data version to use (default: v2.11)")
-    parser.add_argument("--epochs", type=int, default=100)
-    parser.add_argument("--lr", type=float, default=0.01)
-    parser.add_argument("--patience", type=int, default=10)
+    parser.add_argument("--epochs", type=int, default=200)
+    parser.add_argument("--lr", type=float, default=0.001)
+    parser.add_argument("--patience", type=int, default=20)
     args = parser.parse_args()
 
     device = get_device()

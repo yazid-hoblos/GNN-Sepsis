@@ -1,0 +1,127 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 800px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"group": "consensus_other", "id": "Protein_PDIA4", "label": "PDIA4", "shape": "dot", "size": 26.66298554991172, "title": "PDIA4 | score=31.005 | degree=1 | consensus_other", "x": 873.5360020128204, "y": 50.093097071063966}, {"group": "consensus_other", "id": "Protein_ADAMTSL4", "label": "ADAMTSL4", "shape": "dot", "size": 17.983663434788472, "title": "ADAMTSL4 | score=23.535 | degree=3 | consensus_other", "x": 862.8024815694306, "y": 145.590885123117}, {"group": "consensus_other", "id": "Protein_RANBP9", "label": "RANBP9", "shape": "dot", "size": 23.357897912200382, "title": "RANBP9 | score=28.160 | degree=3 | consensus_other", "x": 449.29912931063535, "y": 116.63226862411028}, {"group": "consensus_other", "id": "Protein_PRR13", "label": "PRR13", "shape": "dot", "size": 27.795585230348138, "title": "PRR13 | score=31.980 | degree=2 | consensus_other", "x": 664.1024278858933, "y": 529.5727155505567}, {"group": "consensus_other", "id": "Protein_TMEM128", "label": "TMEM128", "shape": "dot", "size": 28.591572869714028, "title": "TMEM128 | score=32.665 | degree=0 | consensus_other", "x": 529.566733949077, "y": 664.069731278927}, {"group": "consensus_other", "id": "Protein_GNMT", "label": "GNMT", "shape": "dot", "size": 21.876569601987345, "title": "GNMT | score=26.885 | degree=3 | consensus_other", "x": 333.7855819531527, "y": 808.7835320802246}, {"group": "consensus_other", "id": "Protein_MBD2", "label": "MBD2", "shape": "dot", "size": 18.881155203426328, "title": "MBD2 | score=24.307 | degree=3 | consensus_other", "x": 546.1012398778313, "y": 1000.0}, {"group": "consensus_other", "id": "Protein_CDCA5", "label": "CDCA5", "shape": "dot", "size": 15.0, "title": "CDCA5 | score=20.966 | degree=4 | consensus_other", "x": -219.69319865864173, "y": 634.9558374293485}, {"group": "consensus_other", "id": "Protein_PLAA", "label": "PLAA", "shape": "dot", "size": 19.487055547808083, "title": "PLAA | score=24.829 | degree=0 | consensus_other", "x": -188.90979048878182, "y": 828.1498312761756}, {"group": "consensus_immune", "id": "Protein_CTR9", "label": "CTR9", "shape": "dot", "size": 24.9756043226174, "title": "CTR9 | score=29.553 | degree=0 | consensus_immune", "x": -368.5204514300207, "y": 765.3119112612962}, {"group": "consensus_immune", "id": "Protein_LEPR", "label": "LEPR", "shape": "dot", "size": 26.781410357925395, "title": "LEPR | score=31.107 | degree=0 | consensus_immune", "x": -529.5868484930406, "y": 664.094032536533}, {"group": "consensus_other", "id": "Protein_MAP7", "label": "MAP7", "shape": "dot", "size": 20.926704831508214, "title": "MAP7 | score=26.068 | degree=0 | consensus_other", "x": -664.0812543793112, "y": 529.5869457853623}, {"group": "consensus_other", "id": "Protein_TRAK1", "label": "TRAK1", "shape": "dot", "size": 25.74715935278921, "title": "TRAK1 | score=30.217 | degree=0 | consensus_other", "x": -765.2675815529401, "y": 368.52146220791457}, {"group": "consensus_other", "id": "Protein_NAA16", "label": "NAA16", "shape": "dot", "size": 23.721364550660994, "title": "NAA16 | score=28.473 | degree=1 | consensus_other", "x": -965.4644100112763, "y": 231.47941642670793}, {"group": "consensus_other", "id": "Protein_RIOX2", "label": "RIOX2", "shape": "dot", "size": 27.445133731566592, "title": "RIOX2 | score=31.679 | degree=0 | consensus_other", "x": -849.3820694947034, "y": -0.008354487547720823}, {"group": "consensus_immune", "id": "Protein_ERBIN", "label": "ERBIN", "shape": "dot", "size": 25.292419435469196, "title": "ERBIN | score=29.826 | degree=0 | consensus_immune", "x": -828.1011431054917, "y": -189.02864659439945}, {"group": "consensus_other", "id": "Protein_RANGRF", "label": "RANGRF", "shape": "dot", "size": 15.659651641426974, "title": "RANGRF | score=21.534 | degree=0 | consensus_other", "x": -765.284852741686, "y": -368.5718995371289}, {"group": "consensus_immune", "id": "Protein_RASSF5", "label": "RASSF5", "shape": "dot", "size": 24.62169711423689, "title": "RASSF5 | score=29.248 | degree=2 | consensus_immune", "x": -664.086763861024, "y": -529.6383733416217}, {"group": "consensus_other", "id": "Protein_LMNB2", "label": "LMNB2", "shape": "dot", "size": 19.03001330136122, "title": "LMNB2 | score=24.435 | degree=3 | consensus_other", "x": -213.67242556716764, "y": -412.0837242703952}, {"group": "consensus_immune", "id": "Protein_TGFB3", "label": "TGFB3", "shape": "dot", "size": 15.413393277110314, "title": "TGFB3 | score=21.322 | degree=0 | consensus_immune", "x": -368.60869679566594, "y": -765.2910810530701}, {"group": "consensus_other", "id": "Protein_NUS1", "label": "NUS1", "shape": "dot", "size": 21.290362038115994, "title": "NUS1 | score=26.381 | degree=0 | consensus_other", "x": -189.0536205269339, "y": -828.1228799215794}, {"group": "consensus_other", "id": "Protein_CUBN", "label": "CUBN", "shape": "dot", "size": 30.0, "title": "CUBN | score=33.878 | degree=2 | consensus_other", "x": -0.024946432179899877, "y": -849.4187873838613}, {"group": "consensus_other", "id": "Protein_PDE7A", "label": "PDE7A", "shape": "dot", "size": 19.267549849081846, "title": "PDE7A | score=24.640 | degree=0 | consensus_other", "x": 188.99679326195215, "y": -828.1167108615327}, {"group": "consensus_immune", "id": "Protein_ZBTB2", "label": "ZBTB2", "shape": "dot", "size": 17.187199375054657, "title": "ZBTB2 | score=22.849 | degree=0 | consensus_immune", "x": 368.53409760592916, "y": -765.2846607810633}, {"group": "consensus_other", "id": "Protein_BRI3BP", "label": "BRI3BP", "shape": "dot", "size": 19.55062996806728, "title": "BRI3BP | score=24.883 | degree=1 | consensus_other", "x": 505.5067700352307, "y": -714.1667006418869}, {"group": "consensus_other", "id": "Protein_CCDC91", "label": "CCDC91", "shape": "dot", "size": 26.50019381814658, "title": "CCDC91 | score=30.865 | degree=2 | consensus_other", "x": 664.0941665576385, "y": -529.5898370738378}, {"group": "consensus_other", "id": "Protein_SPATC1L", "label": "SPATC1L", "shape": "dot", "size": 24.30153265540315, "title": "SPATC1L | score=28.973 | degree=2 | consensus_other", "x": 765.2953208665314, "y": -368.5318878943394}, {"group": "consensus_other", "id": "Protein_AEBP2", "label": "AEBP2", "shape": "dot", "size": 15.95988732547503, "title": "AEBP2 | score=21.793 | degree=0 | consensus_other", "x": 828.1173086527425, "y": -188.98812280907427}]);
+                  edges = new vis.DataSet([{"color": "#9ca3af", "from": "Protein_PDIA4", "opacity": 0.3, "to": "Protein_BRI3BP", "width": 1}, {"color": "#9ca3af", "from": "Protein_ADAMTSL4", "opacity": 0.3, "to": "Protein_ADAMTSL4", "width": 1}, {"color": "#9ca3af", "from": "Protein_ADAMTSL4", "opacity": 0.3, "to": "Protein_GNMT", "width": 1}, {"color": "#9ca3af", "from": "Protein_RANBP9", "opacity": 0.3, "to": "Protein_RANBP9", "width": 1}, {"color": "#9ca3af", "from": "Protein_RANBP9", "opacity": 0.3, "to": "Protein_LMNB2", "width": 1}, {"color": "#9ca3af", "from": "Protein_PRR13", "opacity": 0.3, "to": "Protein_PRR13", "width": 1}, {"color": "#9ca3af", "from": "Protein_GNMT", "opacity": 0.3, "to": "Protein_GNMT", "width": 1}, {"color": "#9ca3af", "from": "Protein_MBD2", "opacity": 0.3, "to": "Protein_CDCA5", "width": 1}, {"color": "#9ca3af", "from": "Protein_MBD2", "opacity": 0.3, "to": "Protein_MBD2", "width": 1}, {"color": "#9ca3af", "from": "Protein_CDCA5", "opacity": 0.3, "to": "Protein_NAA16", "width": 1}, {"color": "#9ca3af", "from": "Protein_CDCA5", "opacity": 0.3, "to": "Protein_CDCA5", "width": 1}, {"color": "#9ca3af", "from": "Protein_RASSF5", "opacity": 0.3, "to": "Protein_RASSF5", "width": 1}, {"color": "#9ca3af", "from": "Protein_LMNB2", "opacity": 0.3, "to": "Protein_LMNB2", "width": 1}, {"color": "#9ca3af", "from": "Protein_CUBN", "opacity": 0.3, "to": "Protein_CUBN", "width": 1}, {"color": "#9ca3af", "from": "Protein_CCDC91", "opacity": 0.3, "to": "Protein_CCDC91", "width": 1}, {"color": "#9ca3af", "from": "Protein_SPATC1L", "opacity": 0.3, "to": "Protein_SPATC1L", "width": 1}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {"physics": {"enabled": false}, "interaction": {"hover": true, "navigationButtons": true, "dragNodes": true, "dragView": true, "zoomView": true}, "nodes": {"font": {"size": 12, "face": "arial", "bold": {"color": "#111"}}}, "edges": {"smooth": {"type": "continuous"}}};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

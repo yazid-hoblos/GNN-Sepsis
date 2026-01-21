@@ -37,7 +37,6 @@ class DashboardVisualizer:
                 ax=ax
             )
             ax.set_title(metric.upper())
-            # Keep 0-1 range for probabilities, others scale automatically
             if metric in ["balanced_accuracy", "precision", "recall", "f1", "auroc", "auprc"]:
                 ax.set_ylim(0, 1)
             ax.legend(title="Input", loc="upper right")
@@ -55,7 +54,6 @@ class DashboardVisualizer:
     # -----------------------------
     def plot_radar(self, title=None):
         """Radar plots for all models and inputs with metric labels and proper spacing."""
-        # Optionally shorten long metric names for readability
         metrics = ["balanced_acc" if m=="balanced_accuracy" else m for m in self.metrics]
 
         angles = np.linspace(0, 2 * np.pi, len(metrics), endpoint=False)
@@ -74,11 +72,9 @@ class DashboardVisualizer:
                 values = np.concatenate((values, [values[0]]))  # close loop
                 ax.plot(angles, values, label=f"{model} – {input_name}")
 
-        # Add metric labels at correct angles
         ax.set_xticks(angles[:-1])
         ax.set_xticklabels(metrics, fontsize=10)
 
-        # Move legend outside the plot
         ax.legend(bbox_to_anchor=(1.2, 1), loc='upper left')
 
         plt.title(title if title else "Radar Plot: Metrics by Model and Input", fontsize=14)

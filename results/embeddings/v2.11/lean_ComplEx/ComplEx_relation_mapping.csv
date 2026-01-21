@@ -1,0 +1,11 @@
+relation_id,label
+0,hasgeneticinteractionwith
+1,hasmodification
+2,hasphysicalinteractionwith
+3,isago
+4,isassociatedwithgo
+5,isassociatedwithproteinpathway
+6,participatedin
+7,partofgo
+8,partofpathway
+9,regulatesgo
